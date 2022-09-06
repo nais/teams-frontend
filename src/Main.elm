@@ -1,43 +1,16 @@
 module Main exposing (..)
 
-import Backend.Object
-import Backend.Object.User as User
-import Backend.Query as Query
-import Backend.Scalar exposing (Uuid)
 import Browser
-import Browser.Navigation
-import Graphql.Http
-import Graphql.Operation exposing (RootQuery)
-import Graphql.SelectionSet exposing (SelectionSet, empty)
-import Html exposing (Html, button, div, h1, img, text)
-import Html.Attributes exposing (src)
-import Html.Events exposing (onClick)
+import Home
+import Html exposing (Html)
 
 
 
 ---- MODEL ----
 
 
-type Actor
-    = LoggedIn UserData
-    | Unauthorized
-    | Unknown
-
-
-type alias Model =
-    { user : Actor }
-
-
-type alias UserData =
-    { id : Uuid
-    , email : String
-    , name : String
-    }
-
-
-init : ( Model, Cmd Msg )
-init =
-    ( { user = Unknown }, sendGetMeRequest )
+type Model
+    = Home Home.Model
 
 
 
@@ -45,58 +18,43 @@ init =
 
 
 type Msg
-    = ClickedLogin
-    | GotMeResponse (Result (Graphql.Http.Error UserData) UserData)
+    = GotHomeMsg Home.Msg
+
+
+init : (Model, Cmd Msg)
+init =
+    (Home.init |> updateWith Home GotHomeMsg ) -- just use the home model's init in main (should be route based later on)
+
+
+updateWith : (subModel -> Model) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
+updateWith toModel toMsg ( subModel, subCmd ) =
+    ( toModel subModel
+    , Cmd.map toMsg subCmd
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        ClickedLogin ->
-            ( model, Browser.Navigation.load "http://localhost:3000/oauth2/login" )
-
-        GotMeResponse (Ok user) ->
-            ( { model | user = LoggedIn user }, Cmd.none )
-
-        GotMeResponse (Err _) ->
-            ( { model | user = Unauthorized }, Cmd.none )
+    case ( msg, model ) of -- Add handler here when we add new modules
+        ( GotHomeMsg subMsg, Home subModel ) ->
+            Home.update subMsg subModel |> updateWith Home GotHomeMsg
 
 
 
+-- (_, _) ->
+--     Debug.log "got update from invalid location"
 ---- VIEW ----
 
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ h1 [] [ text "nais console" ]
-        , button [ onClick ClickedLogin ] [ text "Single sign-on" ]
-        ]
+    case model of -- Add new view here when we add new modules
+        Home subModel ->
+            Home.view subModel |> Html.map GotHomeMsg
 
 
 
 ---- PROGRAM ----
-
-
-sendGetMeRequest : Cmd Msg
-sendGetMeRequest =
-    getMeQuery
-        |> Graphql.Http.queryRequest "http://localhost:3000/query"
-        |> Graphql.Http.withCredentials
-        |> Graphql.Http.send GotMeResponse
-
-
-getMeQuery : SelectionSet UserData RootQuery
-getMeQuery =
-    Query.me meSelection
-
-
-meSelection : SelectionSet UserData Backend.Object.User
-meSelection =
-    Graphql.SelectionSet.map3 UserData
-        User.id
-        User.email
-        User.name
 
 
 main : Program () Model Msg
