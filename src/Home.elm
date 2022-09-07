@@ -3,7 +3,7 @@ module Home exposing (..)
 import Backend.Query exposing (me)
 import Browser.Navigation
 import Graphql.Http
-import Html exposing (Html, button, div, h1, text)
+import Html exposing (Html, button, div, h1, p, text)
 import Html.Events exposing (onClick)
 import Queries.Do exposing (send)
 import Queries.UserQueries exposing (UserData, getMeQuery)
@@ -40,14 +40,16 @@ update msg model =
         LoginClicked ->
             ( model, Browser.Navigation.load "http://localhost:3000/oauth2/login" )
 
+        LogoutClicked ->
+            ( model, Browser.Navigation.load "http://localhost:3000/oauth2/logout" )
+
         GotMeResponse r ->
             case r of
                 Ok u ->
                     ( { model | user = LoggedIn u }, Cmd.none )
 
                 Err e ->
-                    Debug.log "no user"
-                        ( model, Cmd.none ) -- should we have a "log error Cmd ?"
+                    ( { model | user = Unauthorized }, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -58,10 +60,13 @@ view model =
         , case model.user of
             LoggedIn user ->
                 div []
-                    [ text user.email
+                    [ p [] [ text ("Logged in as " ++ user.email) ]
                     , button [ onClick LoginClicked ] [ text "Log out" ] -- fake news logout
                     ]
 
-            _ ->
+            Unknown ->
+                div [] [ text "Loading..." ]
+
+            Unauthorized ->
                 button [ onClick LoginClicked ] [ text "Single sign-on" ]
         ]
