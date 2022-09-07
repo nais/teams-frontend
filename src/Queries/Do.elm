@@ -1,4 +1,4 @@
-module Queries.Do exposing (do)
+module Queries.Do exposing (send)
 
 import Graphql.Http
 import Graphql.Operation exposing (RootQuery)
@@ -14,8 +14,8 @@ graphQLBackend =
     "http://localhost:3000/query"
 
 
-do : SelectionSet decodesTo RootQuery -> (Result (Graphql.Http.Error decodesTo) decodesTo -> msg) -> Cmd msg
-do query toMsg =
+send : SelectionSet decodesTo RootQuery -> (Result (Graphql.Http.Error decodesTo) decodesTo -> msg) -> Cmd msg
+send query toMsg =
     query
         |> Graphql.Http.queryRequest graphQLBackend
         |> Graphql.Http.withCredentials

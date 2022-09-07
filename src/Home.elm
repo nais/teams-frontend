@@ -5,7 +5,7 @@ import Browser.Navigation
 import Graphql.Http
 import Html exposing (Html, button, div, h1, text)
 import Html.Events exposing (onClick)
-import Queries.Do exposing (do)
+import Queries.Do exposing (send)
 import Queries.UserQueries exposing (UserData, getMeQuery)
 
 
@@ -23,13 +23,14 @@ type alias Model =
 type Msg
     = GotMeResponse (Result (Graphql.Http.Error UserData) UserData)
     | LoginClicked
+    | LogoutClicked
 
 
 init : ( Model, Cmd Msg )
 init =
     ( { user = Unknown
       }
-    , do getMeQuery GotMeResponse
+    , send getMeQuery GotMeResponse
     )
 
 
