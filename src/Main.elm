@@ -27,8 +27,7 @@ type Msg
 
 init : ( Model, Cmd Msg )
 init =
-    --Home.init |> updateWith Home GotHomeMsg
-    Teams.init |> updateWith Teams GotTeamsMsg
+    Home.init |> updateWith Home GotHomeMsg
 
 
 
@@ -46,6 +45,9 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model ) of
         -- Add handler here when we add new modules
+        ( GotHomeMsg (Home.GotMeResponse (Ok _)), Home subModel ) ->
+            Teams.init |> updateWith Teams GotTeamsMsg
+
         ( GotHomeMsg subMsg, Home subModel ) ->
             Home.update subMsg subModel |> updateWith Home GotHomeMsg
 
