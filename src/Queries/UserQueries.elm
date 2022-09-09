@@ -23,9 +23,10 @@ getMeQuery : SelectionSet UserData RootQuery
 getMeQuery =
     Query.me userDataSelection
 
+
 getUserQuery : String -> SelectionSet UserData RootQuery
 getUserQuery email =
-    Query.userByEmail {email=email} userDataSelection
+    Query.userByEmail { email = email } userDataSelection
 
 
 userDataSelection : SelectionSet UserData Backend.Object.User

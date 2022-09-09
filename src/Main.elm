@@ -3,6 +3,7 @@ module Main exposing (..)
 import Browser
 import Home
 import Html exposing (Html)
+import Teams
 
 
 
@@ -11,6 +12,7 @@ import Html exposing (Html)
 
 type Model
     = Home Home.Model
+    | Teams Teams.Model
 
 
 
@@ -19,11 +21,17 @@ type Model
 
 type Msg
     = GotHomeMsg Home.Msg
+    | GotTeamsMsg Teams.Msg
 
 
-init : (Model, Cmd Msg)
+init : ( Model, Cmd Msg )
 init =
-    (Home.init |> updateWith Home GotHomeMsg ) -- just use the home model's init in main (should be route based later on)
+    --Home.init |> updateWith Home GotHomeMsg
+    Teams.init |> updateWith Teams GotTeamsMsg
+
+
+
+-- just use the home model's init in main (should be route based later on)
 
 
 updateWith : (subModel -> Model) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
@@ -35,9 +43,16 @@ updateWith toModel toMsg ( subModel, subCmd ) =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case ( msg, model ) of -- Add handler here when we add new modules
+    case ( msg, model ) of
+        -- Add handler here when we add new modules
         ( GotHomeMsg subMsg, Home subModel ) ->
             Home.update subMsg subModel |> updateWith Home GotHomeMsg
+
+        ( GotTeamsMsg subMsg, Teams subModel ) ->
+            Teams.update subMsg subModel |> updateWith Teams GotTeamsMsg
+
+        ( _, _ ) ->
+            ( model, Cmd.none )
 
 
 
@@ -48,9 +63,13 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    case model of -- Add new view here when we add new modules
+    case model of
+        -- Add new view here when we add new modules
         Home subModel ->
             Home.view subModel |> Html.map GotHomeMsg
+
+        Teams subModel ->
+            Teams.view subModel |> Html.map GotTeamsMsg
 
 
 
