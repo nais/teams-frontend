@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Browser
+import Browser exposing (Document)
 import Home
 import Html exposing (Html)
 import Teams
@@ -61,15 +61,19 @@ update msg model =
 ---- VIEW ----
 
 
-view : Model -> Html Msg
+view : Model -> Document Msg
 view model =
-    case model of
-        -- Add new view here when we add new modules
-        Home subModel ->
-            Home.view subModel |> Html.map GotHomeMsg
+    let
+        html =
+            case model of
+                -- Add new view here when we add new modules
+                Home subModel ->
+                    Home.view subModel |> Html.map GotHomeMsg
 
-        Teams subModel ->
-            Teams.view subModel |> Html.map GotTeamsMsg
+                Teams subModel ->
+                    Teams.view subModel |> Html.map GotTeamsMsg
+    in
+    { title = "NAIS console", body = [ html ] }
 
 
 
@@ -78,7 +82,7 @@ view model =
 
 main : Program () Model Msg
 main =
-    Browser.element
+    Browser.document
         { view = view
         , init = \_ -> init
         , update = update
