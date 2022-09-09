@@ -4,7 +4,8 @@ import Backend.Query exposing (me)
 import Backend.Scalar exposing (Uuid)
 import Browser.Navigation
 import Graphql.Http
-import Html exposing (Html, button, div, h1, p, table, tbody, td, text, th, thead, tr)
+import Html exposing (Html, a, button, div, h1, p, table, tbody, td, text, th, thead, tr)
+import Html.Attributes exposing (href)
 import Html.Events exposing (onClick)
 import Queries.Do exposing (send)
 import Queries.TeamQueries exposing (TeamData, getTeamsQuery)
@@ -55,9 +56,14 @@ uuidstr (Backend.Scalar.Uuid u) =
 
 row : TeamData -> Html Msg
 row team =
+    let
+        permalink =
+            "/teams/" ++ uuidstr team.id
+    in
     tr []
-        [ td [] [ text (uuidstr team.id) ]
-        , td [] [ text (slugstr team.slug) ]
+        [ td []
+            [ a [ href permalink ] [ text (slugstr team.slug) ]
+            ]
         , td [] [ text team.name ]
         , td [] [ text (Maybe.withDefault "" team.purpose) ]
         ]
@@ -68,10 +74,9 @@ teamTable teams =
     table []
         [ thead []
             [ tr []
-                [ th [] [ text "id" ]
-                , th [] [ text "slug" ]
-                , th [] [ text "name" ]
-                , th [] [ text "purpose" ]
+                [ th [] [ text "Slug" ]
+                , th [] [ text "Team name" ]
+                , th [] [ text "Purpose" ]
                 ]
             ]
         , tbody [] (List.map row teams)
