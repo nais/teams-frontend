@@ -20,7 +20,8 @@ type Model
 
 
 type Msg
-    = GotHomeMsg Home.Msg
+    = NoOp
+    | GotHomeMsg Home.Msg
     | GotTeamsMsg Teams.Msg
 
 
@@ -82,9 +83,11 @@ view model =
 
 main : Program () Model Msg
 main =
-    Browser.document
+    Browser.application
         { view = view
-        , init = \_ -> init
+        , init = \_ -> \_ -> \_ -> init
         , update = update
         , subscriptions = always Sub.none
+        , onUrlRequest = \_ -> NoOp
+        , onUrlChange = \_ -> NoOp
         }
