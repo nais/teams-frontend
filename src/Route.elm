@@ -6,13 +6,14 @@ import Html.Attributes exposing (href)
 import String
 import Url exposing (Url)
 import Url.Parser as Parser exposing ((</>), Parser, oneOf, s, string)
+import Backend.Scalar exposing (Uuid(..))
 
 
 type Route
     = Home
     | Teams
     | CreateTeam
-    | Team String
+    | Team Backend.Scalar.Uuid
 
 
 parser : Parser (Route -> a) a
@@ -21,10 +22,8 @@ parser =
         [ Parser.map Home Parser.top
         , Parser.map CreateTeam (s "teams" </> s "create")
         , Parser.map Teams (s "teams")
-        , Parser.map Team (s "teams" </> string)
+        , Parser.map (\s -> Team (Uuid s)) (s "teams" </> string)
         ]
-
-
 
 -- PUBLIC HELPERS
 
@@ -63,7 +62,7 @@ routeToString page =
                 Teams ->
                     [ "teams" ]
 
-                Team id ->
+                Team (Uuid id) ->
                     [ "teams", id ]
     in
     "#/" ++ String.join "/" pieces

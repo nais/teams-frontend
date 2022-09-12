@@ -9,6 +9,7 @@ import Html exposing (div, h1, header, li, main_, nav, text, ul)
 import Route exposing (Route(..), link)
 import Teams
 import Url
+import Team
 
 
 
@@ -18,6 +19,7 @@ import Url
 type Model
     = Redirect Nav.Key
     | Home Home.Model
+    | Team Team.Model
     | Teams Teams.Model
     | CreateTeam CreateTeam.Model
     | Error Error.Model
@@ -30,6 +32,7 @@ type Model
 type Msg
     = NoOp
     | GotHomeMsg Home.Msg
+    | GotTeamMsg Team.Msg
     | GotTeamsMsg Teams.Msg
     | GotCreateTeamMsg CreateTeam.Msg
     | LinkClicked Browser.UrlRequest
@@ -68,8 +71,8 @@ changeRouteTo maybeRoute model =
         Just Route.Teams ->
             Teams.init nk |> updateWith Teams GotTeamsMsg
 
-        Just (Route.Team _) ->
-            Teams.init nk |> updateWith Teams GotTeamsMsg
+        Just (Route.Team id) ->
+            Team.init nk id |> updateWith Team GotTeamMsg
 
         Nothing ->
             Error.init nk "no route" |> updateWith Error (\_ -> NoOp)
@@ -92,6 +95,9 @@ update msg model =
 
         ( GotHomeMsg subMsg, Home subModel ) ->
             Home.update subMsg subModel |> updateWith Home GotHomeMsg
+
+        ( GotTeamMsg subMsg, Team subModel ) ->
+            Team.update subMsg subModel |> updateWith Team GotTeamMsg
 
         ( GotTeamsMsg subMsg, Teams subModel ) ->
             Teams.update subMsg subModel |> updateWith Teams GotTeamsMsg
@@ -117,6 +123,9 @@ view model =
                 -- Add new view here when we add new modules
                 Home subModel ->
                     Home.view subModel |> Html.map GotHomeMsg
+
+                Team subModel ->
+                    Team.view subModel |> Html.map GotTeamMsg
 
                 Teams subModel ->
                     Teams.view subModel |> Html.map GotTeamsMsg
@@ -171,6 +180,9 @@ navKey model =
 
         Error m ->
             Error.navKey m
+
+        Team m ->
+            m.navKey
 
         Teams m ->
             Teams.navKey m
