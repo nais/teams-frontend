@@ -4,7 +4,7 @@ import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Error exposing (navKey)
 import Home
-import Html exposing (article, div, h1, header, li, nav, text, ul)
+import Html exposing (article, div, h1, header, li, main_, nav, text, ul)
 import Route exposing (Route(..), link)
 import Teams
 import Url
@@ -129,7 +129,7 @@ view model =
                     ]
                 ]
             ]
-        , article []
+        , main_ []
             [ html ]
         ]
     }
