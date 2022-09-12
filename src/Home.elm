@@ -1,13 +1,11 @@
 module Home exposing (..)
 
-import Backend.Query exposing (me)
 import Browser.Navigation
 import Graphql.Http
-import Html exposing (Html, button, div, h1, p, text)
+import Html exposing (Html, button, div, p, text)
 import Html.Events exposing (onClick)
 import Queries.Do exposing (query)
 import Queries.UserQueries exposing (UserData, getMeQuery)
-import Route
 
 
 type Actor

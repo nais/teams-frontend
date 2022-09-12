@@ -5,7 +5,7 @@ import Browser.Navigation as Nav
 import CreateTeam
 import Error exposing (navKey)
 import Home
-import Html exposing (article, div, h1, header, li, main_, nav, text, ul)
+import Html exposing (div, h1, header, li, main_, nav, text, ul)
 import Route exposing (Route(..), link)
 import Teams
 import Url
