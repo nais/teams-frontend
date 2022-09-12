@@ -4,7 +4,7 @@ import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Error exposing (navKey)
 import Home
-import Html exposing (div, text)
+import Html exposing (article, div, h1, header, text)
 import Route exposing (Route(..))
 import Teams
 import Url
@@ -118,7 +118,15 @@ view model =
                 Redirect _ ->
                     div [] [ text "redirect" ]
     in
-    { title = "NAIS console", body = [ html ] }
+    { title = "NAIS console"
+    , body =
+        [ header []
+            [ h1 [] [ text "nais console" ]
+            ]
+        , article []
+            [ html ]
+        ]
+    }
 
 
 

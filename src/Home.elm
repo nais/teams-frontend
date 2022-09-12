@@ -57,22 +57,18 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ h1 []
-            [ text "nais console" ]
-        , case model.user of
-            LoggedIn user ->
-                div []
-                    [ p [] [ text ("Logged in as " ++ user.email) ]
-                    , button [ onClick LoginClicked ] [ text "Log out" ] -- fake news logout
-                    ]
+    case model.user of
+        LoggedIn user ->
+            div []
+                [ p [] [ text ("Logged in as " ++ user.email) ]
+                , button [ onClick LoginClicked ] [ text "Log out" ] -- fake news logout
+                ]
 
-            Unknown ->
-                div [] [ text "Loading..." ]
+        Unknown ->
+            div [] [ text "Loading..." ]
 
-            Unauthorized ->
-                button [ onClick LoginClicked ] [ text "Single sign-on" ]
-        ]
+        Unauthorized ->
+            button [ onClick LoginClicked ] [ text "Single sign-on" ]
 
 
 navKey : Model -> Browser.Navigation.Key
