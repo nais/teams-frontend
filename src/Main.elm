@@ -1,9 +1,13 @@
 module Main exposing (..)
 
 import Browser exposing (Document)
+import Browser.Navigation as Nav
+import Error exposing (navKey)
 import Home
-import Html exposing (Html)
+import Html exposing (div, text)
+import Route exposing (Route(..))
 import Teams
+import Url
 
 
 
@@ -11,8 +15,10 @@ import Teams
 
 
 type Model
-    = Home Home.Model
+    = Redirect Nav.Key
+    | Home Home.Model
     | Teams Teams.Model
+    | Error Error.Model
 
 
 
@@ -23,11 +29,13 @@ type Msg
     = NoOp
     | GotHomeMsg Home.Msg
     | GotTeamsMsg Teams.Msg
+    | LinkClicked Browser.UrlRequest
+    | UrlChanged Url.Url
 
 
-init : ( Model, Cmd Msg )
-init =
-    Home.init |> updateWith Home GotHomeMsg
+init : a -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init _ url nk =
+    changeRouteTo (Route.fromUrl url) (Redirect nk)
 
 
 
@@ -41,12 +49,40 @@ updateWith toModel toMsg ( subModel, subCmd ) =
     )
 
 
+changeRouteTo : Maybe Route -> Model -> ( Model, Cmd Msg )
+changeRouteTo maybeRoute model =
+    let
+        nk =
+            navKey model
+    in
+    case maybeRoute of
+        Just Route.Home ->
+            Home.init nk |> updateWith Home GotHomeMsg
+
+        Just Route.Teams ->
+            Teams.init nk |> updateWith Teams GotTeamsMsg
+
+        Just (Route.Team _) ->
+            Teams.init nk |> updateWith Teams GotTeamsMsg
+
+        Nothing ->
+            Error.init nk "no route" |> updateWith Error (\_ -> NoOp)
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model ) of
         -- Add handler here when we add new modules
-        ( GotHomeMsg (Home.GotMeResponse (Ok _)), Home subModel ) ->
-            Teams.init |> updateWith Teams GotTeamsMsg
+        ( LinkClicked urlRequest, _ ) ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl (navKey model) (Url.toString url) )
+
+                Browser.External href ->
+                    ( model, Nav.load href )
+
+        ( UrlChanged url, _ ) ->
+            changeRouteTo (Route.fromUrl url) model
 
         ( GotHomeMsg subMsg, Home subModel ) ->
             Home.update subMsg subModel |> updateWith Home GotHomeMsg
@@ -75,6 +111,12 @@ view model =
 
                 Teams subModel ->
                     Teams.view subModel |> Html.map GotTeamsMsg
+
+                Error subModel ->
+                    Error.view subModel |> Html.map (\_ -> NoOp)
+
+                Redirect _ ->
+                    div [] [ text "redirect" ]
     in
     { title = "NAIS console", body = [ html ] }
 
@@ -87,9 +129,25 @@ main : Program () Model Msg
 main =
     Browser.application
         { view = view
-        , init = \_ -> \_ -> \_ -> init
+        , init = init
         , update = update
         , subscriptions = always Sub.none
-        , onUrlRequest = \_ -> NoOp
-        , onUrlChange = \_ -> NoOp
+        , onUrlRequest = LinkClicked
+        , onUrlChange = UrlChanged
         }
+
+
+navKey : Model -> Nav.Key
+navKey model =
+    case model of
+        Home m ->
+            Home.navKey m
+
+        Error m ->
+            Error.navKey m
+
+        Teams m ->
+            Teams.navKey m
+
+        Redirect nk ->
+            nk

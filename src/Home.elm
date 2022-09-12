@@ -7,6 +7,7 @@ import Html exposing (Html, button, div, h1, p, text)
 import Html.Events exposing (onClick)
 import Queries.Do exposing (send)
 import Queries.UserQueries exposing (UserData, getMeQuery)
+import Route
 
 
 type Actor
@@ -17,6 +18,7 @@ type Actor
 
 type alias Model =
     { user : Actor
+    , navKey : Browser.Navigation.Key
     }
 
 
@@ -26,9 +28,10 @@ type Msg
     | LogoutClicked
 
 
-init : ( Model, Cmd Msg )
-init =
+init : Browser.Navigation.Key -> ( Model, Cmd Msg )
+init navigationKey =
     ( { user = Unknown
+      , navKey = navigationKey
       }
     , send getMeQuery GotMeResponse
     )
@@ -70,3 +73,8 @@ view model =
             Unauthorized ->
                 button [ onClick LoginClicked ] [ text "Single sign-on" ]
         ]
+
+
+navKey : Model -> Browser.Navigation.Key
+navKey model =
+    model.navKey

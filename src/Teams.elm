@@ -9,10 +9,13 @@ import Html.Attributes exposing (href)
 import Html.Events exposing (onClick)
 import Queries.Do exposing (send)
 import Queries.TeamQueries exposing (TeamData, getTeamsQuery)
+import Route
+import Route exposing (link)
 
 
 type alias Model =
     { teams : List TeamData
+    , navKey : Browser.Navigation.Key
     }
 
 
@@ -21,9 +24,10 @@ type Msg
     | GotTeamsResponse (Result (Graphql.Http.Error (List TeamData)) (List TeamData))
 
 
-init : ( Model, Cmd Msg )
-init =
+init : Browser.Navigation.Key -> ( Model, Cmd Msg )
+init navigationKey =
     ( { teams = []
+      , navKey = navigationKey
       }
     , send getTeamsQuery GotTeamsResponse
     )
@@ -56,13 +60,9 @@ uuidstr (Backend.Scalar.Uuid u) =
 
 row : TeamData -> Html Msg
 row team =
-    let
-        permalink =
-            "/teams/" ++ uuidstr team.id
-    in
     tr []
         [ td []
-            [ a [ href permalink ] [ text (slugstr team.slug) ]
+            [ link (Route.Team (uuidstr team.id)) [] [ text (slugstr team.slug) ]
             ]
         , td [] [ text team.name ]
         , td [] [ text (Maybe.withDefault "" team.purpose) ]
@@ -86,3 +86,8 @@ teamTable teams =
 view : Model -> Html Msg
 view model =
     teamTable model.teams
+
+
+navKey : Model -> Browser.Navigation.Key
+navKey model =
+    model.navKey
