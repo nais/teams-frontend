@@ -96,8 +96,11 @@ update msg model =
         ( GotTeamsMsg subMsg, Teams subModel ) ->
             Teams.update subMsg subModel |> updateWith Teams GotTeamsMsg
 
+        ( GotCreateTeamMsg subMsg, CreateTeam subModel ) ->
+            CreateTeam.update subMsg subModel |> updateWith CreateTeam GotCreateTeamMsg
+
         ( _, _ ) ->
-            ( model, Cmd.none )
+            Debug.todo "this is not a valid case"
 
 
 

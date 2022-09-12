@@ -7,7 +7,7 @@ import Graphql.Http
 import Html exposing (Html, a, button, div, h1, p, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (colspan, href)
 import Html.Events exposing (onClick)
-import Queries.Do exposing (send)
+import Queries.Do exposing (query)
 import Queries.TeamQueries exposing (TeamData, getTeamsQuery)
 import Route exposing (link)
 
@@ -28,7 +28,7 @@ init navigationKey =
     ( { teams = []
       , navKey = navigationKey
       }
-    , send getTeamsQuery GotTeamsResponse
+    , query getTeamsQuery GotTeamsResponse
     )
 
 

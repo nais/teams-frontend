@@ -1,10 +1,12 @@
 module Queries.TeamQueries exposing (..)
 
+import Backend.InputObject exposing (CreateTeamInput)
+import Backend.Mutation as Mutation exposing (CreateTeamRequiredArguments)
 import Backend.Object
 import Backend.Object.Team as Team
 import Backend.Query as Query
 import Backend.Scalar exposing (Slug, Uuid)
-import Graphql.Operation exposing (RootQuery)
+import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
 
 
@@ -23,6 +25,11 @@ type alias TeamData =
 getTeamsQuery : SelectionSet (List TeamData) RootQuery
 getTeamsQuery =
     Query.teams teamDataSelection
+
+
+createTeamQuery : CreateTeamInput -> SelectionSet TeamData RootMutation
+createTeamQuery team =
+    Mutation.createTeam { input = team } teamDataSelection
 
 
 teamDataSelection : SelectionSet TeamData Backend.Object.Team
