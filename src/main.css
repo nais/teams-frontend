@@ -64,3 +64,26 @@ header nav ul li a {
 table {
     width: 100%;
 }
+
+form ul {
+    display: flex;
+    flex-direction: column;
+}
+
+form ul li {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    margin: 0 0 1rem;
+}
+
+form label {
+    text-align: left;
+    margin: 0 0 0.5rem;
+}
+
+form input[type="text"] {
+    padding: 0.5rem;
+    border-radius: 1rem;
+    border: 1px solid #cac;
+}

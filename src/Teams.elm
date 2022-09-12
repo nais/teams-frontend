@@ -5,11 +5,10 @@ import Backend.Scalar exposing (Uuid)
 import Browser.Navigation
 import Graphql.Http
 import Html exposing (Html, a, button, div, h1, p, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (href)
+import Html.Attributes exposing (colspan, href)
 import Html.Events exposing (onClick)
 import Queries.Do exposing (send)
 import Queries.TeamQueries exposing (TeamData, getTeamsQuery)
-import Route
 import Route exposing (link)
 
 
@@ -77,6 +76,9 @@ teamTable teams =
                 [ th [] [ text "Slug" ]
                 , th [] [ text "Team name" ]
                 , th [] [ text "Purpose" ]
+                ]
+            , tr [ colspan 3 ]
+                [ td [] [ link Route.CreateTeam [] [ text "Create new team..." ] ]
                 ]
             ]
         , tbody [] (List.map row teams)

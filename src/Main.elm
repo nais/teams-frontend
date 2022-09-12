@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Browser exposing (Document)
 import Browser.Navigation as Nav
+import CreateTeam
 import Error exposing (navKey)
 import Home
 import Html exposing (article, div, h1, header, li, main_, nav, text, ul)
@@ -18,6 +19,7 @@ type Model
     = Redirect Nav.Key
     | Home Home.Model
     | Teams Teams.Model
+    | CreateTeam CreateTeam.Model
     | Error Error.Model
 
 
@@ -29,6 +31,7 @@ type Msg
     = NoOp
     | GotHomeMsg Home.Msg
     | GotTeamsMsg Teams.Msg
+    | GotCreateTeamMsg CreateTeam.Msg
     | LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
 
@@ -58,6 +61,9 @@ changeRouteTo maybeRoute model =
     case maybeRoute of
         Just Route.Home ->
             Home.init nk |> updateWith Home GotHomeMsg
+
+        Just Route.CreateTeam ->
+            CreateTeam.init nk |> updateWith CreateTeam GotCreateTeamMsg
 
         Just Route.Teams ->
             Teams.init nk |> updateWith Teams GotTeamsMsg
@@ -112,6 +118,9 @@ view model =
                 Teams subModel ->
                     Teams.view subModel |> Html.map GotTeamsMsg
 
+                CreateTeam subModel ->
+                    CreateTeam.view subModel |> Html.map GotCreateTeamMsg
+
                 Error subModel ->
                     Error.view subModel |> Html.map (\_ -> NoOp)
 
@@ -162,6 +171,9 @@ navKey model =
 
         Teams m ->
             Teams.navKey m
+
+        CreateTeam m ->
+            m.navKey
 
         Redirect nk ->
             nk
