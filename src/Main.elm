@@ -4,8 +4,8 @@ import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Error exposing (navKey)
 import Home
-import Html exposing (article, div, h1, header, text)
-import Route exposing (Route(..))
+import Html exposing (article, div, h1, header, li, nav, text, ul)
+import Route exposing (Route(..), link)
 import Teams
 import Url
 
@@ -122,6 +122,12 @@ view model =
     , body =
         [ header []
             [ h1 [] [ text "nais console" ]
+            , nav []
+                [ ul []
+                    [ li [] [ link Route.Home [] [ text "Home" ] ]
+                    , li [] [ link Route.Teams [] [ text "Teams" ] ]
+                    ]
+                ]
             ]
         , article []
             [ html ]

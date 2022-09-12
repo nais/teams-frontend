@@ -30,3 +30,28 @@ td, th {
     padding: 0.5rem;
     margin: 0;
 }
+
+header nav ul {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+header nav ul li {
+    background: #fee;
+    color: #121;
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+header nav ul li:hover {
+    background: #faf;
+}
+
+header nav ul li a {
+    text-decoration: inherit;
+    color: inherit;
+}
