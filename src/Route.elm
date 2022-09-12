@@ -40,8 +40,7 @@ replaceUrl key route =
 
 fromUrl : Url -> Maybe Route
 fromUrl url =
-    { url | path = url.path, fragment = Nothing }
-        |> Parser.parse parser
+    Parser.parse parser url
 
 
 
