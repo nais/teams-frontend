@@ -88,3 +88,6 @@ form input[type="text"] {
     border-radius: 1rem;
     border: 1px solid #cac;
 }
+
+tbody tr:nth-child(even) {background: #CCC}
+tbody tr:nth-child(odd) {background: #FFF}

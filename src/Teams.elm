@@ -4,7 +4,7 @@ import Backend.Scalar
 import Browser.Navigation
 import Graphql.Http
 import Html exposing (Html, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (colspan)
+import Html.Attributes exposing (class, colspan)
 import Queries.Do exposing (query)
 import Queries.TeamQueries exposing (TeamData, getTeamsQuery)
 import Route exposing (link)
@@ -75,7 +75,9 @@ teamTable teams =
                 , th [] [ text "Team name" ]
                 , th [] [ text "Purpose" ]
                 ]
-            , tr [ colspan 3 ]
+            ]
+        , tbody [ class "meta" ]
+            [ tr [ colspan 3 ]
                 [ td [] [ link Route.CreateTeam [] [ text "Create new team..." ] ]
                 ]
             ]
