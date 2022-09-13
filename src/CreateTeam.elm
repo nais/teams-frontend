@@ -8,7 +8,7 @@ import Html exposing (Html, div, form, input, label, li, text, ul)
 import Html.Attributes exposing (for, placeholder, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Queries.Do
-import Queries.TeamQueries exposing (TeamData, createTeamQuery)
+import Queries.TeamQueries exposing (TeamData, createTeamMutation)
 
 
 type alias Model =
@@ -44,7 +44,7 @@ update msg model =
         CreateTeamSubmit ->
             ( model
             , Queries.Do.mutate
-                (createTeamQuery
+                (createTeamMutation
                     { name = model.name
                     , purpose = Graphql.OptionalArgument.fromMaybe model.purpose
                     , slug = Backend.Scalar.Slug model.slug

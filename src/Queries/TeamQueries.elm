@@ -43,13 +43,13 @@ getTeamQuery id =
     Query.team { id = id } teamDataSelection
 
 
-createTeamQuery : CreateTeamInput -> SelectionSet TeamData RootMutation
-createTeamQuery team =
+createTeamMutation : CreateTeamInput -> SelectionSet TeamData RootMutation
+createTeamMutation team =
     Mutation.createTeam { input = team } teamDataSelection
 
 
-addMemberToTeamQuery : Backend.ScalarCodecs.Uuid -> Backend.ScalarCodecs.Uuid -> SelectionSet TeamData RootMutation
-addMemberToTeamQuery userID teamID =
+addMemberToTeamMutation : Backend.ScalarCodecs.Uuid -> Backend.ScalarCodecs.Uuid -> SelectionSet TeamData RootMutation
+addMemberToTeamMutation userID teamID =
     Mutation.addTeamMembers
         { input =
             { teamId = teamID
@@ -59,8 +59,8 @@ addMemberToTeamQuery userID teamID =
         teamDataSelection
 
 
-setTeamMemberRole : Backend.Scalar.Uuid -> Backend.Scalar.Uuid -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
-setTeamMemberRole userID teamID role =
+setTeamMemberRoleMutation : Backend.Scalar.Uuid -> Backend.Scalar.Uuid -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
+setTeamMemberRoleMutation userID teamID role =
     Mutation.setTeamMemberRole
         { input =
             { teamId = teamID
