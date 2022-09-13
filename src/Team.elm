@@ -3,15 +3,21 @@ module Team exposing (..)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar
 import Browser.Navigation
-import Graphql.Http
+import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, div, em, h2, h3, li, p, text, ul)
 import Html.Attributes exposing (class)
 import Queries.Do exposing (query)
 import Queries.TeamQueries exposing (TeamData, TeamMemberData, getTeamQuery)
 
 
+type Team
+    = Team TeamData
+    | Loading
+    | Error String
+
+
 type alias Model =
-    { team : Maybe TeamData
+    { team : Team
     , navKey : Browser.Navigation.Key
     }
 
@@ -22,7 +28,7 @@ type Msg
 
 init : Browser.Navigation.Key -> Backend.Scalar.Uuid -> ( Model, Cmd Msg )
 init navigationKey id =
-    ( { team = Nothing
+    ( { team = Loading
       , navKey = navigationKey
       }
     , query (getTeamQuery id) GotTeamResponse
@@ -34,11 +40,19 @@ update msg model =
     case msg of
         GotTeamResponse r ->
             case r of
-                Ok teams ->
-                    ( { model | team = Just teams }, Cmd.none )
+                Ok team ->
+                    ( { model | team = Team team }, Cmd.none )
 
-                Err _ ->
-                    ( model, Cmd.none )
+                Err (Graphql.Http.HttpError e) ->
+                    ( { model | team = Error "Can't talk to server, are we connected?" }, Cmd.none )
+
+                Err (GraphqlError data errors) ->
+                    let
+                        errstr =
+                            List.map (\error -> error.message) errors
+                                |> String.join ","
+                    in
+                    ( { model | team = Error errstr }, Cmd.none )
 
 
 slugstr : Backend.Scalar.Slug -> String
@@ -58,7 +72,7 @@ memberRow member =
 view : Model -> Html Msg
 view model =
     case model.team of
-        Just team ->
+        Team team ->
             div []
                 [ h2 []
                     [ text "Team "
@@ -71,5 +85,8 @@ view model =
                 , ul [] (List.map memberRow team.members)
                 ]
 
-        Nothing ->
-            div [] [ text "wut" ]
+        Loading ->
+            div [] [ text "spinner" ]
+
+        Error msg ->
+            div [ class "error" ] [ text msg ]
