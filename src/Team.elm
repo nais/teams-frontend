@@ -4,7 +4,7 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar
 import Browser.Navigation
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, div, em, h2, h3, li, p, text, ul)
+import Html exposing (Html, div, h2, h3, li, table, td, text, th, tr, ul)
 import Html.Attributes exposing (class)
 import Queries.Do exposing (query)
 import Queries.TeamQueries exposing (TeamData, TeamMemberData, getTeamQuery)
@@ -69,19 +69,26 @@ memberRow member =
         ]
 
 
+simpleRow : String -> String -> Html msg
+simpleRow header content =
+    tr []
+        [ th [] [ text header ]
+        , td [] [ text content ]
+        ]
+
+
 view : Model -> Html Msg
 view model =
     case model.team of
         Team team ->
             div []
-                [ h2 []
-                    [ text "Team "
-                    , em [] [ text (slugstr team.slug) ]
+                [ h2 [] [ text team.name ]
+                , table []
+                    [ simpleRow "Name" team.name
+                    , simpleRow "Slug" (slugstr team.slug)
+                    , simpleRow "Purpose" (Maybe.withDefault "" team.purpose)
                     ]
-                , p [] [ text ("Slug: " ++ slugstr team.slug) ]
-                , p [] [ text ("Name: " ++ slugstr team.slug) ]
-                , p [] [ text ("Purpose: " ++ Maybe.withDefault "" team.purpose) ]
-                , text "members:"
+                , h3 [] [ text "Team members" ]
                 , ul [] (List.map memberRow team.members)
                 ]
 
