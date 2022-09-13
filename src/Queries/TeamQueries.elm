@@ -48,6 +48,29 @@ createTeamQuery team =
     Mutation.createTeam { input = team } teamDataSelection
 
 
+addMemberToTeamQuery : Backend.ScalarCodecs.Uuid -> Backend.ScalarCodecs.Uuid -> SelectionSet TeamData RootMutation
+addMemberToTeamQuery userID teamID =
+    Mutation.addTeamMembers
+        { input =
+            { teamId = teamID
+            , userIds = [ userID ]
+            }
+        }
+        teamDataSelection
+
+
+setTeamMemberRole : Backend.Scalar.Uuid -> Backend.Scalar.Uuid -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
+setTeamMemberRole userID teamID role =
+    Mutation.setTeamMemberRole
+        { input =
+            { teamId = teamID
+            , userId = userID
+            , role = role
+            }
+        }
+        teamDataSelection
+
+
 teamDataSelection : SelectionSet TeamData Backend.Object.Team
 teamDataSelection =
     Graphql.SelectionSet.map5 TeamData
