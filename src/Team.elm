@@ -4,10 +4,10 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar
 import Browser.Navigation
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, div, h2, h3, li, table, td, text, th, tr, ul)
+import Html exposing (Html, div, h2, h3, li, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class)
 import Queries.Do exposing (query)
-import Queries.TeamQueries exposing (TeamData, TeamMemberData, getTeamQuery)
+import Queries.TeamQueries exposing (AuditLogData, TeamData, TeamMemberData, getTeamQuery)
 
 
 type Team
@@ -60,12 +60,32 @@ slugstr (Backend.Scalar.Slug u) =
     u
 
 
+timestr : Backend.Scalar.Time -> String
+timestr (Backend.Scalar.Time u) =
+    u
+
+
+actionstr : Backend.Scalar.AuditAction -> String
+actionstr (Backend.Scalar.AuditAction u) =
+    u
+
+
 memberRow : TeamMemberData -> Html Msg
 memberRow member =
     li []
         [ text member.user.email
         , text " | "
         , text (Backend.Enum.TeamRole.toString member.role)
+        ]
+
+
+logRow : AuditLogData -> Html Msg
+logRow log =
+    tr []
+        [ td [] [ text (timestr log.createdAt) ]
+        , td [] [ text (Maybe.withDefault "" log.actor) ]
+        , td [] [ text (actionstr log.action) ]
+        , td [] [ text log.message ]
         ]
 
 
@@ -90,6 +110,16 @@ view model =
                     ]
                 , h3 [] [ text "Team members" ]
                 , ul [] (List.map memberRow team.members)
+                , h3 [] [ text "Logs" ]
+                , table []
+                    [ thead []
+                        [ th [] [ text "Timestamp" ]
+                        , th [] [ text "Actor" ]
+                        , th [] [ text "Action" ]
+                        , th [] [ text "Message" ]
+                        ]
+                    , tbody [] (List.map logRow team.auditLogs)
+                    ]
                 ]
 
         Loading ->
