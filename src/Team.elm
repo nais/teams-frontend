@@ -4,7 +4,8 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar
 import Browser.Navigation
 import Graphql.Http
-import Html exposing (Html, div, h3, li, p, text, ul)
+import Html exposing (Html, div, em, h2, h3, li, p, text, ul)
+import Html.Attributes exposing (class)
 import Queries.Do exposing (query)
 import Queries.TeamQueries exposing (TeamData, TeamMemberData, getTeamQuery)
 
@@ -59,9 +60,13 @@ view model =
     case model.team of
         Just team ->
             div []
-                [ h3 [] [ text team.name ]
+                [ h2 []
+                    [ text "Team "
+                    , em [] [ text (slugstr team.slug) ]
+                    ]
                 , p [] [ text ("Slug: " ++ slugstr team.slug) ]
-                , p [] [ text (Maybe.withDefault "" team.purpose) ]
+                , p [] [ text ("Name: " ++ slugstr team.slug) ]
+                , p [] [ text ("Purpose: " ++ Maybe.withDefault "" team.purpose) ]
                 , text "members:"
                 , ul [] (List.map memberRow team.members)
                 ]
