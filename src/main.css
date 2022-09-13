@@ -91,3 +91,7 @@ form input[type="text"] {
 
 tbody tr:nth-child(even) {background: #CCC}
 tbody tr:nth-child(odd) {background: #FFF}
+
+tbody.meta tr {
+    background: inherit
+}
