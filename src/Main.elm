@@ -7,9 +7,9 @@ import Error exposing (navKey)
 import Home
 import Html exposing (div, h1, header, li, main_, nav, text, ul)
 import Route exposing (Route(..), link)
+import Team
 import Teams
 import Url
-import Team
 
 
 
@@ -101,6 +101,9 @@ update msg model =
 
         ( GotTeamsMsg subMsg, Teams subModel ) ->
             Teams.update subMsg subModel |> updateWith Teams GotTeamsMsg
+
+        ( GotCreateTeamMsg (CreateTeam.GotTeamCreatedResponse (Ok team)), CreateTeam subModel ) ->
+            Team.init subModel.navKey team.id |> updateWith Team GotTeamMsg
 
         ( GotCreateTeamMsg subMsg, CreateTeam subModel ) ->
             CreateTeam.update subMsg subModel |> updateWith CreateTeam GotCreateTeamMsg
