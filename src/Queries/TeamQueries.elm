@@ -3,11 +3,12 @@ module Queries.TeamQueries exposing (..)
 import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.InputObject exposing (CreateTeamInput)
 import Backend.Mutation as Mutation
-import Backend.Object
+import Backend.Object exposing (AuditLog)
+import Backend.Object.AuditLog as AuditLog
 import Backend.Object.Team as Team
 import Backend.Object.TeamMember as TeamMember
 import Backend.Query as Query
-import Backend.Scalar exposing (Slug, Uuid)
+import Backend.Scalar as Scalar exposing (Slug, Uuid)
 import Backend.ScalarCodecs
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
@@ -24,12 +25,21 @@ type alias TeamMemberData =
     }
 
 
+type alias AuditLogData =
+    { action : Scalar.AuditAction
+    , actor : Maybe String
+    , message : String
+    , createdAt : Scalar.Time
+    }
+
+
 type alias TeamData =
     { id : Uuid
     , name : String
     , slug : Slug
     , purpose : Maybe String
     , members : List TeamMemberData
+    , auditLogs : List AuditLogData
     }
 
 
@@ -59,7 +69,7 @@ addMemberToTeamMutation userID teamID =
         teamDataSelection
 
 
-setTeamMemberRoleMutation : Backend.Scalar.Uuid -> Backend.Scalar.Uuid -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
+setTeamMemberRoleMutation : Scalar.Uuid -> Scalar.Uuid -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
 setTeamMemberRoleMutation userID teamID role =
     Mutation.setTeamMemberRole
         { input =
@@ -73,12 +83,13 @@ setTeamMemberRoleMutation userID teamID role =
 
 teamDataSelection : SelectionSet TeamData Backend.Object.Team
 teamDataSelection =
-    Graphql.SelectionSet.map5 TeamData
+    Graphql.SelectionSet.map6 TeamData
         Team.id
         Team.name
         Team.slug
         Team.purpose
         (Team.members teamMemberSelection)
+        (Team.auditLogs auditLogSelection)
 
 
 teamMemberSelection : SelectionSet TeamMemberData Backend.Object.TeamMember
@@ -86,3 +97,12 @@ teamMemberSelection =
     Graphql.SelectionSet.map2 TeamMemberData
         (TeamMember.user userDataSelection)
         TeamMember.role
+
+
+auditLogSelection : SelectionSet AuditLogData Backend.Object.AuditLog
+auditLogSelection =
+    Graphql.SelectionSet.map4 AuditLogData
+        AuditLog.action
+        AuditLog.actorEmail
+        AuditLog.message
+        AuditLog.createdAt
