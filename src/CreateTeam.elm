@@ -2,10 +2,10 @@ module CreateTeam exposing (..)
 
 import Backend.Scalar
 import Browser.Navigation
-import Graphql.Http
+import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
 import Html exposing (Html, div, form, input, label, li, text, ul)
-import Html.Attributes exposing (for, placeholder, type_, value)
+import Html.Attributes exposing (class, for, placeholder, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Queries.Do
 import Queries.TeamQueries exposing (TeamData, createTeamMutation)
@@ -16,6 +16,7 @@ type alias Model =
     , slug : String
     , name : String
     , purpose : Maybe String
+    , error : Maybe String
     }
 
 
@@ -33,6 +34,7 @@ init navigationKey =
       , name = ""
       , purpose = Nothing
       , slug = ""
+      , error = Nothing
       }
     , Cmd.none
     )
@@ -53,8 +55,19 @@ update msg model =
                 GotTeamCreatedResponse
             )
 
-        GotTeamCreatedResponse _ ->
-            ( model, Cmd.none )
+        GotTeamCreatedResponse (Ok _) ->
+            ( { model | error = Nothing }, Cmd.none )
+
+        GotTeamCreatedResponse (Err (Graphql.Http.HttpError e)) ->
+            ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
+
+        GotTeamCreatedResponse (Err (GraphqlError data errors)) ->
+            let
+                errstr =
+                    List.map (\error -> error.message) errors
+                        |> String.join ","
+            in
+            ( { model | error = Just errstr }, Cmd.none )
 
         SlugChanged s ->
             ( { model | slug = s }, Cmd.none )
@@ -83,8 +96,8 @@ textbox msg id placeholder =
         ]
 
 
-createTeamForm : Html Msg
-createTeamForm =
+createTeamForm : Model -> Html Msg
+createTeamForm model =
     div []
         [ form [ onSubmit CreateTeamSubmit ]
             [ ul []
@@ -92,6 +105,7 @@ createTeamForm =
                 , textbox NameChanged "name" "Human readable team name"
                 , textbox PurposeChanged "purpose" "Purpose of the team"
                 ]
+            , div [ class "error" ] [ text (Maybe.withDefault "" model.error) ]
             , input [ type_ "submit", value "Create new team" ] []
             ]
         ]
@@ -99,4 +113,4 @@ createTeamForm =
 
 view : Model -> Html Msg
 view model =
-    createTeamForm
+    createTeamForm model
