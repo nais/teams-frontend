@@ -72,10 +72,9 @@ actionstr (Backend.Scalar.AuditAction u) =
 
 memberRow : TeamMemberData -> Html Msg
 memberRow member =
-    li []
-        [ text member.user.email
-        , text " | "
-        , text (Backend.Enum.TeamRole.toString member.role)
+    tr []
+        [ td [] [ text member.user.email ]
+        , td [] [ text (Backend.Enum.TeamRole.toString member.role) ]
         ]
 
 
@@ -104,19 +103,29 @@ view model =
             div []
                 [ h2 [] [ text team.name ]
                 , table []
-                    [ simpleRow "Name" team.name
-                    , simpleRow "Slug" (slugstr team.slug)
-                    , simpleRow "Purpose" (Maybe.withDefault "" team.purpose)
+                    [ simpleRow "Slug" (slugstr team.slug)
+                    , simpleRow "Name" team.name
+                    , simpleRow "Purpose" (Maybe.withDefault "N/A" team.purpose)
                     ]
                 , h3 [] [ text "Team members" ]
-                , ul [] (List.map memberRow team.members)
+                , table []
+                    [ thead []
+                        [ tr []
+                            [ th [] [ text "Email" ]
+                            , th [] [ text "Role" ]
+                            ]
+                        ]
+                    , tbody [] (List.map memberRow team.members)
+                    ]
                 , h3 [] [ text "Logs" ]
                 , table []
                     [ thead []
-                        [ th [] [ text "Timestamp" ]
-                        , th [] [ text "Actor" ]
-                        , th [] [ text "Action" ]
-                        , th [] [ text "Message" ]
+                        [ tr []
+                            [ th [] [ text "Timestamp" ]
+                            , th [] [ text "Actor" ]
+                            , th [] [ text "Action" ]
+                            , th [] [ text "Message" ]
+                            ]
                         ]
                     , tbody [] (List.map logRow team.auditLogs)
                     ]
