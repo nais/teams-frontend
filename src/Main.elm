@@ -103,7 +103,7 @@ update msg model =
             Teams.update subMsg subModel |> updateWith Teams GotTeamsMsg
 
         ( GotCreateTeamMsg (CreateTeam.GotTeamCreatedResponse (Ok team)), CreateTeam subModel ) ->
-            Team.init subModel.navKey team.id |> updateWith Team GotTeamMsg
+            ( model, Nav.pushUrl subModel.navKey (Route.routeToString (Route.Team team.id)) )
 
         ( GotCreateTeamMsg subMsg, CreateTeam subModel ) ->
             CreateTeam.update subMsg subModel |> updateWith CreateTeam GotCreateTeamMsg
