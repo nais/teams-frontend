@@ -101,13 +101,15 @@ view model =
     case model.team of
         Team team ->
             div []
-                [ h2 [] [ text team.name ]
+                [ h2 [] [ text ("Teams → " ++ team.name) ]
                 , table []
-                    [ simpleRow "Slug" (slugstr team.slug)
-                    , simpleRow "Name" team.name
-                    , simpleRow "Purpose" (Maybe.withDefault "N/A" team.purpose)
+                    [ tbody []
+                        [ simpleRow "Slug" (slugstr team.slug)
+                        , simpleRow "Name" team.name
+                        , simpleRow "Purpose" (Maybe.withDefault "N/A" team.purpose)
+                        ]
                     ]
-                , h3 [] [ text "Team members" ]
+                , h3 [] [ text "Members" ]
                 , table []
                     [ thead []
                         [ tr []

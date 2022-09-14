@@ -5,7 +5,8 @@ import Browser.Navigation as Nav
 import CreateTeam
 import Error exposing (navKey)
 import Home
-import Html exposing (div, h1, header, li, main_, nav, text, ul)
+import Html exposing (div, h1, header, li, main_, nav, p, text, ul)
+import Html.Attributes exposing (class)
 import Route exposing (Route(..), link)
 import Team
 import Teams
@@ -145,12 +146,15 @@ view model =
     { title = "NAIS console"
     , body =
         [ header []
-            [ h1 [] [ text "nais console" ]
-            , nav []
-                [ ul []
-                    [ li [] [ link Route.Home [] [ text "Home" ] ]
-                    , li [] [ link Route.Teams [] [ text "Teams" ] ]
-                    ]
+            [ h1 []
+                [ link Route.Home [] [ text "Console" ]
+                ]
+            , p [] [ text "Her vises innlogget bruker" ]
+            ]
+        , nav []
+            [ ul []
+                [ li [ class "active" ] [ link Route.Home [] [ text "Home" ] ]
+                , li [] [ link Route.Teams [] [ text "Teams" ] ]
                 ]
             ]
         , main_ []

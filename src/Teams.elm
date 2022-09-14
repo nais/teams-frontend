@@ -3,7 +3,7 @@ module Teams exposing (..)
 import Backend.Scalar
 import Browser.Navigation
 import Graphql.Http
-import Html exposing (Html, table, tbody, td, text, th, thead, tr)
+import Html exposing (Html, div, h2, p, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class, colspan)
 import Queries.Do exposing (query)
 import Queries.TeamQueries exposing (TeamData, getTeamsQuery)
@@ -68,20 +68,20 @@ row team =
 
 teamTable : List TeamData -> Html Msg
 teamTable teams =
-    table []
-        [ thead []
-            [ tr []
-                [ th [] [ text "Slug" ]
-                , th [] [ text "Team name" ]
-                , th [] [ text "Purpose" ]
+    div []
+        [ h2 [] [ text "Operations" ]
+        , p [] [ link Route.CreateTeam [ class "button" ] [ text "Create new" ] ]
+        , h2 [] [ text "List of teams" ]
+        , table []
+            [ thead []
+                [ tr []
+                    [ th [] [ text "Slug" ]
+                    , th [] [ text "Team name" ]
+                    , th [] [ text "Purpose" ]
+                    ]
                 ]
+            , tbody [] (List.map row teams)
             ]
-        , tbody [ class "meta" ]
-            [ tr [ colspan 3 ]
-                [ td [] [ link Route.CreateTeam [] [ text "Create new team..." ] ]
-                ]
-            ]
-        , tbody [] (List.map row teams)
         ]
 
 

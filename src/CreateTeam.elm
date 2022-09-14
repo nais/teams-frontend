@@ -4,7 +4,7 @@ import Backend.Scalar
 import Browser.Navigation
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, div, form, input, label, li, text, ul)
+import Html exposing (Html, div, form, h2, input, label, li, p, text, ul)
 import Html.Attributes exposing (class, for, placeholder, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Queries.Do
@@ -88,10 +88,10 @@ maybeString s =
         Just s
 
 
-textbox : (String -> Msg) -> String -> String -> Html Msg
-textbox msg id placeholder =
+textbox : (String -> Msg) -> String -> String -> String -> Html Msg
+textbox msg id lbl placeholder =
     li []
-        [ label [ for id ] [ text placeholder ]
+        [ label [ for id ] [ text lbl ]
         , input [ type_ "text", Html.Attributes.placeholder placeholder, onInput msg ] []
         ]
 
@@ -99,11 +99,14 @@ textbox msg id placeholder =
 createTeamForm : Model -> Html Msg
 createTeamForm model =
     div []
-        [ form [ onSubmit CreateTeamSubmit ]
+        [ h2 [] [ text "Create a new team" ]
+        , p [] [ text "Use this form to create a new team. You will become the administrator of the team." ]
+        , p [] [ text "The identifier will be propagated to other systems and cannot be changed after creation." ]
+        , form [ onSubmit CreateTeamSubmit ]
             [ ul []
-                [ textbox SlugChanged "slug" "Unique identifier"
-                , textbox NameChanged "name" "Human readable team name"
-                , textbox PurposeChanged "purpose" "Purpose of the team"
+                [ textbox SlugChanged "slug" "Identifier" "customer-satisfaction"
+                , textbox NameChanged "name" "Team name" "Customer satisfaction"
+                , textbox PurposeChanged "purpose" "Purpose of the team" "Making sure customers have a good user experience"
                 ]
             , div [ class "error" ] [ text (Maybe.withDefault "" model.error) ]
             , input [ type_ "submit", value "Create new team" ] []

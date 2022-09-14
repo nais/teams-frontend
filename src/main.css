@@ -6,69 +6,151 @@
     https://github.com/halfzebra/create-elm-app/issues/320
 */
 [data-elm-hot="true"] {
-  height: inherit;
+    height: inherit;
+}
+
+:root {
+    --black: #262626;
+    --blue: #00374f;
+    --white: white;
+    --light-gray: #f1f1f1;
+    --link: #0067c5;
+    --gutter: 2rem;
 }
 
 body {
-  font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif;
-  margin: 0;
-  text-align: center;
-  color: #293c4b;
+    margin: 0;
+    font-family: "Source Sans Pro", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: var(--black);
+    background: var(--white);
 }
 
-h1 {
-  font-size: 30px;
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
 img {
-  margin: 20px 0;
-  max-width: 200px;
+    margin: 20px 0;
+    max-width: 200px;
 }
 
-td, th {
-    text-align: left;
-    padding: 0.5rem;
-    margin: 0;
+a {
+    text-decoration: underline;
+    color: var(--link);
 }
 
 main {
+    margin: 2rem var(--gutter);
+    /*
     max-width: 45rem;
     margin: 0 auto;
     text-align: left;
+     */
 }
 
-header nav ul {
+header {
+    background: var(--blue);
+    color: var(--white);
     display: flex;
-    justify-content: center;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
     gap: 1rem;
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
+    padding: 0 var(--gutter);
 }
 
-header nav ul li {
-    background: #fee;
-    color: #121;
-    padding: 1rem;
-    border-radius: 1rem;
+h1 {
+    font-size: 1.6rem;
+    background: transparent url("logo.svg") no-repeat;
+    background-size: 0.55em;
+    padding: 0 0 0 1em;
+    font-variant: petite-caps;
 }
 
-header nav ul li:hover {
-    background: #faf;
-}
-
-header nav ul li a {
-    text-decoration: inherit;
+h1 a {
     color: inherit;
+    text-decoration: inherit;
+}
+
+h1 a:hover {
+    text-decoration: underline;
+}
+
+nav {
+    border-bottom: 4px solid var(--light-gray);
+}
+
+nav ul {
+    display: flex;
+    justify-content: flex-start;
+    list-style: none;
+    margin: 0;
+    padding: 0.75rem var(--gutter);
+    padding-top: 1em;
+}
+
+nav li {
+    margin: 0;
+}
+
+nav a {
+    background: var(--white);
+    color: var(--link);
+    padding: 0.75rem 1.25rem;
+    text-decoration: none;
+    font-size: 1.1rem;
+    position: relative;
+    border-bottom: 4px solid var(--light-gray);
+}
+
+nav a:hover {
+    background: var(--light-gray);
+    border-color: var(--link);
+}
+
+nav li.active a {
+    color: var(--black);
+    font-weight: bold;
+    border-color: var(--link);
+}
+
+h2 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin: 2em 0 1em;
 }
 
 table {
     width: 100%;
+    border-collapse: collapse;
+}
+
+td, th {
+    text-align: left;
+    padding: 0.75rem 0.25rem;
+    margin: 0;
+}
+
+td:not(:last-child){
+    white-space: nowrap;
+}
+
+td:last-child{
+    width: 100%;
+}
+
+form {
+    margin: 2rem 0;
+    padding: 0;
 }
 
 form ul {
     display: flex;
     flex-direction: column;
+    margin: 0;
+    padding: 0;
 }
 
 form ul li {
@@ -89,9 +171,36 @@ form input[type="text"] {
     border: 1px solid #cac;
 }
 
-tbody tr:nth-child(even) {background: #CCC}
-tbody tr:nth-child(odd) {background: #FFF}
+tbody tr:nth-child(even) {
+    background: var(--light-gray);
+}
+
+tbody tr:nth-child(odd) {
+    background: var(--white);
+}
 
 tbody.meta tr {
     background: inherit
+}
+
+div.error {
+    border: 2px solid darkred;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+button, .button {
+    padding: 1em;
+    background: var(--blue);
+    border: 0;
+    border-radius: 2px;
+    color: var(--white);
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+button:hover, .button:hover {
+    text-decoration: underline;
 }
