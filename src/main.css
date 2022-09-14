@@ -191,7 +191,7 @@ div.error {
 
 button, .button {
     padding: 1em;
-    background: var(--blue);
+    background: var(--link);
     border: 0;
     border-radius: 2px;
     color: var(--white);
