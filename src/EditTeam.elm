@@ -1,14 +1,18 @@
 module EditTeam exposing (..)
 
+import Backend.Enum.TeamRole exposing (TeamRole)
+import Backend.Object.User exposing (roles)
 import Backend.Scalar exposing (Slug(..), Uuid)
 import Browser.Navigation
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, div, form, h2, input, label, li, p, text, ul)
-import Html.Attributes exposing (class, disabled, for, placeholder, readonly, type_, value)
-import Html.Events exposing (onInput, onSubmit)
+import Html exposing (Html, div, form, h2, input, label, li, option, p, select, table, tbody, td, text, th, tr, ul)
+import Html.Attributes exposing (class, disabled, for, placeholder, readonly, selected, type_, value)
+import Html.Events exposing (onClick, onInput, onSubmit)
+import List exposing (member)
 import Queries.Do
-import Queries.TeamQueries exposing (TeamData, createTeamMutation, updateTeamMutation)
+import Queries.TeamQueries exposing (TeamData, TeamMemberData, createTeamMutation, updateTeamMutation)
+import Queries.UserQueries exposing (UserData)
 import Session exposing (Session)
 
 
@@ -20,6 +24,7 @@ type alias Model =
     , name : Maybe String
     , purpose : Maybe String
     , error : Maybe String
+    , members : List TeamMemberData
     }
 
 
@@ -27,8 +32,10 @@ type Msg
     = SubmitForm
     | GotTeamResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | GotUpdateTeamResponse (Result (Graphql.Http.Error TeamData) TeamData)
+    | GotSetTeamMemberRoleResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | NameChanged String
     | PurposeChanged String
+    | RoleDropDownClicked TeamMemberData TeamRole
 
 
 init : Session -> Uuid -> ( Model, Cmd Msg )
@@ -40,6 +47,7 @@ init session id =
       , purpose = Nothing
       , slug = ""
       , error = Nothing
+      , members = []
       }
     , getTeam id
     )
@@ -61,7 +69,7 @@ update msg model =
             )
 
         GotTeamResponse (Ok team) ->
-            ( mapTeam team { model | error = Nothing }, Cmd.none )
+            ( { model | error = Nothing } |> mapTeam team, Cmd.none )
 
         GotTeamResponse (Err (Graphql.Http.HttpError e)) ->
             ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
@@ -88,11 +96,31 @@ update msg model =
             in
             ( { model | error = Just errstr }, Cmd.none )
 
+        GotSetTeamMemberRoleResponse (Ok team) ->
+            ( { model | error = Nothing } |> mapTeam team, Cmd.none )
+
+        GotSetTeamMemberRoleResponse (Err (Graphql.Http.HttpError e)) ->
+            ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
+
+        GotSetTeamMemberRoleResponse (Err (GraphqlError _ errors)) ->
+            let
+                errstr =
+                    List.map (\error -> error.message) errors
+                        |> String.join ","
+            in
+            ( { model | error = Just errstr }, Cmd.none )
+
         NameChanged s ->
             ( { model | name = stringOrBlank s }, Cmd.none )
 
         PurposeChanged s ->
             ( { model | purpose = stringOrBlank s }, Cmd.none )
+
+        RoleDropDownClicked member role ->
+            if member.role == role then
+                ( model, Cmd.none )
+            else
+                (model, setTeamMemberRole member.user.id model.id role)
 
 
 stringOrBlank : String -> Maybe String
@@ -157,6 +185,7 @@ mapTeam teamData model =
         , purpose = teamData.purpose
         , slug = slug
         , id = teamData.id
+        , members = teamData.members
     }
 
 
@@ -167,6 +196,56 @@ getTeam uuid =
         GotTeamResponse
 
 
+setTeamMemberRole : Uuid -> Uuid -> TeamRole -> Cmd Msg
+setTeamMemberRole teamUuid memberUuid role =
+    Queries.Do.mutate
+        (Queries.TeamQueries.setTeamMemberRoleMutation teamUuid memberUuid role)
+        GotSetTeamMemberRoleResponse
+
+
 view : Model -> Html Msg
 view model =
-    formView model
+    div []
+        [ formView model
+        , memberView model
+        ]
+
+
+memberView : Model -> Html Msg
+memberView model =
+    table []
+        [ tr []
+            [ th [] [ text "Email" ]
+            , th [] [ text "Role" ]
+            , th [] [ text "Delete" ]
+            ]
+        , tbody [] (List.map memberRow model.members)
+        ]
+
+
+roleOption : TeamMemberData -> TeamRole -> Html Msg
+roleOption member role =
+    let
+        roleStr =
+            Backend.Enum.TeamRole.toString role
+    in
+    option
+        [ onClick (RoleDropDownClicked member role)
+        , selected (role == member.role)
+        , value roleStr
+        ]
+        [ text roleStr ]
+
+
+roleSelector : TeamMemberData -> Html Msg
+roleSelector active =
+    select [] (Backend.Enum.TeamRole.list |> List.map (roleOption active))
+
+
+memberRow : TeamMemberData -> Html Msg
+memberRow member =
+    tr []
+        [ td [] [ text member.user.email ]
+        , td [] [ roleSelector member ]
+        , td [] [ text (Backend.Enum.TeamRole.toString member.role) ]
+        ]
