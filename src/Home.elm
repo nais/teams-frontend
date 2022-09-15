@@ -21,12 +21,10 @@ type Msg
     | LogoutClicked
 
 
-init : Session -> ( Model, Cmd Msg )
+init : Session -> Model
 init session =
-    ( { session = session
-      }
-    , Cmd.none
-    )
+    { session = session
+    }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

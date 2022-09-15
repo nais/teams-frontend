@@ -22,8 +22,7 @@ import Url
 
 
 type Model
-    = Boot Session Url.Url
-    | Home Home.Model
+    = Home Home.Model
     | Team Team.Model
     | Teams Teams.Model
     | CreateTeam CreateTeam.Model
@@ -36,7 +35,7 @@ type Model
 
 type Msg
     = NoOp
-    | GotMeResponse (Result (Graphql.Http.Error UserData) UserData)
+    | GotMeResponse Url.Url (Result (Graphql.Http.Error UserData) UserData)
     | GotHomeMsg Home.Msg
     | GotTeamMsg Team.Msg
     | GotTeamsMsg Teams.Msg
@@ -47,7 +46,7 @@ type Msg
 
 init : a -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url nk =
-    ( Boot (Session.init nk) url, getMe )
+    ( Home (Home.init (Session.init nk)), getMe url )
 
 
 
@@ -61,15 +60,11 @@ updateWith toModel toMsg ( subModel, subCmd ) =
     )
 
 
-changeRouteTo : Maybe Route -> Model -> ( Model, Cmd Msg )
-changeRouteTo maybeRoute model =
-    let
-        session =
-            toSession model
-    in
+changeRouteTo : Maybe Route -> Session -> ( Model, Cmd Msg )
+changeRouteTo maybeRoute session =
     case maybeRoute of
         Just Route.Home ->
-            Home.init session |> updateWith Home GotHomeMsg
+            ( Home (Home.init session), Cmd.none )
 
         Just Route.CreateTeam ->
             CreateTeam.init session |> updateWith CreateTeam GotCreateTeamMsg
@@ -97,7 +92,7 @@ update msg model =
                     ( model, Nav.load href )
 
         ( UrlChanged url, _ ) ->
-            changeRouteTo (Route.fromUrl url) model
+            changeRouteTo (Route.fromUrl url) (toSession model)
 
         ( GotHomeMsg subMsg, Home subModel ) ->
             Home.update subMsg subModel |> updateWith Home GotHomeMsg
@@ -114,13 +109,17 @@ update msg model =
         ( GotCreateTeamMsg subMsg, CreateTeam subModel ) ->
             CreateTeam.update subMsg subModel |> updateWith CreateTeam GotCreateTeamMsg
 
-        ( GotMeResponse r, Boot session url ) ->
+        ( GotMeResponse url r, _ ) ->
+            let
+                session =
+                    toSession model
+            in
             case r of
                 Ok u ->
-                    changeRouteTo (Route.fromUrl url) (Boot (Session.mapUser (Session.LoggedIn u) session) url)
+                    changeRouteTo (Route.fromUrl url) (Session.mapUser (Session.LoggedIn u) session)
 
                 Err e ->
-                    changeRouteTo (Route.fromUrl url) (Boot (Session.mapUser Session.Anonymous session) url)
+                    changeRouteTo (Route.fromUrl url) (Session.mapUser Session.Anonymous session)
 
         ( _, _ ) ->
             Debug.todo "this is not a valid case"
@@ -152,9 +151,6 @@ view model =
 
                 Error subModel ->
                     Error.view subModel |> Html.map (\_ -> NoOp)
-
-                Boot _ _ ->
-                    div [] [ text "Redirecting..." ]
     in
     { title = "NAIS console"
     , body =
@@ -210,10 +206,7 @@ toSession model =
         CreateTeam m ->
             m.session
 
-        Boot session _ ->
-            session
 
-
-getMe : Cmd Msg
-getMe =
-    query UserQueries.getMeQuery GotMeResponse
+getMe : Url.Url -> Cmd Msg
+getMe url =
+    query UserQueries.getMeQuery (GotMeResponse url)
