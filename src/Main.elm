@@ -60,24 +60,24 @@ updateWith toModel toMsg ( subModel, subCmd ) =
 changeRouteTo : Maybe Route -> Model -> ( Model, Cmd Msg )
 changeRouteTo maybeRoute model =
     let
-        nk =
+        session =
             toSession model
     in
     case maybeRoute of
         Just Route.Home ->
-            Home.init nk |> updateWith Home GotHomeMsg
+            Home.init session |> updateWith Home GotHomeMsg
 
         Just Route.CreateTeam ->
-            CreateTeam.init nk |> updateWith CreateTeam GotCreateTeamMsg
+            CreateTeam.init session |> updateWith CreateTeam GotCreateTeamMsg
 
         Just Route.Teams ->
-            Teams.init nk |> updateWith Teams GotTeamsMsg
+            Teams.init session |> updateWith Teams GotTeamsMsg
 
         Just (Route.Team id) ->
-            Team.init nk id |> updateWith Team GotTeamMsg
+            Team.init session id |> updateWith Team GotTeamMsg
 
         Nothing ->
-            Error.init nk "no route" |> updateWith Error (\_ -> NoOp)
+            Error.init session "no route" |> updateWith Error (\_ -> NoOp)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -150,7 +150,7 @@ view model =
             [ h1 []
                 [ link Route.Home [] [ text "Console" ]
                 ]
-            , p [] [ text "Her vises innlogget bruker" ]
+            , p [] [ text (Session.username (Session.user (toSession model))) ]
             ]
         , nav []
             [ ul []

@@ -1,4 +1,4 @@
-module Session exposing (Session, User(..), init, mapUser, navKey, user)
+module Session exposing (Session, User(..), init, mapUser, navKey, user, username)
 
 import Browser.Navigation as Nav
 import Queries.UserQueries exposing (UserData)
@@ -32,3 +32,13 @@ navKey (Session nk _) =
 user : Session -> User
 user (Session _ u) =
     u
+
+
+username : User -> String
+username u =
+    case u of
+        LoggedIn loggedIn ->
+            loggedIn.email
+
+        _ ->
+            "Not logged in"

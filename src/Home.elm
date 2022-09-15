@@ -6,31 +6,24 @@ import Html exposing (Html, button, div, p, text)
 import Html.Events exposing (onClick)
 import Queries.Do exposing (query)
 import Queries.UserQueries exposing (UserData, getMeQuery)
-import Session exposing (Session)
-
-
-type Actor
-    = LoggedIn UserData
-    | Unauthorized
-    | Unknown
+import Session exposing (Session, User(..))
 
 
 type alias Model =
-    { user : Actor
-    , session : Session
+    { session : Session
     }
 
 
 type Msg
     = GotMeResponse (Result (Graphql.Http.Error UserData) UserData)
+    | GotUser Session.User
     | LoginClicked
     | LogoutClicked
 
 
 init : Session -> ( Model, Cmd Msg )
 init session =
-    ( { user = Unknown
-      , session = session
+    ( { session = session
       }
     , query getMeQuery GotMeResponse
     )
@@ -45,18 +38,21 @@ update msg model =
         LogoutClicked ->
             ( model, Browser.Navigation.load "http://localhost:3000/oauth2/logout" )
 
+        GotUser u ->
+            ( { model | session = Session.mapUser u model.session }, Cmd.none )
+
         GotMeResponse r ->
             case r of
                 Ok u ->
-                    ( { model | user = LoggedIn u }, Cmd.none )
+                    update (GotUser (LoggedIn u)) model
 
                 Err e ->
-                    ( { model | user = Unauthorized }, Cmd.none )
+                    update (GotUser Anonymous) model
 
 
 view : Model -> Html Msg
 view model =
-    case model.user of
+    case Session.user model.session of
         LoggedIn user ->
             div []
                 [ p [] [ text ("Logged in as " ++ user.email) ]
@@ -66,7 +62,7 @@ view model =
         Unknown ->
             div [] [ text "Loading..." ]
 
-        Unauthorized ->
+        Anonymous ->
             div []
                 [ p []
                     [ text "Welcome to NAIS console."
