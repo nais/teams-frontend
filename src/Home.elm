@@ -47,7 +47,9 @@ view model =
     case Session.user model.session of
         LoggedIn user ->
             div []
-                [ p [] [ text ("Logged in as " ++ user.email) ]
+                [ p [] [ text "Welcome to NAIS console." ]
+                , p [] [ text ("You are logged in as " ++ user.email ++ ".") ]
+                , p [] [ text "Please continue as you wish." ]
                 , button [ onClick LogoutClicked ] [ text "Log out" ] -- fake news logout
                 ]
 
