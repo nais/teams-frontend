@@ -1,12 +1,12 @@
 module Route exposing (..)
 
+import Backend.Scalar exposing (Uuid(..))
 import Browser.Navigation as Nav
 import Html exposing (Html, a)
 import Html.Attributes exposing (href)
 import String
 import Url exposing (Url)
 import Url.Parser as Parser exposing ((</>), Parser, oneOf, s, string)
-import Backend.Scalar exposing (Uuid(..))
 
 
 type Route
@@ -14,6 +14,7 @@ type Route
     | Teams
     | CreateTeam
     | Team Backend.Scalar.Uuid
+    | EditTeam Backend.Scalar.Uuid
 
 
 parser : Parser (Route -> a) a
@@ -22,8 +23,11 @@ parser =
         [ Parser.map Home Parser.top
         , Parser.map CreateTeam (s "teams" </> s "create")
         , Parser.map Teams (s "teams")
+        , Parser.map (\s -> EditTeam (Uuid s)) (s "teams" </> string </> s "edit")
         , Parser.map (\s -> Team (Uuid s)) (s "teams" </> string)
         ]
+
+
 
 -- PUBLIC HELPERS
 
@@ -63,5 +67,8 @@ routeToString page =
 
                 Team (Uuid id) ->
                     [ "teams", id ]
+
+                EditTeam (Uuid id) ->
+                    [ "teams", id, "edit" ]
     in
     "/" ++ String.join "/" pieces

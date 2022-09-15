@@ -3,6 +3,7 @@ module Main exposing (..)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import CreateTeam
+import EditTeam
 import Error
 import Graphql.Http
 import Home
@@ -24,6 +25,7 @@ import Url
 type Model
     = Home Home.Model
     | Team Team.Model
+    | EditTeam EditTeam.Model
     | Teams Teams.Model
     | CreateTeam CreateTeam.Model
     | Error Error.Model
@@ -38,6 +40,7 @@ type Msg
     | GotMeResponse Url.Url (Result (Graphql.Http.Error UserData) UserData)
     | GotHomeMsg Home.Msg
     | GotTeamMsg Team.Msg
+    | GotEditTeamMsg EditTeam.Msg
     | GotTeamsMsg Teams.Msg
     | GotCreateTeamMsg CreateTeam.Msg
     | LinkClicked Browser.UrlRequest
@@ -75,8 +78,11 @@ changeRouteTo maybeRoute session =
         Just (Route.Team id) ->
             Team.init session id |> updateWith Team GotTeamMsg
 
+        Just (Route.EditTeam id) ->
+            EditTeam.init session id |> updateWith EditTeam GotEditTeamMsg
+
         Nothing ->
-            Error.init session "no route" |> updateWith Error (\_ -> NoOp)
+            Error.init session "404" |> updateWith Error (\_ -> NoOp)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -99,6 +105,12 @@ update msg model =
 
         ( GotTeamMsg subMsg, Team subModel ) ->
             Team.update subMsg subModel |> updateWith Team GotTeamMsg
+
+        ( GotEditTeamMsg (EditTeam.GotUpdateTeamResponse (Ok team)), EditTeam subModel ) ->
+            ( model, Nav.pushUrl (Session.navKey subModel.session) (Route.routeToString (Route.Team team.id)) )
+
+        ( GotEditTeamMsg subMsg, EditTeam subModel ) ->
+            EditTeam.update subMsg subModel |> updateWith EditTeam GotEditTeamMsg
 
         ( GotTeamsMsg subMsg, Teams subModel ) ->
             Teams.update subMsg subModel |> updateWith Teams GotTeamsMsg
@@ -145,6 +157,9 @@ view model =
 
                 Teams subModel ->
                     Teams.view subModel |> Html.map GotTeamsMsg
+
+                EditTeam subModel ->
+                    EditTeam.view subModel |> Html.map GotEditTeamMsg
 
                 CreateTeam subModel ->
                     CreateTeam.view subModel |> Html.map GotCreateTeamMsg
@@ -224,6 +239,9 @@ toSession model =
             m.session
 
         Team m ->
+            m.session
+
+        EditTeam m ->
             m.session
 
         Teams m ->

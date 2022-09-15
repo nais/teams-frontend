@@ -1,7 +1,7 @@
 module Queries.TeamQueries exposing (..)
 
 import Backend.Enum.TeamRole exposing (TeamRole)
-import Backend.InputObject exposing (CreateTeamInput)
+import Backend.InputObject exposing (CreateTeamInput, UpdateTeamInput)
 import Backend.Mutation as Mutation
 import Backend.Object exposing (AuditLog)
 import Backend.Object.AuditLog as AuditLog
@@ -56,6 +56,11 @@ getTeamQuery id =
 createTeamMutation : CreateTeamInput -> SelectionSet TeamData RootMutation
 createTeamMutation team =
     Mutation.createTeam { input = team } teamDataSelection
+
+
+updateTeamMutation : Uuid -> UpdateTeamInput -> SelectionSet TeamData RootMutation
+updateTeamMutation id team =
+    Mutation.updateTeam { teamId = id, input = team } teamDataSelection
 
 
 addMemberToTeamMutation : Backend.ScalarCodecs.Uuid -> Backend.ScalarCodecs.Uuid -> SelectionSet TeamData RootMutation

@@ -4,10 +4,11 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar
 import Browser.Navigation
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, div, h2, h3, li, table, tbody, td, text, th, thead, tr, ul)
+import Html exposing (Html, div, h2, h3, li, p, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class)
 import Queries.Do exposing (query)
 import Queries.TeamQueries exposing (AuditLogData, TeamData, TeamMemberData, getTeamQuery)
+import Route exposing (link)
 import Session exposing (Session)
 
 
@@ -110,6 +111,7 @@ view model =
                         , simpleRow "Purpose" (Maybe.withDefault "N/A" team.purpose)
                         ]
                     ]
+                , p [] [ link (Route.EditTeam team.id) [ class "button" ] [ text "Edit" ] ]
                 , h3 [] [ text "Members" ]
                 , table []
                     [ thead []
