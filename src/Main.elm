@@ -4,9 +4,12 @@ import Browser exposing (Document)
 import Browser.Navigation as Nav
 import CreateTeam
 import Error
+import Graphql.Http
 import Home
 import Html exposing (div, h1, header, li, main_, nav, p, text, ul)
 import Html.Attributes exposing (class)
+import Queries.Do exposing (query)
+import Queries.UserQueries as UserQueries exposing (UserData)
 import Route exposing (Route(..), link)
 import Session exposing (Session)
 import Team
@@ -19,7 +22,7 @@ import Url
 
 
 type Model
-    = Redirect Session
+    = Boot Session Url.Url
     | Home Home.Model
     | Team Team.Model
     | Teams Teams.Model
@@ -33,6 +36,7 @@ type Model
 
 type Msg
     = NoOp
+    | GotMeResponse (Result (Graphql.Http.Error UserData) UserData)
     | GotHomeMsg Home.Msg
     | GotTeamMsg Team.Msg
     | GotTeamsMsg Teams.Msg
@@ -43,7 +47,7 @@ type Msg
 
 init : a -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url nk =
-    changeRouteTo (Route.fromUrl url) (Redirect (Session.init nk))
+    ( Boot (Session.init nk) url, getMe )
 
 
 
@@ -110,6 +114,14 @@ update msg model =
         ( GotCreateTeamMsg subMsg, CreateTeam subModel ) ->
             CreateTeam.update subMsg subModel |> updateWith CreateTeam GotCreateTeamMsg
 
+        ( GotMeResponse r, Boot session url ) ->
+            case r of
+                Ok u ->
+                    changeRouteTo (Route.fromUrl url) (Boot (Session.mapUser (Session.LoggedIn u) session) url)
+
+                Err e ->
+                    changeRouteTo (Route.fromUrl url) (Boot (Session.mapUser Session.Anonymous session) url)
+
         ( _, _ ) ->
             Debug.todo "this is not a valid case"
 
@@ -141,8 +153,8 @@ view model =
                 Error subModel ->
                     Error.view subModel |> Html.map (\_ -> NoOp)
 
-                Redirect _ ->
-                    div [] [ text "redirect" ]
+                Boot _ _ ->
+                    div [] [ text "Redirecting..." ]
     in
     { title = "NAIS console"
     , body =
@@ -198,5 +210,10 @@ toSession model =
         CreateTeam m ->
             m.session
 
-        Redirect session ->
+        Boot session _ ->
             session
+
+
+getMe : Cmd Msg
+getMe =
+    query UserQueries.getMeQuery GotMeResponse

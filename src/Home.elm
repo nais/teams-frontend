@@ -25,7 +25,7 @@ init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
       }
-    , query getMeQuery GotMeResponse
+    , Cmd.none
     )
 
 
@@ -38,16 +38,8 @@ update msg model =
         LogoutClicked ->
             ( model, Browser.Navigation.load "http://localhost:3000/oauth2/logout" )
 
-        GotUser u ->
-            ( { model | session = Session.mapUser u model.session }, Cmd.none )
-
-        GotMeResponse r ->
-            case r of
-                Ok u ->
-                    update (GotUser (LoggedIn u)) model
-
-                Err e ->
-                    update (GotUser Anonymous) model
+        _ ->
+            ( model, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -64,9 +56,12 @@ view model =
 
         Anonymous ->
             div []
-                [ p []
-                    [ text "Welcome to NAIS console."
-                    , text "This is your one stop shop for team management. Please log in to continue."
-                    ]
+                [ p [] [ text "Welcome to NAIS console." ]
+                , p [] [ text "This is your one stop shop for team management. Please log in to continue." ]
                 , button [ onClick LoginClicked ] [ text "Single sign-on" ]
                 ]
+
+
+mapUser : User -> Model -> Model
+mapUser user model =
+    { model | session = Session.mapUser user model.session }
