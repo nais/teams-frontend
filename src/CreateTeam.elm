@@ -76,11 +76,11 @@ update msg model =
             ( { model | name = s }, Cmd.none )
 
         PurposeChanged s ->
-            ( { model | purpose = maybeString s }, Cmd.none )
+            ( { model | purpose = stringOrBlank s }, Cmd.none )
 
 
-maybeString : String -> Maybe String
-maybeString s =
+stringOrBlank : String -> Maybe String
+stringOrBlank s =
     if s == "" then
         Nothing
 
@@ -96,6 +96,16 @@ textbox msg id lbl placeholder =
         ]
 
 
+errorView : Maybe String -> List (Html msg)
+errorView maybeString =
+    case maybeString of
+        Nothing ->
+            []
+
+        Just s ->
+            [ div [ class "error" ] [ text s ] ]
+
+
 createTeamForm : Model -> Html Msg
 createTeamForm model =
     div []
@@ -103,14 +113,16 @@ createTeamForm model =
         , p [] [ text "Use this form to create a new team. You will become the administrator of the team." ]
         , p [] [ text "The identifier will be propagated to other systems and cannot be changed after creation." ]
         , form [ onSubmit CreateTeamSubmit ]
-            [ ul []
+            ([ ul []
                 [ textbox SlugChanged "slug" "Identifier" "customer-satisfaction"
                 , textbox NameChanged "name" "Team name" "Customer satisfaction"
                 , textbox PurposeChanged "purpose" "Purpose of the team" "Making sure customers have a good user experience"
                 ]
-            , div [ class "error" ] [ text (Maybe.withDefault "" model.error) ]
-            , input [ type_ "submit", value "Create new team" ] []
-            ]
+             ]
+                ++ errorView model.error
+                ++ [ input [ type_ "submit", value "Create new team" ] []
+                   ]
+            )
         ]
 
 
