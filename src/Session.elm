@@ -1,4 +1,4 @@
-module Session exposing (User(..), init, mapUser, navKey, user)
+module Session exposing (Session, User(..), init, mapUser, navKey, user)
 
 import Browser.Navigation as Nav
 import Queries.UserQueries exposing (UserData)
@@ -19,8 +19,8 @@ init nk =
     Session nk Unknown
 
 
-mapUser : Session -> User -> Session
-mapUser (Session nk _) u =
+mapUser : User -> Session -> Session
+mapUser u (Session nk _) =
     Session nk u
 
 

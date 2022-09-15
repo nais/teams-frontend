@@ -6,6 +6,7 @@ import Html exposing (Html, button, div, p, text)
 import Html.Events exposing (onClick)
 import Queries.Do exposing (query)
 import Queries.UserQueries exposing (UserData, getMeQuery)
+import Session exposing (Session)
 
 
 type Actor
@@ -16,7 +17,7 @@ type Actor
 
 type alias Model =
     { user : Actor
-    , navKey : Browser.Navigation.Key
+    , session : Session
     }
 
 
@@ -26,10 +27,10 @@ type Msg
     | LogoutClicked
 
 
-init : Browser.Navigation.Key -> ( Model, Cmd Msg )
-init navigationKey =
+init : Session -> ( Model, Cmd Msg )
+init session =
     ( { user = Unknown
-      , navKey = navigationKey
+      , session = session
       }
     , query getMeQuery GotMeResponse
     )
@@ -59,16 +60,17 @@ view model =
         LoggedIn user ->
             div []
                 [ p [] [ text ("Logged in as " ++ user.email) ]
-                , button [ onClick LoginClicked ] [ text "Log out" ] -- fake news logout
+                , button [ onClick LogoutClicked ] [ text "Log out" ] -- fake news logout
                 ]
 
         Unknown ->
             div [] [ text "Loading..." ]
 
         Unauthorized ->
-            button [ onClick LoginClicked ] [ text "Single sign-on" ]
-
-
-navKey : Model -> Browser.Navigation.Key
-navKey model =
-    model.navKey
+            div []
+                [ p []
+                    [ text "Welcome to NAIS console."
+                    , text "This is your one stop shop for team management. Please log in to continue."
+                    ]
+                , button [ onClick LoginClicked ] [ text "Single sign-on" ]
+                ]

@@ -3,11 +3,12 @@ module Main exposing (..)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import CreateTeam
-import Error exposing (navKey)
+import Error
 import Home
 import Html exposing (div, h1, header, li, main_, nav, p, text, ul)
 import Html.Attributes exposing (class)
 import Route exposing (Route(..), link)
+import Session exposing (Session)
 import Team
 import Teams
 import Url
@@ -18,7 +19,7 @@ import Url
 
 
 type Model
-    = Redirect Nav.Key
+    = Redirect Session
     | Home Home.Model
     | Team Team.Model
     | Teams Teams.Model
@@ -42,7 +43,7 @@ type Msg
 
 init : a -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url nk =
-    changeRouteTo (Route.fromUrl url) (Redirect nk)
+    changeRouteTo (Route.fromUrl url) (Redirect (Session.init nk))
 
 
 
@@ -60,7 +61,7 @@ changeRouteTo : Maybe Route -> Model -> ( Model, Cmd Msg )
 changeRouteTo maybeRoute model =
     let
         nk =
-            navKey model
+            toSession model
     in
     case maybeRoute of
         Just Route.Home ->
@@ -86,7 +87,7 @@ update msg model =
         ( LinkClicked urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
-                    ( model, Nav.pushUrl (navKey model) (Url.toString url) )
+                    ( model, Nav.pushUrl (toSession model |> Session.navKey) (Url.toString url) )
 
                 Browser.External href ->
                     ( model, Nav.load href )
@@ -104,7 +105,7 @@ update msg model =
             Teams.update subMsg subModel |> updateWith Teams GotTeamsMsg
 
         ( GotCreateTeamMsg (CreateTeam.GotTeamCreatedResponse (Ok team)), CreateTeam subModel ) ->
-            ( model, Nav.pushUrl subModel.navKey (Route.routeToString (Route.Team team.id)) )
+            ( model, Nav.pushUrl (Session.navKey subModel.session) (Route.routeToString (Route.Team team.id)) )
 
         ( GotCreateTeamMsg subMsg, CreateTeam subModel ) ->
             CreateTeam.update subMsg subModel |> updateWith CreateTeam GotCreateTeamMsg
@@ -179,23 +180,23 @@ main =
         }
 
 
-navKey : Model -> Nav.Key
-navKey model =
+toSession : Model -> Session
+toSession model =
     case model of
         Home m ->
-            Home.navKey m
+            m.session
 
         Error m ->
-            Error.navKey m
+            m.session
 
         Team m ->
-            m.navKey
+            m.session
 
         Teams m ->
-            Teams.navKey m
+            m.session
 
         CreateTeam m ->
-            m.navKey
+            m.session
 
-        Redirect nk ->
-            nk
+        Redirect session ->
+            session

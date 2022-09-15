@@ -9,10 +9,11 @@ import Html.Attributes exposing (class, for, placeholder, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Queries.Do
 import Queries.TeamQueries exposing (TeamData, createTeamMutation)
+import Session exposing (Session)
 
 
 type alias Model =
-    { navKey : Browser.Navigation.Key
+    { session : Session
     , slug : String
     , name : String
     , purpose : Maybe String
@@ -28,9 +29,9 @@ type Msg
     | PurposeChanged String
 
 
-init : Browser.Navigation.Key -> ( Model, Cmd Msg )
-init navigationKey =
-    ( { navKey = navigationKey
+init : Session -> ( Model, Cmd Msg )
+init session =
+    ( { session = session
       , name = ""
       , purpose = Nothing
       , slug = ""

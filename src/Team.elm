@@ -8,6 +8,7 @@ import Html exposing (Html, div, h2, h3, li, table, tbody, td, text, th, thead, 
 import Html.Attributes exposing (class)
 import Queries.Do exposing (query)
 import Queries.TeamQueries exposing (AuditLogData, TeamData, TeamMemberData, getTeamQuery)
+import Session exposing (Session)
 
 
 type Team
@@ -18,7 +19,7 @@ type Team
 
 type alias Model =
     { team : Team
-    , navKey : Browser.Navigation.Key
+    , session : Session
     }
 
 
@@ -26,10 +27,10 @@ type Msg
     = GotTeamResponse (Result (Graphql.Http.Error TeamData) TeamData)
 
 
-init : Browser.Navigation.Key -> Backend.Scalar.Uuid -> ( Model, Cmd Msg )
-init navigationKey id =
+init : Session -> Backend.Scalar.Uuid -> ( Model, Cmd Msg )
+init session id =
     ( { team = Loading
-      , navKey = navigationKey
+      , session = session
       }
     , query (getTeamQuery id) GotTeamResponse
     )

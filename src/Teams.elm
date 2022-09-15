@@ -8,11 +8,12 @@ import Html.Attributes exposing (class, colspan)
 import Queries.Do exposing (query)
 import Queries.TeamQueries exposing (TeamData, getTeamsQuery)
 import Route exposing (link)
+import Session exposing (Session)
 
 
 type alias Model =
     { teams : List TeamData
-    , navKey : Browser.Navigation.Key
+    , session : Session
     }
 
 
@@ -21,10 +22,10 @@ type Msg
     | GotTeamsResponse (Result (Graphql.Http.Error (List TeamData)) (List TeamData))
 
 
-init : Browser.Navigation.Key -> ( Model, Cmd Msg )
-init navigationKey =
+init : Session -> ( Model, Cmd Msg )
+init session =
     ( { teams = []
-      , navKey = navigationKey
+      , session = session
       }
     , query getTeamsQuery GotTeamsResponse
     )
@@ -88,8 +89,3 @@ teamTable teams =
 view : Model -> Html Msg
 view model =
     teamTable model.teams
-
-
-navKey : Model -> Browser.Navigation.Key
-navKey model =
-    model.navKey

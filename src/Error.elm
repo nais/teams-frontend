@@ -1,20 +1,20 @@
 module Error exposing (..)
 
 import Browser.Navigation
-import Html exposing (Html, text, div)
+import Html exposing (Html, div, text)
+import Session exposing (Session)
 
 
 type alias Model =
     { error : String
-    , navKey : Browser.Navigation.Key
+    , session : Session
     }
 
 
-
-init : Browser.Navigation.Key -> String -> ( Model, Cmd msg )
-init navigationKey error =
+init : Session -> String -> ( Model, Cmd msg )
+init session error =
     ( { error = error
-      , navKey = navigationKey
+      , session = session
       }
     , Cmd.none
     )
@@ -24,11 +24,7 @@ update : msg -> Model -> ( Model, Cmd msg )
 update _ model =
     ( model, Cmd.none )
 
+
 view : Model -> Html msg
 view model =
     div [] [ text model.error ]
-
-
-navKey : Model -> Browser.Navigation.Key
-navKey model =
-    model.navKey
