@@ -7,7 +7,7 @@ import Error
 import Graphql.Http
 import Home
 import Html exposing (div, h1, header, li, main_, nav, p, text, ul)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, classList)
 import Queries.Do exposing (query)
 import Queries.UserQueries as UserQueries exposing (UserData)
 import Route exposing (Route(..), link)
@@ -162,14 +162,40 @@ view model =
             ]
         , nav []
             [ ul []
-                [ li [ class "active" ] [ link Route.Home [] [ text "Home" ] ]
-                , li [] [ link Route.Teams [] [ text "Teams" ] ]
+                [ menuItem model Route.Home "Home"
+                , menuItem model Route.Teams "Teams"
                 ]
             ]
         , main_ []
             [ html ]
         ]
     }
+
+
+isActiveRoute model target =
+    case ( model, target ) of
+        ( Home _, Route.Home ) ->
+            True
+
+        ( Teams _, Route.Teams ) ->
+            True
+
+        ( CreateTeam _, Route.Teams ) ->
+            True
+
+        ( Team _, Route.Teams ) ->
+            True
+
+        ( _, _ ) ->
+            False
+
+
+menuItem model target title =
+    let
+        classes =
+            [ ( "active", isActiveRoute model target ) ]
+    in
+    li [ classList classes ] [ link target [] [ text title ] ]
 
 
 
