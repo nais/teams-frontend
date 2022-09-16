@@ -134,7 +134,7 @@ update msg model =
                     changeRouteTo (Route.fromUrl url) (Session.mapUser Session.Anonymous session)
 
         ( _, _ ) ->
-            Debug.todo "this is not a valid case"
+            ( model, Cmd.none )
 
 
 
