@@ -12,6 +12,7 @@ import Queries.Do
 import Queries.TeamQueries exposing (TeamData, TeamMemberData, updateTeamMutation)
 import Queries.UserQueries exposing (UserData)
 import Session exposing (Session, User(..))
+import Bitwise exposing (or)
 
 
 type alias Model =
@@ -138,7 +139,7 @@ filterUser query user =
         email =
             String.toLower user.email
     in
-    or (String.startsWith q name) (String.startsWith q email)
+    (String.startsWith q name) || (String.startsWith q email)
 
 
 handleGraphQLError : Model -> RawError parsedData httpError -> ( Model, Cmd msg )
