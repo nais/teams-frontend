@@ -15,6 +15,7 @@
     --white: white;
     --red: darkred;
     --light-gray: #f1f1f1;
+    --gray: #d1d1d1;
     --link: #0067c5;
     --gutter: 2rem;
     --content-width: 45rem;
@@ -170,10 +171,10 @@ form label {
     margin: 0 0 0.5rem;
 }
 
-form input[type="text"] {
+input[type="text"] {
     padding: 0.5rem;
     border-radius: 1rem;
-    border: 1px solid #cac;
+    border: 1px solid var(--gray);
 }
 
 thead {

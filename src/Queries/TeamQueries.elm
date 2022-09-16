@@ -63,12 +63,12 @@ updateTeamMutation id team =
     Mutation.updateTeam { teamId = id, input = team } teamDataSelection
 
 
-addMemberToTeamMutation : Backend.ScalarCodecs.Uuid -> Backend.ScalarCodecs.Uuid -> SelectionSet TeamData RootMutation
-addMemberToTeamMutation userID teamID =
+addMemberToTeamMutation : TeamData -> UserData -> SelectionSet TeamData RootMutation
+addMemberToTeamMutation team user =
     Mutation.addTeamMembers
         { input =
-            { teamId = teamID
-            , userIds = [ userID ]
+            { teamId = team.id
+            , userIds = [ user.id ]
             }
         }
         teamDataSelection

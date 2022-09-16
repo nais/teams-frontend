@@ -4,8 +4,8 @@ import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.Scalar exposing (Slug(..), Uuid)
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, button, div, form, h2, input, label, li, option, p, select, table, tbody, td, text, th, tr, ul)
-import Html.Attributes exposing (class, disabled, for, placeholder, readonly, selected, type_, value)
+import Html exposing (Html, button, div, form, h2, input, label, li, option, p, select, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, colspan, disabled, for, placeholder, readonly, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import List exposing (member)
 import Queries.Do
@@ -163,7 +163,7 @@ formView model =
                 , textbox PurposeChanged model.team.purpose "purpose" "Purpose of the team" "Making sure customers have a good user experience"
                 ]
                 :: errorView model.error
-                ++ [ input [ type_ "submit", value "Save changes" ] []
+                ++ [ button [ type_ "submit" ] [ text "Save changes" ]
                    ]
             )
         ]
@@ -217,10 +217,20 @@ memberView currentUser members =
     div []
         [ h2 [] [ text "Membership administration" ]
         , table []
-            [ tr []
-                [ th [] [ text "Email" ]
-                , th [] [ text "Role" ]
-                , th [] [ text "" ]
+            [ thead []
+                [ tr []
+                    [ th [] [ text "Email" ]
+                    , th [] [ text "Role" ]
+                    , th [] [ text "" ]
+                    ]
+                ]
+            , tbody []
+                [ tr []
+                    [ td []
+                        [ input [ type_ "text" ] []
+                        ]
+                    , td [ colspan 2 ] [ text "(new member)" ]
+                    ]
                 ]
             , tbody [] (List.map (memberRow currentUser) members)
             ]
