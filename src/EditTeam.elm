@@ -26,9 +26,11 @@ type Msg
     | GotTeamResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | GotUpdateTeamResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | GotSetTeamMemberRoleResponse (Result (Graphql.Http.Error TeamData) TeamData)
+    | GotRemoveTeamMemberResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | NameChanged String
     | PurposeChanged String
     | RoleDropDownClicked TeamMemberData TeamRole
+    | RemoveMemberClicked TeamMemberData
 
 
 init : Session -> Uuid -> ( Model, Cmd Msg )
@@ -82,6 +84,12 @@ update msg model =
         GotSetTeamMemberRoleResponse (Err e) ->
             handleGraphQLError model e
 
+        GotRemoveTeamMemberResponse (Ok team) ->
+            ( { model | error = Nothing, team = team }, Cmd.none )
+
+        GotRemoveTeamMemberResponse (Err e) ->
+            handleGraphQLError model e
+
         NameChanged name ->
             ( { model | team = mapTeamName name model.team }, Cmd.none )
 
@@ -94,6 +102,9 @@ update msg model =
 
             else
                 ( model, setTeamMemberRole model.team member role )
+
+        RemoveMemberClicked member ->
+            ( model, removeTeamMember model.team member.user )
 
 
 handleGraphQLError : Model -> RawError parsedData httpError -> ( Model, Cmd msg )
@@ -187,6 +198,12 @@ setTeamMemberRole team member role =
         GotSetTeamMemberRoleResponse
 
 
+removeTeamMember team user =
+    Queries.Do.mutate
+        (Queries.TeamQueries.removeMemberFromTeamMutation team user)
+        GotRemoveTeamMemberResponse
+
+
 view : Model -> Html Msg
 view model =
     div []
@@ -197,13 +214,16 @@ view model =
 
 memberView : User -> List TeamMemberData -> Html Msg
 memberView currentUser members =
-    table []
-        [ tr []
-            [ th [] [ text "Email" ]
-            , th [] [ text "Role" ]
-            , th [] [ text "" ]
+    div []
+        [ h2 [] [ text "Membership administration" ]
+        , table []
+            [ tr []
+                [ th [] [ text "Email" ]
+                , th [] [ text "Role" ]
+                , th [] [ text "" ]
+                ]
+            , tbody [] (List.map (memberRow currentUser) members)
             ]
-        , tbody [] (List.map (memberRow currentUser) members)
         ]
 
 
@@ -241,5 +261,5 @@ memberRow currentUser member =
     tr []
         [ td [] [ text member.user.email ]
         , td [] [ roleSelector currentUser member ]
-        , td [] [ button [ class "red" ] [ text "Remove" ] ]
+        , td [] [ button [ class "red", onClick (RemoveMemberClicked member) ] [ text "Remove" ] ]
         ]

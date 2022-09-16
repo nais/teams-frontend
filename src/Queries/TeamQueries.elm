@@ -74,6 +74,17 @@ addMemberToTeamMutation userID teamID =
         teamDataSelection
 
 
+removeMemberFromTeamMutation : TeamData -> UserData -> SelectionSet TeamData RootMutation
+removeMemberFromTeamMutation team user =
+    Mutation.removeUsersFromTeam
+        { input =
+            { userIds = [ user.id ]
+            , teamId = team.id
+            }
+        }
+        teamDataSelection
+
+
 setTeamMemberRoleMutation : TeamData -> TeamMemberData -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
 setTeamMemberRoleMutation team member role =
     Mutation.setTeamMemberRole
