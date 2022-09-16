@@ -201,7 +201,7 @@ memberView currentUser members =
         [ tr []
             [ th [] [ text "Email" ]
             , th [] [ text "Role" ]
-            , th [] [ text "Delete" ]
+            , th [] [ text "" ]
             ]
         , tbody [] (List.map (memberRow currentUser) members)
         ]
@@ -241,5 +241,5 @@ memberRow currentUser member =
     tr []
         [ td [] [ text member.user.email ]
         , td [] [ roleSelector currentUser member ]
-        , td [] [ button [] [ text "delete" ] ]
+        , td [] [ button [ class "red" ] [ text "Remove" ] ]
         ]

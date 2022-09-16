@@ -13,6 +13,7 @@
     --black: #262626;
     --blue: #00374f;
     --white: white;
+    --red: darkred;
     --light-gray: #f1f1f1;
     --link: #0067c5;
     --gutter: 2rem;
@@ -133,13 +134,13 @@ td, th {
     margin: 0;
 }
 
-td:not(:last-child){
+/*td:not(:last-child){
     white-space: nowrap;
 }
 
 td:last-child{
     width: 100%;
-}
+}*/
 
 form {
     margin: 2rem 0;
@@ -171,6 +172,10 @@ form input[type="text"] {
     border: 1px solid #cac;
 }
 
+thead {
+    border-bottom: 2px solid var(--light-gray);
+}
+
 tbody tr:nth-child(even) {
     background: var(--light-gray);
 }
@@ -184,7 +189,7 @@ tbody.meta tr {
 }
 
 div.error {
-    border: 2px solid darkred;
+    border: 2px solid var(--red);
     padding: 1rem;
     margin: 1rem 0;
 }
@@ -199,6 +204,10 @@ button, .button {
     cursor: pointer;
     text-decoration: none;
     display: inline-block;
+}
+
+button.red, .button.red {
+    background: var(--red);
 }
 
 button:hover, .button:hover {
