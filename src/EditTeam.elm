@@ -4,15 +4,13 @@ import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.Scalar exposing (Slug(..), Uuid)
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, button, div, form, h2, input, label, li, option, p, select, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, colspan, disabled, for, placeholder, readonly, selected, type_, value)
+import Html exposing (Html, button, datalist, div, form, h2, input, label, li, option, p, select, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, colspan, disabled, for, id, list, placeholder, readonly, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
-import List exposing (member)
 import Queries.Do
 import Queries.TeamQueries exposing (TeamData, TeamMemberData, updateTeamMutation)
 import Queries.UserQueries exposing (UserData)
 import Session exposing (Session, User(..))
-import Bitwise exposing (or)
 
 
 type alias Model =
@@ -21,7 +19,6 @@ type alias Model =
     , error : Maybe String
     , team : TeamData
     , userList : List UserData
-    , addMemberCandidates : List UserData
     }
 
 
@@ -31,6 +28,7 @@ type Msg
     | GotUpdateTeamResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | GotSetTeamMemberRoleResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | GotRemoveTeamMemberResponse (Result (Graphql.Http.Error TeamData) TeamData)
+    | GotAddTeamMemberResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | GotUserListResponse (Result (Graphql.Http.Error (List UserData)) (List UserData))
     | NameChanged String
     | PurposeChanged String
@@ -45,7 +43,6 @@ init session id =
       , originalName = Nothing
       , error = Nothing
       , userList = []
-      , addMemberCandidates = []
       , team =
             { id = id
             , name = ""
@@ -101,6 +98,12 @@ update msg model =
         GotRemoveTeamMemberResponse (Err e) ->
             handleGraphQLError model e
 
+        GotAddTeamMemberResponse (Ok team) ->
+            ( { model | error = Nothing, team = team }, Cmd.none )
+
+        GotAddTeamMemberResponse (Err e) ->
+            handleGraphQLError model e
+
         GotUserListResponse (Ok userList) ->
             ( { model | error = Nothing, userList = userList }, Cmd.none )
 
@@ -124,22 +127,18 @@ update msg model =
             ( model, removeTeamMember model.team member.user )
 
         AddMemberSearchChanged query ->
-            ( { model | addMemberCandidates = List.filter (filterUser query) model.userList }, Cmd.none )
+            case List.head (List.filter (matchExactUser query) model.userList) of
+                Just u ->
+                    (  model , addTeamMember model.team u )
+
+                Nothing ->
+                    (  model , Cmd.none )
 
 
-filterUser : String -> UserData -> Bool
-filterUser query user =
-    let
-        q =
-            String.toLower query
+matchExactUser : String -> UserData -> Bool
+matchExactUser query user =
+    nameAndEmail user == query
 
-        name =
-            String.toLower user.name
-
-        email =
-            String.toLower user.email
-    in
-    (String.startsWith q name) || (String.startsWith q email)
 
 
 handleGraphQLError : Model -> RawError parsedData httpError -> ( Model, Cmd msg )
@@ -240,22 +239,33 @@ setTeamMemberRole team member role =
         GotSetTeamMemberRoleResponse
 
 
+removeTeamMember : TeamData -> UserData -> Cmd Msg
 removeTeamMember team user =
     Queries.Do.mutate
         (Queries.TeamQueries.removeMemberFromTeamMutation team user)
         GotRemoveTeamMemberResponse
+
+addTeamMember : TeamData -> UserData -> Cmd Msg
+addTeamMember team user =
+    Queries.Do.mutate
+        (Queries.TeamQueries.addMemberToTeamMutation team user)
+        GotAddTeamMemberResponse
 
 
 view : Model -> Html Msg
 view model =
     div []
         [ formView model
-        , memberView (Session.user model.session) model.team.members
+        , memberView model
         ]
 
 
-memberView : User -> List TeamMemberData -> Html Msg
-memberView currentUser members =
+memberView : Model -> Html Msg
+memberView model =
+    let
+        currentUser =
+            Session.user model.session
+    in
     div []
         [ h2 [] [ text "Membership administration" ]
         , table []
@@ -269,12 +279,13 @@ memberView currentUser members =
             , tbody []
                 [ tr []
                     [ td []
-                        [ input [ type_ "text", onInput AddMemberSearchChanged ] []
+                        [ input [ list "teams", type_ "text", onInput AddMemberSearchChanged ] []
+                        , datalist [ id "teams" ] (List.map addUserCandidateRow model.userList)
                         ]
                     , td [ colspan 2 ] [ text "(new member)" ]
                     ]
                 ]
-            , tbody [] (List.map (memberRow currentUser) members)
+            , tbody [] (List.map (memberRow currentUser) model.team.members)
             ]
         ]
 
@@ -315,3 +326,13 @@ memberRow currentUser member =
         , td [] [ roleSelector currentUser member ]
         , td [] [ button [ class "red", onClick (RemoveMemberClicked member) ] [ text "Remove" ] ]
         ]
+
+
+nameAndEmail : UserData -> String
+nameAndEmail user =
+    user.name ++ " <" ++ user.email ++ ">"
+
+
+addUserCandidateRow : UserData -> Html msg
+addUserCandidateRow user =
+    option [] [ text (nameAndEmail user) ]
