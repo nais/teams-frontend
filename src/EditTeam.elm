@@ -70,44 +70,20 @@ update msg model =
         GotTeamResponse (Ok team) ->
             ( { model | error = Nothing, team = team, originalName = Just team.name }, Cmd.none )
 
-        GotTeamResponse (Err (Graphql.Http.HttpError e)) ->
-            ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
-
-        GotTeamResponse (Err (GraphqlError _ errors)) ->
-            let
-                errstr =
-                    List.map (\error -> error.message) errors
-                        |> String.join ","
-            in
-            ( { model | error = Just errstr }, Cmd.none )
+        GotTeamResponse (Err e) ->
+            handleGraphQLError model e
 
         GotUpdateTeamResponse (Ok _) ->
             ( { model | error = Nothing }, Cmd.none )
 
-        GotUpdateTeamResponse (Err (Graphql.Http.HttpError e)) ->
-            ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
-
-        GotUpdateTeamResponse (Err (GraphqlError _ errors)) ->
-            let
-                errstr =
-                    List.map (\error -> error.message) errors
-                        |> String.join ","
-            in
-            ( { model | error = Just errstr }, Cmd.none )
+        GotUpdateTeamResponse (Err e) ->
+            handleGraphQLError model e
 
         GotSetTeamMemberRoleResponse (Ok team) ->
             ( { model | error = Nothing, team = team }, Cmd.none )
 
-        GotSetTeamMemberRoleResponse (Err (Graphql.Http.HttpError e)) ->
-            ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
-
-        GotSetTeamMemberRoleResponse (Err (GraphqlError _ errors)) ->
-            let
-                errstr =
-                    List.map (\error -> error.message) errors
-                        |> String.join ","
-            in
-            ( { model | error = Just errstr }, Cmd.none )
+        GotSetTeamMemberRoleResponse (Err e) ->
+            handleGraphQLError model e
 
         NameChanged name ->
             ( { model | team = mapTeamName name model.team }, Cmd.none )
@@ -121,6 +97,21 @@ update msg model =
 
             else
                 ( model, setTeamMemberRole model.team member role )
+
+
+handleGraphQLError : Model -> RawError parsedData httpError -> ( Model, Cmd msg )
+handleGraphQLError model err =
+    case err of
+        Graphql.Http.HttpError e ->
+            ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
+
+        GraphqlError _ errors ->
+            let
+                errstr =
+                    List.map (\error -> error.message) errors
+                        |> String.join ","
+            in
+            ( { model | error = Just errstr }, Cmd.none )
 
 
 stringOrNothing : String -> Maybe String
