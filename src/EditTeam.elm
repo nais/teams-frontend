@@ -10,6 +10,7 @@ import Html.Events exposing (onClick, onInput, onSubmit)
 import List exposing (member)
 import Queries.Do
 import Queries.TeamQueries exposing (TeamData, TeamMemberData, updateTeamMutation)
+import Queries.UserQueries exposing (UserData)
 import Session exposing (Session, User(..))
 
 
@@ -18,6 +19,7 @@ type alias Model =
     , originalName : Maybe String
     , error : Maybe String
     , team : TeamData
+    , userList : List UserData
     }
 
 
@@ -27,10 +29,12 @@ type Msg
     | GotUpdateTeamResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | GotSetTeamMemberRoleResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | GotRemoveTeamMemberResponse (Result (Graphql.Http.Error TeamData) TeamData)
+    | GotUserListResponse (Result (Graphql.Http.Error (List UserData)) (List UserData))
     | NameChanged String
     | PurposeChanged String
     | RoleDropDownClicked TeamMemberData TeamRole
     | RemoveMemberClicked TeamMemberData
+    | AddMemberSearchChanged String
 
 
 init : Session -> Uuid -> ( Model, Cmd Msg )
@@ -38,6 +42,7 @@ init session id =
     ( { session = session
       , originalName = Nothing
       , error = Nothing
+      , userList = []
       , team =
             { id = id
             , name = ""
@@ -47,7 +52,10 @@ init session id =
             , auditLogs = []
             }
       }
-    , getTeam id
+    , Cmd.batch
+        [ getTeam id
+        , getUserList
+        ]
     )
 
 
@@ -90,6 +98,12 @@ update msg model =
         GotRemoveTeamMemberResponse (Err e) ->
             handleGraphQLError model e
 
+        GotUserListResponse (Ok userList) ->
+            ( { model | error = Nothing, userList = userList }, Cmd.none )
+
+        GotUserListResponse (Err e) ->
+            handleGraphQLError model e
+
         NameChanged name ->
             ( { model | team = mapTeamName name model.team }, Cmd.none )
 
@@ -105,6 +119,9 @@ update msg model =
 
         RemoveMemberClicked member ->
             ( model, removeTeamMember model.team member.user )
+
+        AddMemberSearchChanged query ->
+            ( model, Cmd.none )
 
 
 handleGraphQLError : Model -> RawError parsedData httpError -> ( Model, Cmd msg )
@@ -191,6 +208,13 @@ getTeam uuid =
         GotTeamResponse
 
 
+getUserList : Cmd Msg
+getUserList =
+    Queries.Do.query
+        Queries.UserQueries.getAllUsers
+        GotUserListResponse
+
+
 setTeamMemberRole : TeamData -> TeamMemberData -> TeamRole -> Cmd Msg
 setTeamMemberRole team member role =
     Queries.Do.mutate
@@ -227,7 +251,7 @@ memberView currentUser members =
             , tbody []
                 [ tr []
                     [ td []
-                        [ input [ type_ "text" ] []
+                        [ input [ type_ "text", onInput AddMemberSearchChanged ] []
                         ]
                     , td [ colspan 2 ] [ text "(new member)" ]
                     ]

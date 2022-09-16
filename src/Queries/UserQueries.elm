@@ -29,6 +29,11 @@ getUserQuery email =
     Query.userByEmail { email = email } userDataSelection
 
 
+getAllUsers : SelectionSet (List UserData) RootQuery
+getAllUsers =
+    Query.users userDataSelection
+
+
 userDataSelection : SelectionSet UserData Backend.Object.User
 userDataSelection =
     Graphql.SelectionSet.map3 UserData
