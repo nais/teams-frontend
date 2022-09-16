@@ -18,13 +18,9 @@ import Session exposing (Session)
 
 type alias Model =
     { session : Session
-    , id : Uuid
-    , slug : String
     , originalName : Maybe String
-    , name : Maybe String
-    , purpose : Maybe String
     , error : Maybe String
-    , members : List TeamMemberData
+    , team : TeamData
     }
 
 
@@ -41,13 +37,16 @@ type Msg
 init : Session -> Uuid -> ( Model, Cmd Msg )
 init session id =
     ( { session = session
-      , id = id
       , originalName = Nothing
-      , name = Nothing
-      , purpose = Nothing
-      , slug = ""
       , error = Nothing
-      , members = []
+      , team =
+            { id = id
+            , name = ""
+            , slug = Slug ""
+            , purpose = Nothing
+            , members = []
+            , auditLogs = []
+            }
       }
     , getTeam id
     )
@@ -60,16 +59,16 @@ update msg model =
             ( model
             , Queries.Do.mutate
                 (updateTeamMutation
-                    model.id
-                    { name = Graphql.OptionalArgument.fromMaybe model.name
-                    , purpose = Graphql.OptionalArgument.fromMaybe model.purpose
+                    model.team.id
+                    { name = Graphql.OptionalArgument.Present model.team.name
+                    , purpose = Graphql.OptionalArgument.fromMaybe model.team.purpose
                     }
                 )
                 GotUpdateTeamResponse
             )
 
         GotTeamResponse (Ok team) ->
-            ( { model | error = Nothing } |> mapTeam team, Cmd.none )
+            ( { model | error = Nothing, team = team, originalName = Just team.name }, Cmd.none )
 
         GotTeamResponse (Err (Graphql.Http.HttpError e)) ->
             ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
@@ -97,7 +96,7 @@ update msg model =
             ( { model | error = Just errstr }, Cmd.none )
 
         GotSetTeamMemberRoleResponse (Ok team) ->
-            ( { model | error = Nothing } |> mapTeam team, Cmd.none )
+            ( { model | error = Nothing, team = team }, Cmd.none )
 
         GotSetTeamMemberRoleResponse (Err (Graphql.Http.HttpError e)) ->
             ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
@@ -110,21 +109,22 @@ update msg model =
             in
             ( { model | error = Just errstr }, Cmd.none )
 
-        NameChanged s ->
-            ( { model | name = stringOrBlank s }, Cmd.none )
+        NameChanged name ->
+            ( { model | team = mapTeamName name model.team }, Cmd.none )
 
-        PurposeChanged s ->
-            ( { model | purpose = stringOrBlank s }, Cmd.none )
+        PurposeChanged purpose ->
+            ( { model | team = mapTeamPurpose purpose model.team }, Cmd.none )
 
         RoleDropDownClicked member role ->
             if member.role == role then
                 ( model, Cmd.none )
+
             else
-                (model, setTeamMemberRole member.user.id model.id role)
+                ( model, setTeamMemberRole model.team member role )
 
 
-stringOrBlank : String -> Maybe String
-stringOrBlank s =
+stringOrNothing : String -> Maybe String
+stringOrNothing s =
     if s == "" then
         Nothing
 
@@ -155,38 +155,34 @@ formView model =
     div []
         [ h2 [] [ text ("Teams → Change " ++ Maybe.withDefault "team" model.originalName) ]
         , form [ onSubmit SubmitForm ]
-            ([ ul []
+            (ul []
                 [ li []
                     [ label [ for "slug" ] [ text "Identifier" ]
-                    , input [ type_ "text", readonly True, disabled True, value model.slug ] []
+                    , input [ type_ "text", readonly True, disabled True, value (slugstr model.team.slug) ] []
                     ]
-                , textbox NameChanged model.name "name" "Team name" "Customer satisfaction"
-                , textbox PurposeChanged model.purpose "purpose" "Purpose of the team" "Making sure customers have a good user experience"
+                , textbox NameChanged (stringOrNothing model.team.name) "name" "Team name" "Customer satisfaction"
+                , textbox PurposeChanged model.team.purpose "purpose" "Purpose of the team" "Making sure customers have a good user experience"
                 ]
-             ]
-                ++ errorView model.error
+                :: errorView model.error
                 ++ [ input [ type_ "submit", value "Save changes" ] []
                    ]
             )
         ]
 
 
-mapTeam : TeamData -> Model -> Model
-mapTeam teamData model =
-    let
-        slug =
-            case teamData.slug of
-                Slug s ->
-                    s
-    in
-    { model
-        | name = Just teamData.name
-        , originalName = Just teamData.name
-        , purpose = teamData.purpose
-        , slug = slug
-        , id = teamData.id
-        , members = teamData.members
-    }
+slugstr : Slug -> String
+slugstr (Slug s) =
+    s
+
+
+mapTeamName : String -> TeamData -> TeamData
+mapTeamName name team =
+    { team | name = name }
+
+
+mapTeamPurpose : String -> TeamData -> TeamData
+mapTeamPurpose purpose team =
+    { team | purpose = Just purpose }
 
 
 getTeam : Uuid -> Cmd Msg
@@ -196,10 +192,10 @@ getTeam uuid =
         GotTeamResponse
 
 
-setTeamMemberRole : Uuid -> Uuid -> TeamRole -> Cmd Msg
-setTeamMemberRole teamUuid memberUuid role =
+setTeamMemberRole : TeamData -> TeamMemberData -> TeamRole -> Cmd Msg
+setTeamMemberRole team member role =
     Queries.Do.mutate
-        (Queries.TeamQueries.setTeamMemberRoleMutation teamUuid memberUuid role)
+        (Queries.TeamQueries.setTeamMemberRoleMutation team member role)
         GotSetTeamMemberRoleResponse
 
 
@@ -207,19 +203,19 @@ view : Model -> Html Msg
 view model =
     div []
         [ formView model
-        , memberView model
+        , memberView model.team.members
         ]
 
 
-memberView : Model -> Html Msg
-memberView model =
+memberView : List TeamMemberData -> Html Msg
+memberView members =
     table []
         [ tr []
             [ th [] [ text "Email" ]
             , th [] [ text "Role" ]
             , th [] [ text "Delete" ]
             ]
-        , tbody [] (List.map memberRow model.members)
+        , tbody [] (List.map memberRow members)
         ]
 
 

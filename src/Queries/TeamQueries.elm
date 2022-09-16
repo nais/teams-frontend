@@ -74,12 +74,12 @@ addMemberToTeamMutation userID teamID =
         teamDataSelection
 
 
-setTeamMemberRoleMutation : Scalar.Uuid -> Scalar.Uuid -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
-setTeamMemberRoleMutation userID teamID role =
+setTeamMemberRoleMutation : TeamData -> TeamMemberData -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
+setTeamMemberRoleMutation team member role =
     Mutation.setTeamMemberRole
         { input =
-            { teamId = teamID
-            , userId = userID
+            { teamId = team.id
+            , userId = member.user.id
             , role = role
             }
         }
