@@ -13,7 +13,7 @@ import List exposing (member)
 import Queries.Do
 import Queries.TeamQueries exposing (TeamData, TeamMemberData, createTeamMutation, updateTeamMutation)
 import Queries.UserQueries exposing (UserData)
-import Session exposing (Session)
+import Session exposing (Session, User(..))
 
 
 type alias Model =
@@ -203,19 +203,19 @@ view : Model -> Html Msg
 view model =
     div []
         [ formView model
-        , memberView model.team.members
+        , memberView (Session.user model.session)model.team.members 
         ]
 
 
-memberView : List TeamMemberData -> Html Msg
-memberView members =
+memberView : User -> List TeamMemberData -> Html Msg
+memberView currentUser members =
     table []
         [ tr []
             [ th [] [ text "Email" ]
             , th [] [ text "Role" ]
             , th [] [ text "Delete" ]
             ]
-        , tbody [] (List.map memberRow members)
+        , tbody [] (List.map (memberRow currentUser) members)
         ]
 
 
@@ -233,15 +233,25 @@ roleOption member role =
         [ text roleStr ]
 
 
-roleSelector : TeamMemberData -> Html Msg
-roleSelector active =
-    select [] (Backend.Enum.TeamRole.list |> List.map (roleOption active))
+roleSelector : User -> TeamMemberData -> Html Msg
+roleSelector currentUser member =
+    select [ disabled (isActiveUser currentUser member) ] (Backend.Enum.TeamRole.list |> List.map (roleOption member))
 
 
-memberRow : TeamMemberData -> Html Msg
-memberRow member =
+isActiveUser : User -> TeamMemberData -> Bool
+isActiveUser currentUser member =
+    case currentUser of
+        LoggedIn u ->
+            u.id == member.user.id
+
+        _ ->
+            False
+
+
+memberRow : User -> TeamMemberData -> Html Msg
+memberRow currentUser member =
     tr []
         [ td [] [ text member.user.email ]
-        , td [] [ roleSelector member ]
+        , td [] [ roleSelector currentUser member ]
         , td [] [ text (Backend.Enum.TeamRole.toString member.role) ]
         ]
