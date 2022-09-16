@@ -1,18 +1,15 @@
 module EditTeam exposing (..)
 
 import Backend.Enum.TeamRole exposing (TeamRole)
-import Backend.Object.User exposing (roles)
 import Backend.Scalar exposing (Slug(..), Uuid)
-import Browser.Navigation
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, div, form, h2, input, label, li, option, p, select, table, tbody, td, text, th, tr, ul)
+import Html exposing (Html, button, div, form, h2, input, label, li, option, p, select, table, tbody, td, text, th, tr, ul)
 import Html.Attributes exposing (class, disabled, for, placeholder, readonly, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import List exposing (member)
 import Queries.Do
-import Queries.TeamQueries exposing (TeamData, TeamMemberData, createTeamMutation, updateTeamMutation)
-import Queries.UserQueries exposing (UserData)
+import Queries.TeamQueries exposing (TeamData, TeamMemberData, updateTeamMutation)
 import Session exposing (Session, User(..))
 
 
@@ -194,7 +191,7 @@ view : Model -> Html Msg
 view model =
     div []
         [ formView model
-        , memberView (Session.user model.session)model.team.members 
+        , memberView (Session.user model.session) model.team.members
         ]
 
 
@@ -244,5 +241,5 @@ memberRow currentUser member =
     tr []
         [ td [] [ text member.user.email ]
         , td [] [ roleSelector currentUser member ]
-        , td [] [ text (Backend.Enum.TeamRole.toString member.role) ]
+        , td [] [ button [] [ text "delete" ] ]
         ]
