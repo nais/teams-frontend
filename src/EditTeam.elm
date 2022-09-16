@@ -20,6 +20,7 @@ type alias Model =
     , error : Maybe String
     , team : TeamData
     , userList : List UserData
+    , addMemberCandidates : List UserData
     }
 
 
@@ -43,6 +44,7 @@ init session id =
       , originalName = Nothing
       , error = Nothing
       , userList = []
+      , addMemberCandidates = []
       , team =
             { id = id
             , name = ""
@@ -121,7 +123,22 @@ update msg model =
             ( model, removeTeamMember model.team member.user )
 
         AddMemberSearchChanged query ->
-            ( model, Cmd.none )
+            ( { model | addMemberCandidates = List.filter (filterUser query) model.userList }, Cmd.none )
+
+
+filterUser : String -> UserData -> Bool
+filterUser query user =
+    let
+        q =
+            String.toLower query
+
+        name =
+            String.toLower user.name
+
+        email =
+            String.toLower user.email
+    in
+    or (String.startsWith q name) (String.startsWith q email)
 
 
 handleGraphQLError : Model -> RawError parsedData httpError -> ( Model, Cmd msg )
