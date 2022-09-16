@@ -170,10 +170,12 @@ view model =
     { title = "NAIS console"
     , body =
         [ header []
-            [ h1 []
-                [ link Route.Home [] [ text "Console" ]
+            [ div []
+                [ h1 []
+                    [ link Route.Home [] [ text "Console" ]
+                    ]
+                , p [] [ text (Session.username (Session.user (toSession model))) ]
                 ]
-            , p [] [ text (Session.username (Session.user (toSession model))) ]
             ]
         , nav []
             [ ul []

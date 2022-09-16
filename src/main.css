@@ -17,6 +17,7 @@
     --light-gray: #f1f1f1;
     --link: #0067c5;
     --gutter: 2rem;
+    --content-width: 45rem;
 }
 
 body {
@@ -43,22 +44,24 @@ a {
 }
 
 main {
-    margin: 2rem var(--gutter);
-    /*
-    max-width: 45rem;
-    margin: 0 auto;
-    text-align: left;
-     */
+    max-width: var(--content-width);
+    margin: 2em auto;
+    padding: 0 var(--gutter);
 }
 
 header {
     background: var(--blue);
     color: var(--white);
+}
+
+header > div {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: baseline;
     gap: 1rem;
+    max-width: var(--content-width);
+    margin: 0 auto;
     padding: 0 var(--gutter);
 }
 
@@ -87,9 +90,10 @@ nav ul {
     display: flex;
     justify-content: flex-start;
     list-style: none;
-    margin: 0;
+    margin: 0 auto;
     padding: 0.75rem var(--gutter);
     padding-top: 1em;
+    max-width: var(--content-width);
 }
 
 nav li {
