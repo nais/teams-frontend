@@ -1,4 +1,4 @@
-import '../public/main.css';
-import { Elm } from '../src/Main.elm'
+import './main.css';
+import { Elm } from './Main.elm'
 
 Elm.Main.init();
