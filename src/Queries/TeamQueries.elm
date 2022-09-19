@@ -35,7 +35,6 @@ type alias AuditLogData =
 
 type alias TeamData =
     { id : Uuid
-    , name : String
     , slug : Slug
     , purpose : Maybe String
     , members : List TeamMemberData
@@ -99,9 +98,8 @@ setTeamMemberRoleMutation team member role =
 
 teamDataSelection : SelectionSet TeamData Backend.Object.Team
 teamDataSelection =
-    Graphql.SelectionSet.map6 TeamData
+    Graphql.SelectionSet.map5 TeamData
         Team.id
-        Team.name
         Team.slug
         Team.purpose
         (Team.members teamMemberSelection)

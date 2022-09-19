@@ -1,7 +1,6 @@
 module CreateTeam exposing (..)
 
 import Backend.Scalar
-import Browser.Navigation
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
 import Html exposing (Html, div, form, h2, input, label, li, p, text, ul)
@@ -15,7 +14,6 @@ import Session exposing (Session)
 type alias Model =
     { session : Session
     , slug : String
-    , name : String
     , purpose : Maybe String
     , error : Maybe String
     }
@@ -25,14 +23,12 @@ type Msg
     = CreateTeamSubmit
     | GotTeamCreatedResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | SlugChanged String
-    | NameChanged String
     | PurposeChanged String
 
 
 init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
-      , name = ""
       , purpose = Nothing
       , slug = ""
       , error = Nothing
@@ -48,7 +44,7 @@ update msg model =
             ( model
             , Queries.Do.mutate
                 (createTeamMutation
-                    { name = model.name
+                    { name = model.slug
                     , purpose = Graphql.OptionalArgument.fromMaybe model.purpose
                     , slug = Backend.Scalar.Slug model.slug
                     }
@@ -59,10 +55,10 @@ update msg model =
         GotTeamCreatedResponse (Ok _) ->
             ( { model | error = Nothing }, Cmd.none )
 
-        GotTeamCreatedResponse (Err (Graphql.Http.HttpError e)) ->
+        GotTeamCreatedResponse (Err (Graphql.Http.HttpError _)) ->
             ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
 
-        GotTeamCreatedResponse (Err (GraphqlError data errors)) ->
+        GotTeamCreatedResponse (Err (GraphqlError _ errors)) ->
             let
                 errstr =
                     List.map (\error -> error.message) errors
@@ -72,9 +68,6 @@ update msg model =
 
         SlugChanged s ->
             ( { model | slug = s }, Cmd.none )
-
-        NameChanged s ->
-            ( { model | name = s }, Cmd.none )
 
         PurposeChanged s ->
             ( { model | purpose = stringOrBlank s }, Cmd.none )
@@ -114,13 +107,11 @@ createTeamForm model =
         , p [] [ text "Use this form to create a new team. You will become the administrator of the team." ]
         , p [] [ text "The identifier will be propagated to other systems and cannot be changed after creation." ]
         , form [ onSubmit CreateTeamSubmit ]
-            ([ ul []
+            (ul []
                 [ textbox SlugChanged "slug" "Identifier" "customer-satisfaction"
-                , textbox NameChanged "name" "Team name" "Customer satisfaction"
                 , textbox PurposeChanged "purpose" "Purpose of the team" "Making sure customers have a good user experience"
                 ]
-             ]
-                ++ errorView model.error
+                :: errorView model.error
                 ++ [ input [ type_ "submit", value "Create new team" ] []
                    ]
             )

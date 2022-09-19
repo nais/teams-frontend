@@ -15,7 +15,6 @@ import Session exposing (Session, User(..))
 
 type alias Model =
     { session : Session
-    , originalName : Maybe String
     , error : Maybe String
     , team : TeamData
     , userList : List UserData
@@ -30,7 +29,6 @@ type Msg
     | GotRemoveTeamMemberResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | GotAddTeamMemberResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | GotUserListResponse (Result (Graphql.Http.Error (List UserData)) (List UserData))
-    | NameChanged String
     | PurposeChanged String
     | RoleDropDownClicked TeamMemberData TeamRole
     | RemoveMemberClicked TeamMemberData
@@ -40,12 +38,10 @@ type Msg
 init : Session -> Uuid -> ( Model, Cmd Msg )
 init session id =
     ( { session = session
-      , originalName = Nothing
       , error = Nothing
       , userList = []
       , team =
             { id = id
-            , name = ""
             , slug = Slug ""
             , purpose = Nothing
             , members = []
@@ -67,15 +63,15 @@ update msg model =
             , Queries.Do.mutate
                 (updateTeamMutation
                     model.team.id
-                    { name = Graphql.OptionalArgument.Present model.team.name
-                    , purpose = Graphql.OptionalArgument.fromMaybe model.team.purpose
+                    { purpose = Graphql.OptionalArgument.fromMaybe model.team.purpose
+                    , name = Graphql.OptionalArgument.Present  (slugstr model.team.slug)
                     }
                 )
                 GotUpdateTeamResponse
             )
 
         GotTeamResponse (Ok team) ->
-            ( { model | error = Nothing, team = team, originalName = Just team.name }, Cmd.none )
+            ( { model | error = Nothing, team = team }, Cmd.none )
 
         GotTeamResponse (Err e) ->
             handleGraphQLError model e
@@ -109,9 +105,6 @@ update msg model =
 
         GotUserListResponse (Err e) ->
             handleGraphQLError model e
-
-        NameChanged name ->
-            ( { model | team = mapTeamName name model.team }, Cmd.none )
 
         PurposeChanged purpose ->
             ( { model | team = mapTeamPurpose purpose model.team }, Cmd.none )
@@ -186,14 +179,13 @@ errorView maybeString =
 formView : Model -> Html Msg
 formView model =
     div []
-        [ h2 [] [ text ("Teams → Change " ++ Maybe.withDefault "team" model.originalName) ]
+        [ h2 [] [ text ("Teams → Change " ++ slugstr model.team.slug) ]
         , form [ onSubmit SubmitForm ]
             (ul []
                 [ li []
                     [ label [ for "slug" ] [ text "Identifier" ]
                     , input [ type_ "text", readonly True, disabled True, value (slugstr model.team.slug) ] []
                     ]
-                , textbox NameChanged (stringOrNothing model.team.name) "name" "Team name" "Customer satisfaction"
                 , textbox PurposeChanged model.team.purpose "purpose" "Purpose of the team" "Making sure customers have a good user experience"
                 ]
                 :: errorView model.error
@@ -206,12 +198,6 @@ formView model =
 slugstr : Slug -> String
 slugstr (Slug s) =
     s
-
-
-mapTeamName : String -> TeamData -> TeamData
-mapTeamName name team =
-    { team | name = name }
-
 
 mapTeamPurpose : String -> TeamData -> TeamData
 mapTeamPurpose purpose team =

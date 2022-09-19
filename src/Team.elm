@@ -103,14 +103,8 @@ view model =
     case model.team of
         Team team ->
             div []
-                [ h2 [] [ text ("Teams → " ++ team.name) ]
-                , table []
-                    [ tbody []
-                        [ simpleRow "Slug" (slugstr team.slug)
-                        , simpleRow "Name" team.name
-                        , simpleRow "Purpose" (Maybe.withDefault "N/A" team.purpose)
-                        ]
-                    ]
+                [ h2 [] [ text ("Teams → " ++ slugstr team.slug) ]
+                , p [] [text (Maybe.withDefault "N/A" team.purpose)]
                 , p [] [ link (Route.EditTeam team.id) [ class "button" ] [ text "Edit" ] ]
                 , h3 [] [ text "Members" ]
                 , table []

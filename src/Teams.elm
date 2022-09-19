@@ -1,10 +1,9 @@
 module Teams exposing (..)
 
 import Backend.Scalar
-import Browser.Navigation
 import Graphql.Http
 import Html exposing (Html, div, h2, p, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (class, colspan)
+import Html.Attributes exposing (class)
 import Queries.Do exposing (query)
 import Queries.TeamQueries exposing (TeamData, getTeamsQuery)
 import Route exposing (link)
@@ -62,7 +61,6 @@ row team =
         [ td []
             [ link (Route.Team team.id) [] [ text (slugstr team.slug) ]
             ]
-        , td [] [ text team.name ]
         , td [] [ text (Maybe.withDefault "" team.purpose) ]
         ]
 
@@ -77,7 +75,6 @@ teamTable teams =
             [ thead []
                 [ tr []
                     [ th [] [ text "Slug" ]
-                    , th [] [ text "Team name" ]
                     , th [] [ text "Purpose" ]
                     ]
                 ]
