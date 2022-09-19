@@ -31,10 +31,10 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         LoginClicked ->
-            ( model, Browser.Navigation.load "http://localhost:3000/oauth2/login" )
+            ( model, Browser.Navigation.load "/oauth2/login" )
 
         LogoutClicked ->
-            ( model, Browser.Navigation.load "http://localhost:3000/oauth2/logout" )
+            ( model, Browser.Navigation.load "/oauth2/logout" )
 
         _ ->
             ( model, Cmd.none )

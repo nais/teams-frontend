@@ -11,7 +11,7 @@ import Graphql.SelectionSet exposing (SelectionSet)
 
 graphQLBackend : String
 graphQLBackend =
-    "http://localhost:3000/query"
+    "/query"
 
 
 query : SelectionSet decodesTo RootQuery -> (Result (Graphql.Http.Error decodesTo) decodesTo -> msg) -> Cmd msg
