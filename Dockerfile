@@ -1,14 +1,13 @@
 FROM node as builder
-RUN unset NODE_ENV
+
 WORKDIR /src
-COPY package.json .
-COPY package-lock.json .
-COPY elm.json .
+COPY package.json package-lock.json elm.json ./
 RUN npm install
-COPY vite.config.js .
-COPY index.html .
-COPY public .
-COPY src .
+
+COPY vite.config.js index.html ./
+COPY ./public ./public
+COPY ./src ./src
+RUN ls -l
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:stable-alpine
