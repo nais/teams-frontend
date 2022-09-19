@@ -13,6 +13,14 @@ type Role
     = Role
 
 
+type ServiceAccount
+    = ServiceAccount
+
+
+type SyncError
+    = SyncError
+
+
 type Team
     = Team
 
@@ -21,13 +29,13 @@ type TeamMember
     = TeamMember
 
 
+type TeamMembership
+    = TeamMembership
+
+
 type TeamSync
     = TeamSync
 
 
 type User
     = User
-
-
-type UserTeam
-    = UserTeam

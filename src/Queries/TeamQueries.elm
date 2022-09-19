@@ -3,7 +3,7 @@ module Queries.TeamQueries exposing (..)
 import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.InputObject exposing (CreateTeamInput, UpdateTeamInput)
 import Backend.Mutation as Mutation
-import Backend.Object exposing (AuditLog)
+import Backend.Object
 import Backend.Object.AuditLog as AuditLog
 import Backend.Object.Team as Team
 import Backend.Object.TeamMember as TeamMember
@@ -117,6 +117,6 @@ auditLogSelection : SelectionSet AuditLogData Backend.Object.AuditLog
 auditLogSelection =
     Graphql.SelectionSet.map4 AuditLogData
         AuditLog.action
-        AuditLog.actorEmail
+        AuditLog.actor
         AuditLog.message
         AuditLog.createdAt

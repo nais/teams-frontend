@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Backend.Object.User exposing (..)
+module Backend.Object.ServiceAccount exposing (..)
 
 import Backend.InputObject
 import Backend.Interface
@@ -19,40 +19,24 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
-{-| Unique ID of the user.
+{-| Unique ID of the service account.
 -}
-id : SelectionSet Backend.ScalarCodecs.Uuid Backend.Object.User
+id : SelectionSet Backend.ScalarCodecs.Uuid Backend.Object.ServiceAccount
 id =
     Object.selectionForField "ScalarCodecs.Uuid" "id" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
-{-| The email address of the user.
+{-| The name of the service account.
 -}
-email : SelectionSet String Backend.Object.User
-email =
-    Object.selectionForField "String" "email" [] Decode.string
-
-
-{-| The name of the user.
--}
-name : SelectionSet String Backend.Object.User
+name : SelectionSet String Backend.Object.ServiceAccount
 name =
     Object.selectionForField "String" "name" [] Decode.string
 
 
-{-| List of team memberships.
--}
-teams :
-    SelectionSet decodesTo Backend.Object.TeamMembership
-    -> SelectionSet (List decodesTo) Backend.Object.User
-teams object____ =
-    Object.selectionForCompositeField "teams" [] object____ (Basics.identity >> Decode.list)
-
-
-{-| Roles attached to the user.
+{-| Roles attached to the service account.
 -}
 roles :
     SelectionSet decodesTo Backend.Object.Role
-    -> SelectionSet (List decodesTo) Backend.Object.User
+    -> SelectionSet (List decodesTo) Backend.Object.ServiceAccount
 roles object____ =
     Object.selectionForCompositeField "roles" [] object____ (Basics.identity >> Decode.list)

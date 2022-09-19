@@ -19,13 +19,61 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode exposing (Decoder)
 
 
+type alias AssignGlobalRoleToUserRequiredArguments =
+    { role : Backend.ScalarCodecs.RoleName
+    , userID : Backend.ScalarCodecs.Uuid
+    }
+
+
+{-| Assign a global role to a user
+
+Only users with the admin role are allowed to assign global roles.
+
+The updated user is returned on success.
+
+  - role - The role to assign the user.
+  - userID - The user that will be assiged the role.
+
+-}
+assignGlobalRoleToUser :
+    AssignGlobalRoleToUserRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.User
+    -> SelectionSet decodesTo RootMutation
+assignGlobalRoleToUser requiredArgs____ object____ =
+    Object.selectionForCompositeField "assignGlobalRoleToUser" [ Argument.required "role" requiredArgs____.role (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecRoleName), Argument.required "userID" requiredArgs____.userID (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+
+
+type alias RevokeGlobalRoleFromUserRequiredArguments =
+    { role : Backend.ScalarCodecs.RoleName
+    , userID : Backend.ScalarCodecs.Uuid
+    }
+
+
+{-| Revoke a global role from a user
+
+Only users with the admin role are allowed to revoke global roles.
+
+The updated user is returned on success.
+
+  - role - The role to revoke from the user.
+  - userID - The user to revoke the role from.
+
+-}
+revokeGlobalRoleFromUser :
+    RevokeGlobalRoleFromUserRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.User
+    -> SelectionSet decodesTo RootMutation
+revokeGlobalRoleFromUser requiredArgs____ object____ =
+    Object.selectionForCompositeField "revokeGlobalRoleFromUser" [ Argument.required "role" requiredArgs____.role (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecRoleName), Argument.required "userID" requiredArgs____.userID (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+
+
 type alias CreateTeamRequiredArguments =
     { input : Backend.InputObject.CreateTeamInput }
 
 
 {-| Create a new team
 
-The user creating the team will be granted team ownership.
+The user creating the team will be granted team ownership, unless the user is a service account, in which case the team will not get an initial owner. To add one or more owners to the team, refer to the `addTeamOwners` mutation.
 
 The new team will be returned on success.
 

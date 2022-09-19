@@ -5,6 +5,5 @@
 module Backend.Union exposing (..)
 
 
-placeholder : String
-placeholder =
-    ""
+type AuthenticatedUser
+    = AuthenticatedUser

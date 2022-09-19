@@ -4,8 +4,10 @@ import Backend.Object
 import Backend.Object.User as User
 import Backend.Query as Query
 import Backend.Scalar exposing (Uuid)
+import Backend.Union
+import Backend.Union.AuthenticatedUser as AuthenticatedUser
 import Graphql.Operation exposing (RootQuery)
-import Graphql.SelectionSet exposing (SelectionSet)
+import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 
 
 
@@ -19,9 +21,9 @@ type alias UserData =
     }
 
 
-getMeQuery : SelectionSet UserData RootQuery
+getMeQuery : SelectionSet (Maybe UserData) RootQuery
 getMeQuery =
-    Query.me userDataSelection
+    Query.me meSelection
 
 
 getUserQuery : String -> SelectionSet UserData RootQuery
@@ -36,7 +38,15 @@ getAllUsers =
 
 userDataSelection : SelectionSet UserData Backend.Object.User
 userDataSelection =
-    Graphql.SelectionSet.map3 UserData
+    SelectionSet.map3 UserData
         User.id
         User.email
         User.name
+
+
+meSelection : SelectionSet (Maybe UserData) Backend.Union.AuthenticatedUser
+meSelection =
+    AuthenticatedUser.fragments
+        { onUser = SelectionSet.map Just userDataSelection
+        , onServiceAccount = SelectionSet.map (\_ -> Nothing) SelectionSet.empty
+        }

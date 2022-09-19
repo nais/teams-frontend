@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Backend.Scalar exposing (AuditAction(..), Codecs, Id(..), Map(..), Slug(..), SystemName(..), Time(..), Uuid(..), defaultCodecs, defineCodecs, unwrapCodecs, unwrapEncoder)
+module Backend.Scalar exposing (AuditAction(..), Codecs, Id(..), Map(..), RoleName(..), Slug(..), SystemName(..), Time(..), Uuid(..), defaultCodecs, defineCodecs, unwrapCodecs, unwrapEncoder)
 
 import Graphql.Codec exposing (Codec)
 import Graphql.Internal.Builder.Object as Object
@@ -21,6 +21,10 @@ type Id
 
 type Map
     = Map String
+
+
+type RoleName
+    = RoleName String
 
 
 type Slug
@@ -43,22 +47,24 @@ defineCodecs :
     { codecAuditAction : Codec valueAuditAction
     , codecId : Codec valueId
     , codecMap : Codec valueMap
+    , codecRoleName : Codec valueRoleName
     , codecSlug : Codec valueSlug
     , codecSystemName : Codec valueSystemName
     , codecTime : Codec valueTime
     , codecUuid : Codec valueUuid
     }
-    -> Codecs valueAuditAction valueId valueMap valueSlug valueSystemName valueTime valueUuid
+    -> Codecs valueAuditAction valueId valueMap valueRoleName valueSlug valueSystemName valueTime valueUuid
 defineCodecs definitions =
     Codecs definitions
 
 
 unwrapCodecs :
-    Codecs valueAuditAction valueId valueMap valueSlug valueSystemName valueTime valueUuid
+    Codecs valueAuditAction valueId valueMap valueRoleName valueSlug valueSystemName valueTime valueUuid
     ->
         { codecAuditAction : Codec valueAuditAction
         , codecId : Codec valueId
         , codecMap : Codec valueMap
+        , codecRoleName : Codec valueRoleName
         , codecSlug : Codec valueSlug
         , codecSystemName : Codec valueSystemName
         , codecTime : Codec valueTime
@@ -69,22 +75,23 @@ unwrapCodecs (Codecs unwrappedCodecs) =
 
 
 unwrapEncoder :
-    (RawCodecs valueAuditAction valueId valueMap valueSlug valueSystemName valueTime valueUuid -> Codec getterValue)
-    -> Codecs valueAuditAction valueId valueMap valueSlug valueSystemName valueTime valueUuid
+    (RawCodecs valueAuditAction valueId valueMap valueRoleName valueSlug valueSystemName valueTime valueUuid -> Codec getterValue)
+    -> Codecs valueAuditAction valueId valueMap valueRoleName valueSlug valueSystemName valueTime valueUuid
     -> getterValue
     -> Graphql.Internal.Encode.Value
 unwrapEncoder getter (Codecs unwrappedCodecs) =
     (unwrappedCodecs |> getter |> .encoder) >> Graphql.Internal.Encode.fromJson
 
 
-type Codecs valueAuditAction valueId valueMap valueSlug valueSystemName valueTime valueUuid
-    = Codecs (RawCodecs valueAuditAction valueId valueMap valueSlug valueSystemName valueTime valueUuid)
+type Codecs valueAuditAction valueId valueMap valueRoleName valueSlug valueSystemName valueTime valueUuid
+    = Codecs (RawCodecs valueAuditAction valueId valueMap valueRoleName valueSlug valueSystemName valueTime valueUuid)
 
 
-type alias RawCodecs valueAuditAction valueId valueMap valueSlug valueSystemName valueTime valueUuid =
+type alias RawCodecs valueAuditAction valueId valueMap valueRoleName valueSlug valueSystemName valueTime valueUuid =
     { codecAuditAction : Codec valueAuditAction
     , codecId : Codec valueId
     , codecMap : Codec valueMap
+    , codecRoleName : Codec valueRoleName
     , codecSlug : Codec valueSlug
     , codecSystemName : Codec valueSystemName
     , codecTime : Codec valueTime
@@ -92,7 +99,7 @@ type alias RawCodecs valueAuditAction valueId valueMap valueSlug valueSystemName
     }
 
 
-defaultCodecs : RawCodecs AuditAction Id Map Slug SystemName Time Uuid
+defaultCodecs : RawCodecs AuditAction Id Map RoleName Slug SystemName Time Uuid
 defaultCodecs =
     { codecAuditAction =
         { encoder = \(AuditAction raw) -> Encode.string raw
@@ -105,6 +112,10 @@ defaultCodecs =
     , codecMap =
         { encoder = \(Map raw) -> Encode.string raw
         , decoder = Object.scalarDecoder |> Decode.map Map
+        }
+    , codecRoleName =
+        { encoder = \(RoleName raw) -> Encode.string raw
+        , decoder = Object.scalarDecoder |> Decode.map RoleName
         }
     , codecSlug =
         { encoder = \(Slug raw) -> Encode.string raw

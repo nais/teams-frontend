@@ -20,6 +20,10 @@ type alias Map =
     Backend.Scalar.Map
 
 
+type alias RoleName =
+    Backend.Scalar.RoleName
+
+
 type alias Slug =
     Backend.Scalar.Slug
 
@@ -36,12 +40,13 @@ type alias Uuid =
     Backend.Scalar.Uuid
 
 
-codecs : Backend.Scalar.Codecs AuditAction Id Map Slug SystemName Time Uuid
+codecs : Backend.Scalar.Codecs AuditAction Id Map RoleName Slug SystemName Time Uuid
 codecs =
     Backend.Scalar.defineCodecs
         { codecAuditAction = defaultCodecs.codecAuditAction
         , codecId = defaultCodecs.codecId
         , codecMap = defaultCodecs.codecMap
+        , codecRoleName = defaultCodecs.codecRoleName
         , codecSlug = defaultCodecs.codecSlug
         , codecSystemName = defaultCodecs.codecSystemName
         , codecTime = defaultCodecs.codecTime

@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Backend.Object.UserTeam exposing (..)
+module Backend.Object.TeamMembership exposing (..)
 
 import Backend.Enum.TeamRole
 import Backend.InputObject
@@ -24,13 +24,13 @@ import Json.Decode as Decode
 -}
 team :
     SelectionSet decodesTo Backend.Object.Team
-    -> SelectionSet decodesTo Backend.Object.UserTeam
+    -> SelectionSet decodesTo Backend.Object.TeamMembership
 team object____ =
     Object.selectionForCompositeField "team" [] object____ Basics.identity
 
 
-{-| The role that the user has in the team.
+{-| The role that the member has in the team.
 -}
-role : SelectionSet Backend.Enum.TeamRole.TeamRole Backend.Object.UserTeam
+role : SelectionSet Backend.Enum.TeamRole.TeamRole Backend.Object.TeamMembership
 role =
     Object.selectionForField "Enum.TeamRole.TeamRole" "role" [] Backend.Enum.TeamRole.decoder

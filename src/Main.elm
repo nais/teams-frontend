@@ -8,7 +8,7 @@ import Error
 import Graphql.Http
 import Home
 import Html exposing (div, h1, header, li, main_, nav, p, text, ul)
-import Html.Attributes exposing (class, classList)
+import Html.Attributes exposing (classList)
 import Queries.Do exposing (query)
 import Queries.UserQueries as UserQueries exposing (UserData)
 import Route exposing (Route(..), link)
@@ -37,7 +37,7 @@ type Model
 
 type Msg
     = NoOp
-    | GotMeResponse Url.Url (Result (Graphql.Http.Error UserData) UserData)
+    | GotMeResponse Url.Url (Result (Graphql.Http.Error (Maybe UserData)) (Maybe UserData))
     | GotHomeMsg Home.Msg
     | GotTeamMsg Team.Msg
     | GotEditTeamMsg EditTeam.Msg
@@ -122,16 +122,7 @@ update msg model =
             CreateTeam.update subMsg subModel |> updateWith CreateTeam GotCreateTeamMsg
 
         ( GotMeResponse url r, _ ) ->
-            let
-                session =
-                    toSession model
-            in
-            case r of
-                Ok u ->
-                    changeRouteTo (Route.fromUrl url) (Session.mapUser (Session.LoggedIn u) session)
-
-                Err e ->
-                    changeRouteTo (Route.fromUrl url) (Session.mapUser Session.Anonymous session)
+            handleMeResponse (toSession model) url r
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -256,3 +247,18 @@ toSession model =
 getMe : Url.Url -> Cmd Msg
 getMe url =
     query UserQueries.getMeQuery (GotMeResponse url)
+
+
+handleMeResponse : Session -> Url.Url -> Result (Graphql.Http.Error (Maybe UserData)) (Maybe UserData) -> ( Model, Cmd Msg )
+handleMeResponse session url result =
+    case result of
+        Ok maybeU ->
+            case maybeU of
+                Just u ->
+                    changeRouteTo (Route.fromUrl url) (Session.mapUser (Session.LoggedIn u) session)
+
+                Nothing ->
+                    changeRouteTo (Route.fromUrl url) (Session.mapUser Session.Anonymous session)
+
+        Err _ ->
+            changeRouteTo (Route.fromUrl url) (Session.mapUser Session.Anonymous session)

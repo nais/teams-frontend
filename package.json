@@ -5,11 +5,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "gqlgen": "elm-graphql http://localhost:3000/query --base Backend --output src"
   },
   "author": "nais features",
   "license": "MIT",
   "devDependencies": {
+    "@dillonkearns/elm-graphql": "^4.3.0",
     "elm": "0.19.1-5",
     "vite": "3.1.0",
     "vite-plugin-elm": "v2.7.2"

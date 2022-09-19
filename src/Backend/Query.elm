@@ -19,6 +19,22 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode exposing (Decoder)
 
 
+{-| The currently authenticated user.
+-}
+me :
+    SelectionSet decodesTo Backend.Union.AuthenticatedUser
+    -> SelectionSet decodesTo RootQuery
+me object____ =
+    Object.selectionForCompositeField "me" [] object____ Basics.identity
+
+
+{-| List all Console roles.
+-}
+roles : SelectionSet (List Backend.ScalarCodecs.RoleName) RootQuery
+roles =
+    Object.selectionForField "(List ScalarCodecs.RoleName)" "roles" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecRoleName |> .decoder |> Decode.list)
+
+
 {-| Get a collection of teams.
 -}
 teams :
@@ -86,12 +102,3 @@ userByEmail :
     -> SelectionSet decodesTo RootQuery
 userByEmail requiredArgs____ object____ =
     Object.selectionForCompositeField "userByEmail" [ Argument.required "email" requiredArgs____.email Encode.string ] object____ Basics.identity
-
-
-{-| The currently authenticated user.
--}
-me :
-    SelectionSet decodesTo Backend.Object.User
-    -> SelectionSet decodesTo RootQuery
-me object____ =
-    Object.selectionForCompositeField "me" [] object____ Basics.identity

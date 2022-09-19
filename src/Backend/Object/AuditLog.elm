@@ -40,25 +40,25 @@ systemName =
     Object.selectionForField "ScalarCodecs.SystemName" "systemName" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSystemName |> .decoder)
 
 
-{-| The related correlation.
+{-| The related correlation ID.
 -}
 correlationID : SelectionSet Backend.ScalarCodecs.Uuid Backend.Object.AuditLog
 correlationID =
     Object.selectionForField "ScalarCodecs.Uuid" "correlationID" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
-{-| The email address of the actor who performed the action. When this field is empty it means that some backend process performed the action.
+{-| The identity of the actor who performed the action. When this field is empty it means that some backend process performed the action. The value, when present, is either the name of a service account, or the email address of a user.
 -}
-actorEmail : SelectionSet (Maybe String) Backend.Object.AuditLog
-actorEmail =
-    Object.selectionForField "(Maybe String)" "actorEmail" [] (Decode.string |> Decode.nullable)
+actor : SelectionSet (Maybe String) Backend.Object.AuditLog
+actor =
+    Object.selectionForField "(Maybe String)" "actor" [] (Decode.string |> Decode.nullable)
 
 
-{-| The email address of the target user, if any.
+{-| The target user, if any. For service accounts this is the name of the service account, while for users this will be the email address of the user.
 -}
-targetUserEmail : SelectionSet (Maybe String) Backend.Object.AuditLog
-targetUserEmail =
-    Object.selectionForField "(Maybe String)" "targetUserEmail" [] (Decode.string |> Decode.nullable)
+targetUser : SelectionSet (Maybe String) Backend.Object.AuditLog
+targetUser =
+    Object.selectionForField "(Maybe String)" "targetUser" [] (Decode.string |> Decode.nullable)
 
 
 {-| The target team slug, if any.

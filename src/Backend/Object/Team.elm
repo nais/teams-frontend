@@ -70,3 +70,12 @@ members :
     -> SelectionSet (List decodesTo) Backend.Object.Team
 members object____ =
     Object.selectionForCompositeField "members" [] object____ (Basics.identity >> Decode.list)
+
+
+{-| Possible issues related to synchronization of the team to configured external systems. If there are no entries the team can be considered fully synchronized.
+-}
+syncErrors :
+    SelectionSet decodesTo Backend.Object.SyncError
+    -> SelectionSet (List decodesTo) Backend.Object.Team
+syncErrors object____ =
+    Object.selectionForCompositeField "syncErrors" [] object____ (Basics.identity >> Decode.list)

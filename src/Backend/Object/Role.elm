@@ -21,9 +21,9 @@ import Json.Decode as Decode
 
 {-| Name of the role.
 -}
-name : SelectionSet String Backend.Object.Role
+name : SelectionSet Backend.ScalarCodecs.RoleName Backend.Object.Role
 name =
-    Object.selectionForField "String" "name" [] Decode.string
+    Object.selectionForField "ScalarCodecs.RoleName" "name" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecRoleName |> .decoder)
 
 
 {-| Whether or not the role is global.
