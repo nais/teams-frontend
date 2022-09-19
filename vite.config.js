@@ -3,7 +3,6 @@ import { defineConfig } from 'vite'
 import { plugin } from 'vite-plugin-elm'
 
 export default defineConfig({
-  root: './public/',
   plugins: [plugin()],
   server: {
     port: 3001,
@@ -16,9 +15,10 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: "dist",
     rollupOptions: {
       input: {
-        index: resolve(__dirname + '/public/', 'index.html'),
+        index: resolve(__dirname, 'index.html'),
       },
     },
   },
