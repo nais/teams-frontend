@@ -7,6 +7,13 @@ export default defineConfig({
   plugins: [plugin()],
   server: {
     port: 3001,
+    strictPort: true,
+    proxy: {
+      "^(/oauth2|/query)": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     rollupOptions: {

@@ -2,7 +2,6 @@
   "name": "console-frontend-elm",
   "version": "1.0.0",
   "description": "frontend for https://github.com/nais/console",
-  "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
