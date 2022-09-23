@@ -9,7 +9,6 @@ env:
 
 jobs:
   build_and_push:
-    needs: test
     permissions:
       contents: "read"
       id-token: "write"
