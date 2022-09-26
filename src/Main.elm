@@ -49,7 +49,7 @@ type Msg
 
 init : a -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url nk =
-    ( Home (Home.init (Session.init nk)), getMe url )
+    ( Home (Home.init (Session.init nk) (Route.fromUrl url)), getMe url )
 
 
 
@@ -67,15 +67,15 @@ changeRouteTo : Maybe Route -> Session -> ( Model, Cmd Msg )
 changeRouteTo maybeRoute session =
     case Session.user session of
         Anonymous ->
-            ( Home (Home.init session), Cmd.none )
+            ( Home (Home.init session maybeRoute), Cmd.none )
 
         Unknown ->
-            ( Home (Home.init session), Cmd.none )
+            ( Home (Home.init session maybeRoute), Cmd.none )
 
         LoggedIn _ ->
             case maybeRoute of
                 Just Route.Home ->
-                    ( Home (Home.init session), Cmd.none )
+                    ( Home (Home.init session maybeRoute), Cmd.none )
 
                 Just Route.CreateTeam ->
                     CreateTeam.init session |> updateWith CreateTeam GotCreateTeamMsg

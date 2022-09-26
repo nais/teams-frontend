@@ -5,11 +5,14 @@ import Graphql.Http
 import Html exposing (Html, button, div, p, text)
 import Html.Events exposing (onClick)
 import Queries.UserQueries exposing (UserData)
+import Route exposing (Route)
 import Session exposing (Session, User(..))
+import Url.Builder
 
 
 type alias Model =
     { session : Session
+    , maybeRoute : Maybe Route
     }
 
 
@@ -20,20 +23,38 @@ type Msg
     | LogoutClicked
 
 
-init : Session -> Model
-init session =
+init : Session -> Maybe Route -> Model
+init session maybeRoute =
     { session = session
+    , maybeRoute = maybeRoute
     }
+
+
+maybeRouteToString : Maybe Route -> String
+maybeRouteToString maybeRoute =
+    case maybeRoute of
+        Just r ->
+            Route.routeToString r
+
+        Nothing ->
+            Route.routeToString Route.Home
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    let
+        login =
+            Url.Builder.absolute [ "oauth2", "login" ] [ Url.Builder.string "redirect_uri" (maybeRouteToString model.maybeRoute) ]
+
+        logout =
+            Url.Builder.absolute [ "oauth2", "logout" ] [ Url.Builder.string "redirect_uri" (Route.routeToString Route.Home) ]
+    in
     case msg of
         LoginClicked ->
-            ( model, Browser.Navigation.load "/oauth2/login" )
+            ( model, Browser.Navigation.load login )
 
         LogoutClicked ->
-            ( model, Browser.Navigation.load "/oauth2/logout" )
+            ( model, Browser.Navigation.load logout )
 
         _ ->
             ( model, Cmd.none )
