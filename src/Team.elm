@@ -2,9 +2,8 @@ module Team exposing (..)
 
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar
-import Browser.Navigation
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, div, h2, h3, li, p, table, tbody, td, text, th, thead, tr, ul)
+import Html exposing (Html, div, h2, h3, p, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class)
 import Queries.Do exposing (query)
 import Queries.TeamQueries exposing (AuditLogData, TeamData, TeamMemberData, getTeamQuery)
@@ -45,10 +44,10 @@ update msg model =
                 Ok team ->
                     ( { model | team = Team team }, Cmd.none )
 
-                Err (Graphql.Http.HttpError e) ->
+                Err (Graphql.Http.HttpError _) ->
                     ( { model | team = Error "Can't talk to server, are we connected?" }, Cmd.none )
 
-                Err (GraphqlError data errors) ->
+                Err (GraphqlError _ errors) ->
                     let
                         errstr =
                             List.map (\error -> error.message) errors

@@ -4,7 +4,7 @@ import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.Scalar exposing (Slug(..), Uuid)
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, button, datalist, div, form, h2, input, label, li, option, p, select, table, tbody, td, text, th, thead, tr, ul)
+import Html exposing (Html, button, datalist, div, form, h2, input, label, li, option, select, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, colspan, disabled, for, id, list, placeholder, readonly, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Queries.Do
@@ -137,7 +137,7 @@ matchExactUser query user =
 handleGraphQLError : Model -> RawError parsedData httpError -> ( Model, Cmd msg )
 handleGraphQLError model err =
     case err of
-        Graphql.Http.HttpError e ->
+        Graphql.Http.HttpError _ ->
             ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
 
         GraphqlError _ errors ->
