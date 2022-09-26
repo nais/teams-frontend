@@ -12,7 +12,7 @@ import Html.Attributes exposing (classList)
 import Queries.Do exposing (query)
 import Queries.UserQueries as UserQueries exposing (UserData)
 import Route exposing (Route(..), link)
-import Session exposing (Session)
+import Session exposing (Session, User(..))
 import Team
 import Teams
 import Url
@@ -65,24 +65,32 @@ updateWith toModel toMsg ( subModel, subCmd ) =
 
 changeRouteTo : Maybe Route -> Session -> ( Model, Cmd Msg )
 changeRouteTo maybeRoute session =
-    case maybeRoute of
-        Just Route.Home ->
+    case Session.user session of
+        Anonymous ->
             ( Home (Home.init session), Cmd.none )
 
-        Just Route.CreateTeam ->
-            CreateTeam.init session |> updateWith CreateTeam GotCreateTeamMsg
+        Unknown ->
+            ( Home (Home.init session), Cmd.none )
 
-        Just Route.Teams ->
-            Teams.init session |> updateWith Teams GotTeamsMsg
+        LoggedIn _ ->
+            case maybeRoute of
+                Just Route.Home ->
+                    ( Home (Home.init session), Cmd.none )
 
-        Just (Route.Team id) ->
-            Team.init session id |> updateWith Team GotTeamMsg
+                Just Route.CreateTeam ->
+                    CreateTeam.init session |> updateWith CreateTeam GotCreateTeamMsg
 
-        Just (Route.EditTeam id) ->
-            EditTeam.init session id |> updateWith EditTeam GotEditTeamMsg
+                Just Route.Teams ->
+                    Teams.init session |> updateWith Teams GotTeamsMsg
 
-        Nothing ->
-            Error.init session "404" |> updateWith Error (\_ -> NoOp)
+                Just (Route.Team id) ->
+                    Team.init session id |> updateWith Team GotTeamMsg
+
+                Just (Route.EditTeam id) ->
+                    EditTeam.init session id |> updateWith EditTeam GotEditTeamMsg
+
+                Nothing ->
+                    Error.init session "404" |> updateWith Error (\_ -> NoOp)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

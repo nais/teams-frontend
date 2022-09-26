@@ -4,8 +4,7 @@ import Browser.Navigation
 import Graphql.Http
 import Html exposing (Html, button, div, p, text)
 import Html.Events exposing (onClick)
-import Queries.Do exposing (query)
-import Queries.UserQueries exposing (UserData, getMeQuery)
+import Queries.UserQueries exposing (UserData)
 import Session exposing (Session, User(..))
 
 
@@ -42,24 +41,23 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    case Session.user model.session of
-        LoggedIn user ->
-            div []
-                [ p [] [ text "Welcome to NAIS console." ]
-                , p [] [ text ("You are logged in as " ++ user.email ++ ".") ]
-                , p [] [ text "Please continue as you wish." ]
-                , button [ onClick LogoutClicked ] [ text "Log out" ] -- fake news logout
-                ]
+    div []
+        (p [] [ text "Welcome to NAIS console." ]
+            :: (case Session.user model.session of
+                    LoggedIn _ ->
+                        [ p [] [ text "Please continue as you wish." ]
+                        , button [ onClick LogoutClicked ] [ text "Log out" ]
+                        ]
 
-        Unknown ->
-            div [] [ text "Loading..." ]
+                    Unknown ->
+                        [ text "Loading..." ]
 
-        Anonymous ->
-            div []
-                [ p [] [ text "Welcome to NAIS console." ]
-                , p [] [ text "This is your one stop shop for team management. Please log in to continue." ]
-                , button [ onClick LoginClicked ] [ text "Single sign-on" ]
-                ]
+                    Anonymous ->
+                        [ p [] [ text "Please log in to continue." ]
+                        , button [ onClick LoginClicked ] [ text "Log in" ]
+                        ]
+               )
+        )
 
 
 mapUser : User -> Model -> Model
