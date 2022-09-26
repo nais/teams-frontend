@@ -188,6 +188,7 @@ view model =
     }
 
 
+isActiveRoute : Model -> Route -> Bool
 isActiveRoute model target =
     case ( model, target ) of
         ( Home _, Route.Home ) ->
@@ -206,6 +207,7 @@ isActiveRoute model target =
             False
 
 
+menuItem : Model -> Route -> String -> Html.Html msg
 menuItem model target title =
     let
         classes =

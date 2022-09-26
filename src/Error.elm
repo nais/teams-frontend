@@ -1,6 +1,5 @@
 module Error exposing (..)
 
-import Browser.Navigation
 import Html exposing (Html, div, text)
 import Session exposing (Session)
 
