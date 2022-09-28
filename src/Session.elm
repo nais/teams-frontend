@@ -1,5 +1,6 @@
-module Session exposing (Session, User(..), init, mapUser, navKey, user, username)
+module Session exposing (Session, User(..), init, isGlobalAdmin, mapUser, navKey, user, username)
 
+import Backend.Scalar exposing (RoleName(..))
 import Browser.Navigation as Nav
 import Queries.UserQueries exposing (UserData)
 
@@ -42,3 +43,16 @@ username u =
 
         _ ->
             "Not logged in"
+
+
+isGlobalAdmin : User -> Bool
+isGlobalAdmin u =
+    case u of
+        LoggedIn lu ->
+            List.any (\r -> r.isGlobal && r.name == RoleName "Admin") lu.roles
+
+        Unknown ->
+            False
+
+        Anonymous ->
+            False
