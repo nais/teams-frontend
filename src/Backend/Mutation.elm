@@ -19,6 +19,81 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode exposing (Decoder)
 
 
+type alias EnableReconcilerRequiredArguments =
+    { name : Backend.ScalarCodecs.ReconcilerName }
+
+
+{-| Enable a reconciler
+
+A reconciler must be fully configured before it can be enabled.
+
+  - name - The name of the reconciler to enable.
+
+-}
+enableReconciler :
+    EnableReconcilerRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Reconciler
+    -> SelectionSet decodesTo RootMutation
+enableReconciler requiredArgs____ object____ =
+    Object.selectionForCompositeField "enableReconciler" [ Argument.required "name" requiredArgs____.name (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
+
+
+type alias DisableReconcilerRequiredArguments =
+    { name : Backend.ScalarCodecs.ReconcilerName }
+
+
+{-| Disable a reconciler
+
+The reconciler configuration will be left intact.
+
+  - name - The name of the reconciler to disable.
+
+-}
+disableReconciler :
+    DisableReconcilerRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Reconciler
+    -> SelectionSet decodesTo RootMutation
+disableReconciler requiredArgs____ object____ =
+    Object.selectionForCompositeField "disableReconciler" [ Argument.required "name" requiredArgs____.name (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
+
+
+type alias ConfigureReconcilerRequiredArguments =
+    { name : Backend.ScalarCodecs.ReconcilerName
+    , config : Backend.ScalarCodecs.Map
+    }
+
+
+{-| Configure a reconciler.
+
+  - name - The name of the reconciler to configure.
+  - config - Configuration options as a key => value map.
+
+-}
+configureReconciler :
+    ConfigureReconcilerRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Reconciler
+    -> SelectionSet decodesTo RootMutation
+configureReconciler requiredArgs____ object____ =
+    Object.selectionForCompositeField "configureReconciler" [ Argument.required "name" requiredArgs____.name (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName), Argument.required "config" requiredArgs____.config (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecMap) ] object____ Basics.identity
+
+
+type alias ResetReconcilerRequiredArguments =
+    { name : Backend.ScalarCodecs.ReconcilerName }
+
+
+{-| Reset all reconciler configuration options to their initial state and disable the reconciler if it is currently enabled.
+
+  - name - The name of the reconciler to reset.
+
+-}
+resetReconciler :
+    ResetReconcilerRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Reconciler
+    -> SelectionSet decodesTo RootMutation
+resetReconciler requiredArgs____ object____ =
+    Object.selectionForCompositeField "resetReconciler" [ Argument.required "name" requiredArgs____.name (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
+
+
 type alias AssignGlobalRoleToUserRequiredArguments =
     { role : Backend.ScalarCodecs.RoleName
     , userID : Backend.ScalarCodecs.Uuid

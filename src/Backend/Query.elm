@@ -28,6 +28,15 @@ me object____ =
     Object.selectionForCompositeField "me" [] object____ Basics.identity
 
 
+{-| Get a collection of reconcilers.
+-}
+reconcilers :
+    SelectionSet decodesTo Backend.Object.Reconciler
+    -> SelectionSet (List decodesTo) RootQuery
+reconcilers object____ =
+    Object.selectionForCompositeField "reconcilers" [] object____ (Basics.identity >> Decode.list)
+
+
 {-| List all Console roles.
 -}
 roles : SelectionSet (List Backend.ScalarCodecs.RoleName) RootQuery

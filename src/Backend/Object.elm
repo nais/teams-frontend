@@ -9,6 +9,14 @@ type AuditLog
     = AuditLog
 
 
+type Reconciler
+    = Reconciler
+
+
+type ReconcilerConfig
+    = ReconcilerConfig
+
+
 type Role
     = Role
 
