@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import Admin
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import CreateTeam
@@ -24,6 +25,7 @@ import Url
 
 type Model
     = Home Home.Model
+    | Admin Admin.Model
     | Team Team.Model
     | EditTeam EditTeam.Model
     | Teams Teams.Model
@@ -39,6 +41,7 @@ type Msg
     = NoOp
     | GotMeResponse Url.Url (Result (Graphql.Http.Error (Maybe UserData)) (Maybe UserData))
     | GotHomeMsg Home.Msg
+    | GotAdminMsg Admin.Msg
     | GotTeamMsg Team.Msg
     | GotEditTeamMsg EditTeam.Msg
     | GotTeamsMsg Teams.Msg
@@ -77,6 +80,9 @@ changeRouteTo maybeRoute session =
                 Just Route.Home ->
                     ( Home (Home.init session maybeRoute), Cmd.none )
 
+                Just Route.Admin ->
+                    Admin.init session |> updateWith Admin GotAdminMsg
+
                 Just Route.CreateTeam ->
                     CreateTeam.init session |> updateWith CreateTeam GotCreateTeamMsg
 
@@ -110,6 +116,9 @@ update msg model =
 
         ( GotHomeMsg subMsg, Home subModel ) ->
             Home.update subMsg subModel |> updateWith Home GotHomeMsg
+
+        ( GotAdminMsg subMsg, Admin subModel ) ->
+            Admin.update subMsg subModel |> updateWith Admin GotAdminMsg
 
         ( GotTeamMsg subMsg, Team subModel ) ->
             Team.update subMsg subModel |> updateWith Team GotTeamMsg
@@ -151,6 +160,9 @@ view model =
                 Home subModel ->
                     Home.view subModel |> Html.map GotHomeMsg
 
+                Admin subModel ->
+                    Admin.view subModel |> Html.map GotAdminMsg
+
                 Team subModel ->
                     Team.view subModel |> Html.map GotTeamMsg
 
@@ -177,10 +189,17 @@ view model =
                 ]
             ]
         , nav []
-            [ ul []
-                [ menuItem model Route.Home "Home"
-                , menuItem model Route.Teams "Teams"
-                ]
+            [ ul [] -- Remember to update isActiveRoute with model/route combo
+                ([ menuItem model Route.Home "Home"
+                 , menuItem model Route.Teams "Teams"
+                 ]
+                    ++ (if Session.isGlobalAdmin (Session.user (toSession model)) then
+                            [ menuItem model Route.Admin "Admin" ]
+
+                        else
+                            []
+                       )
+                )
             ]
         , main_ []
             [ html ]
@@ -203,6 +222,9 @@ isActiveRoute model target =
         ( Team _, Route.Teams ) ->
             True
 
+        ( Admin _, Route.Admin ) ->
+            True
+
         ( _, _ ) ->
             False
 
@@ -211,7 +233,9 @@ menuItem : Model -> Route -> String -> Html.Html msg
 menuItem model target title =
     let
         classes =
-            [ ( "active", isActiveRoute model target ) ]
+            [ ( "active", isActiveRoute model target ) -- Remember to update isActiveRoute with model/route combo
+            , ( "nav-right", title == "Admin" )
+            ]
     in
     li [ classList classes ] [ link target [] [ text title ] ]
 
@@ -236,6 +260,9 @@ toSession : Model -> Session
 toSession model =
     case model of
         Home m ->
+            m.session
+
+        Admin m ->
             m.session
 
         Error m ->

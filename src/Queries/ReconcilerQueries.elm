@@ -12,6 +12,7 @@ import Graphql.SelectionSet exposing (SelectionSet)
 type alias ReconcilerConfigData =
     { configured : Bool
     , description : String
+    , displayName : String
     , key : String
     }
 
@@ -46,7 +47,8 @@ reconcilerDataSelection =
 
 reconcilerConfigDataSelection : SelectionSet ReconcilerConfigData Backend.Object.ReconcilerConfig
 reconcilerConfigDataSelection =
-    Graphql.SelectionSet.map3 ReconcilerConfigData
+    Graphql.SelectionSet.map4 ReconcilerConfigData
         ReconcilerConfig.configured
         ReconcilerConfig.description
+        ReconcilerConfig.displayName
         ReconcilerConfig.key

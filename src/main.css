@@ -101,6 +101,10 @@ nav li {
     margin: 0;
 }
 
+nav ul li.nav-right {
+    margin-left: auto;
+}
+
 nav a {
     background: var(--white);
     color: var(--link);

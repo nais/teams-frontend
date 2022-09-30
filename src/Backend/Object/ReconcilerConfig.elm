@@ -26,6 +26,13 @@ key =
     Object.selectionForField "String" "key" [] Decode.string
 
 
+{-| The human-friendly name of the configuration key.
+-}
+displayName : SelectionSet String Backend.Object.ReconcilerConfig
+displayName =
+    Object.selectionForField "String" "displayName" [] Decode.string
+
+
 {-| Configuration description.
 -}
 description : SelectionSet String Backend.Object.ReconcilerConfig
