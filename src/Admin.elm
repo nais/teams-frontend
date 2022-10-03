@@ -4,8 +4,8 @@ import Backend.Scalar exposing (ReconcilerName(..))
 import CreateTeam exposing (Msg(..))
 import Dict exposing (Dict)
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, br, div, form, h2, h3, input, label, li, p, text, ul)
-import Html.Attributes exposing (for, id, type_)
+import Html exposing (Html, div, form, h2, h3, input, label, li, p, text, ul)
+import Html.Attributes exposing (classList, for, id, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Queries.Do exposing (query)
 import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, getReconcilersQuery)
@@ -56,55 +56,72 @@ update msg model =
                     ( { model | reconcilerData = Err "graphql error" }, Cmd.none )
 
 
-inputGroup : (String -> String -> Msg) -> ReconcilerConfigData -> Html Msg
-inputGroup msg rcd =
-    li []
+configElement : (String -> String -> Msg) -> ReconcilerConfigData -> Html Msg
+configElement msg rcd =
+    li
+        [ classList
+            [ ( "reconcilerConfigured", rcd.configured )
+            , ( "reconcilerNotConfigured", not rcd.configured )
+            ]
+        ]
         [ label [ for rcd.key ] [ text rcd.displayName ]
-        , if rcd.configured then
-            text "configured" -- todo checkbox or smt
-
-          else
-            text "not configured"
         , input [ type_ "text", id rcd.key, onInput (msg rcd.key) ] []
         , p [] [ text rcd.description ]
         ]
 
 
-renderForm : ReconcilerData -> Html Msg
-renderForm rd =
-    div []
-        [ h3 [] [ text rd.displayname ]
-        , p [] [ text rd.description ]
-        , if rd.configured then
-            text "configured" -- todo checkbox or smt
+b2s : Bool -> String
+b2s b =
+    if b then
+        "true"
 
-          else
-            text "not configured"
-        , form [ onSubmit (Submit rd.name) ]
-            [ ul [] (List.map (inputGroup OnInput) rd.config)
+    else
+        "false"
+
+
+reconcilerEnabledId : ReconcilerData -> String
+reconcilerEnabledId rd =
+    let
+        (ReconcilerName name) =
+            rd.name
+    in
+    name ++ ":enabled"
+
+
+reconcilerConfig : ReconcilerData -> Html Msg
+reconcilerConfig rd =
+    p
+        [ classList
+            [ ( "reconcilerConfigured", rd.configured )
+            , ( "reconcilerNotConfigured", not rd.configured )
             ]
         ]
-
-
-
-{- form [ onSubmit CreateTeamSubmit ]
-       (ul []
-           [ textbox SlugChanged "slug" "Identifier" "customer-satisfaction"
-           , textbox PurposeChanged "purpose" "Purpose of the team" "Making sure customers have a good user experience"
-           ]
-           :: errorView model.error
-           ++ [ input [ type_ "submit", value "Create new team" ] []
-              ]
-       )
-   ]
--}
+        [ h3 [] [ text rd.displayname ]
+        , p [] [ text rd.description ]
+        , form [ onSubmit (Submit rd.name) ]
+            [ ul []
+                (List.map (configElement OnInput) rd.config
+                    ++ [ li []
+                            [ label [ for (reconcilerEnabledId rd) ] [ text "enabled" ]
+                            , input
+                                [ type_ "checkbox"
+                                , value (b2s rd.enabled)
+                                , id (reconcilerEnabledId rd)
+                                , onInput (OnInput (reconcilerEnabledId rd))
+                                ]
+                                []
+                            ]
+                       ]
+                )
+            ]
+        ]
 
 
 renderForms : List ReconcilerData -> Html Msg
 renderForms lrd =
     div []
         (h2 [] [ text "Set up reconcilers" ]
-            :: List.map renderForm lrd
+            :: List.map reconcilerConfig lrd
         )
 
 
