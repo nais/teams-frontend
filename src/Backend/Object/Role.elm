@@ -8,7 +8,6 @@ import Backend.InputObject
 import Backend.Interface
 import Backend.Object
 import Backend.Scalar
-import Backend.ScalarCodecs
 import Backend.Union
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -17,13 +16,14 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
+import ScalarCodecs
 
 
 {-| Name of the role.
 -}
-name : SelectionSet Backend.ScalarCodecs.RoleName Backend.Object.Role
+name : SelectionSet ScalarCodecs.RoleName Backend.Object.Role
 name =
-    Object.selectionForField "ScalarCodecs.RoleName" "name" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecRoleName |> .decoder)
+    Object.selectionForField "ScalarCodecs.RoleName" "name" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecRoleName |> .decoder)
 
 
 {-| Whether or not the role is global.
@@ -35,6 +35,6 @@ isGlobal =
 
 {-| Optional target of the role binding.
 -}
-targetId : SelectionSet (Maybe Backend.ScalarCodecs.Uuid) Backend.Object.Role
+targetId : SelectionSet (Maybe ScalarCodecs.Uuid) Backend.Object.Role
 targetId =
-    Object.selectionForField "(Maybe ScalarCodecs.Uuid)" "targetId" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder |> Decode.nullable)
+    Object.selectionForField "(Maybe ScalarCodecs.Uuid)" "targetId" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder |> Decode.nullable)

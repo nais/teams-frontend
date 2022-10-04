@@ -4,7 +4,15 @@
 
 module Backend.VerifyScalarCodecs exposing (..)
 
+{-
+   This file is intended to be used to ensure that custom scalar decoder
+   files are valid. It is compiled using `elm make` by the CLI.
+-}
 
-placeholder : String
-placeholder =
-    ""
+import Backend.Scalar
+import ScalarCodecs
+
+
+verify : Backend.Scalar.Codecs ScalarCodecs.AuditAction ScalarCodecs.Id ScalarCodecs.Map ScalarCodecs.ReconcilerName ScalarCodecs.RoleName ScalarCodecs.Slug ScalarCodecs.SystemName ScalarCodecs.Time ScalarCodecs.Uuid
+verify =
+    ScalarCodecs.codecs

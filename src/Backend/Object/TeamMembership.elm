@@ -9,7 +9,6 @@ import Backend.InputObject
 import Backend.Interface
 import Backend.Object
 import Backend.Scalar
-import Backend.ScalarCodecs
 import Backend.Union
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -18,6 +17,7 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
+import ScalarCodecs
 
 
 {-| Team instance.

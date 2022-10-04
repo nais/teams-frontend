@@ -8,7 +8,6 @@ import Backend.Enum.TeamRole
 import Backend.Interface
 import Backend.Object
 import Backend.Scalar
-import Backend.ScalarCodecs
 import Backend.Union
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -16,6 +15,7 @@ import Graphql.Internal.Encode as Encode exposing (Value)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
+import ScalarCodecs
 
 
 buildAddTeamMembersInput :
@@ -26,16 +26,16 @@ buildAddTeamMembersInput required____ =
 
 
 type alias AddTeamMembersInputRequiredFields =
-    { teamId : Backend.ScalarCodecs.Uuid
-    , userIds : List Backend.ScalarCodecs.Uuid
+    { teamId : ScalarCodecs.Uuid
+    , userIds : List ScalarCodecs.Uuid
     }
 
 
 {-| Type for the AddTeamMembersInput input object.
 -}
 type alias AddTeamMembersInput =
-    { teamId : Backend.ScalarCodecs.Uuid
-    , userIds : List Backend.ScalarCodecs.Uuid
+    { teamId : ScalarCodecs.Uuid
+    , userIds : List ScalarCodecs.Uuid
     }
 
 
@@ -44,7 +44,7 @@ type alias AddTeamMembersInput =
 encodeAddTeamMembersInput : AddTeamMembersInput -> Value
 encodeAddTeamMembersInput input____ =
     Encode.maybeObject
-        [ ( "teamId", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.teamId |> Just ), ( "userIds", ((Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) input____.userIds |> Just ) ]
+        [ ( "teamId", (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.teamId |> Just ), ( "userIds", ((ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) input____.userIds |> Just ) ]
 
 
 buildAddTeamOwnersInput :
@@ -55,16 +55,16 @@ buildAddTeamOwnersInput required____ =
 
 
 type alias AddTeamOwnersInputRequiredFields =
-    { teamId : Backend.ScalarCodecs.Uuid
-    , userIds : List Backend.ScalarCodecs.Uuid
+    { teamId : ScalarCodecs.Uuid
+    , userIds : List ScalarCodecs.Uuid
     }
 
 
 {-| Type for the AddTeamOwnersInput input object.
 -}
 type alias AddTeamOwnersInput =
-    { teamId : Backend.ScalarCodecs.Uuid
-    , userIds : List Backend.ScalarCodecs.Uuid
+    { teamId : ScalarCodecs.Uuid
+    , userIds : List ScalarCodecs.Uuid
     }
 
 
@@ -73,7 +73,7 @@ type alias AddTeamOwnersInput =
 encodeAddTeamOwnersInput : AddTeamOwnersInput -> Value
 encodeAddTeamOwnersInput input____ =
     Encode.maybeObject
-        [ ( "teamId", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.teamId |> Just ), ( "userIds", ((Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) input____.userIds |> Just ) ]
+        [ ( "teamId", (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.teamId |> Just ), ( "userIds", ((ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) input____.userIds |> Just ) ]
 
 
 buildCreateTeamInput :
@@ -90,7 +90,7 @@ buildCreateTeamInput required____ fillOptionals____ =
 
 
 type alias CreateTeamInputRequiredFields =
-    { slug : Backend.ScalarCodecs.Slug
+    { slug : ScalarCodecs.Slug
     , name : String
     }
 
@@ -102,7 +102,7 @@ type alias CreateTeamInputOptionalFields =
 {-| Type for the CreateTeamInput input object.
 -}
 type alias CreateTeamInput =
-    { slug : Backend.ScalarCodecs.Slug
+    { slug : ScalarCodecs.Slug
     , name : String
     , purpose : OptionalArgument String
     }
@@ -113,7 +113,7 @@ type alias CreateTeamInput =
 encodeCreateTeamInput : CreateTeamInput -> Value
 encodeCreateTeamInput input____ =
     Encode.maybeObject
-        [ ( "slug", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) input____.slug |> Just ), ( "name", Encode.string input____.name |> Just ), ( "purpose", Encode.string |> Encode.optional input____.purpose ) ]
+        [ ( "slug", (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) input____.slug |> Just ), ( "name", Encode.string input____.name |> Just ), ( "purpose", Encode.string |> Encode.optional input____.purpose ) ]
 
 
 buildRemoveUsersFromTeamInput :
@@ -124,16 +124,16 @@ buildRemoveUsersFromTeamInput required____ =
 
 
 type alias RemoveUsersFromTeamInputRequiredFields =
-    { userIds : List Backend.ScalarCodecs.Uuid
-    , teamId : Backend.ScalarCodecs.Uuid
+    { userIds : List ScalarCodecs.Uuid
+    , teamId : ScalarCodecs.Uuid
     }
 
 
 {-| Type for the RemoveUsersFromTeamInput input object.
 -}
 type alias RemoveUsersFromTeamInput =
-    { userIds : List Backend.ScalarCodecs.Uuid
-    , teamId : Backend.ScalarCodecs.Uuid
+    { userIds : List ScalarCodecs.Uuid
+    , teamId : ScalarCodecs.Uuid
     }
 
 
@@ -142,7 +142,7 @@ type alias RemoveUsersFromTeamInput =
 encodeRemoveUsersFromTeamInput : RemoveUsersFromTeamInput -> Value
 encodeRemoveUsersFromTeamInput input____ =
     Encode.maybeObject
-        [ ( "userIds", ((Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) input____.userIds |> Just ), ( "teamId", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.teamId |> Just ) ]
+        [ ( "userIds", ((ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) input____.userIds |> Just ), ( "teamId", (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.teamId |> Just ) ]
 
 
 buildSetTeamMemberRoleInput :
@@ -153,8 +153,8 @@ buildSetTeamMemberRoleInput required____ =
 
 
 type alias SetTeamMemberRoleInputRequiredFields =
-    { teamId : Backend.ScalarCodecs.Uuid
-    , userId : Backend.ScalarCodecs.Uuid
+    { teamId : ScalarCodecs.Uuid
+    , userId : ScalarCodecs.Uuid
     , role : Backend.Enum.TeamRole.TeamRole
     }
 
@@ -162,8 +162,8 @@ type alias SetTeamMemberRoleInputRequiredFields =
 {-| Type for the SetTeamMemberRoleInput input object.
 -}
 type alias SetTeamMemberRoleInput =
-    { teamId : Backend.ScalarCodecs.Uuid
-    , userId : Backend.ScalarCodecs.Uuid
+    { teamId : ScalarCodecs.Uuid
+    , userId : ScalarCodecs.Uuid
     , role : Backend.Enum.TeamRole.TeamRole
     }
 
@@ -173,7 +173,7 @@ type alias SetTeamMemberRoleInput =
 encodeSetTeamMemberRoleInput : SetTeamMemberRoleInput -> Value
 encodeSetTeamMemberRoleInput input____ =
     Encode.maybeObject
-        [ ( "teamId", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.teamId |> Just ), ( "userId", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.userId |> Just ), ( "role", Encode.enum Backend.Enum.TeamRole.toString input____.role |> Just ) ]
+        [ ( "teamId", (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.teamId |> Just ), ( "userId", (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.userId |> Just ), ( "role", Encode.enum Backend.Enum.TeamRole.toString input____.role |> Just ) ]
 
 
 buildUpdateTeamInput :

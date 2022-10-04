@@ -8,7 +8,6 @@ import Backend.InputObject
 import Backend.Interface
 import Backend.Object
 import Backend.Scalar
-import Backend.ScalarCodecs
 import Backend.Union
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -17,13 +16,14 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
+import ScalarCodecs
 
 
 {-| Unique ID of the service account.
 -}
-id : SelectionSet Backend.ScalarCodecs.Uuid Backend.Object.ServiceAccount
+id : SelectionSet ScalarCodecs.Uuid Backend.Object.ServiceAccount
 id =
-    Object.selectionForField "ScalarCodecs.Uuid" "id" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
+    Object.selectionForField "ScalarCodecs.Uuid" "id" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
 {-| The name of the service account.

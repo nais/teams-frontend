@@ -8,7 +8,6 @@ import Backend.InputObject
 import Backend.Interface
 import Backend.Object
 import Backend.Scalar
-import Backend.ScalarCodecs
 import Backend.Union
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -17,10 +16,11 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode exposing (Decoder)
+import ScalarCodecs
 
 
 type alias EnableReconcilerRequiredArguments =
-    { name : Backend.ScalarCodecs.ReconcilerName }
+    { name : ScalarCodecs.ReconcilerName }
 
 
 {-| Enable a reconciler
@@ -35,11 +35,11 @@ enableReconciler :
     -> SelectionSet decodesTo Backend.Object.Reconciler
     -> SelectionSet decodesTo RootMutation
 enableReconciler requiredArgs____ object____ =
-    Object.selectionForCompositeField "enableReconciler" [ Argument.required "name" requiredArgs____.name (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
+    Object.selectionForCompositeField "enableReconciler" [ Argument.required "name" requiredArgs____.name (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
 
 
 type alias DisableReconcilerRequiredArguments =
-    { name : Backend.ScalarCodecs.ReconcilerName }
+    { name : ScalarCodecs.ReconcilerName }
 
 
 {-| Disable a reconciler
@@ -54,12 +54,12 @@ disableReconciler :
     -> SelectionSet decodesTo Backend.Object.Reconciler
     -> SelectionSet decodesTo RootMutation
 disableReconciler requiredArgs____ object____ =
-    Object.selectionForCompositeField "disableReconciler" [ Argument.required "name" requiredArgs____.name (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
+    Object.selectionForCompositeField "disableReconciler" [ Argument.required "name" requiredArgs____.name (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
 
 
 type alias ConfigureReconcilerRequiredArguments =
-    { name : Backend.ScalarCodecs.ReconcilerName
-    , config : Backend.ScalarCodecs.Map
+    { name : ScalarCodecs.ReconcilerName
+    , config : ScalarCodecs.Map
     }
 
 
@@ -74,11 +74,11 @@ configureReconciler :
     -> SelectionSet decodesTo Backend.Object.Reconciler
     -> SelectionSet decodesTo RootMutation
 configureReconciler requiredArgs____ object____ =
-    Object.selectionForCompositeField "configureReconciler" [ Argument.required "name" requiredArgs____.name (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName), Argument.required "config" requiredArgs____.config (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecMap) ] object____ Basics.identity
+    Object.selectionForCompositeField "configureReconciler" [ Argument.required "name" requiredArgs____.name (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName), Argument.required "config" requiredArgs____.config (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecMap) ] object____ Basics.identity
 
 
 type alias ResetReconcilerRequiredArguments =
-    { name : Backend.ScalarCodecs.ReconcilerName }
+    { name : ScalarCodecs.ReconcilerName }
 
 
 {-| Reset all reconciler configuration options to their initial state and disable the reconciler if it is currently enabled.
@@ -91,12 +91,12 @@ resetReconciler :
     -> SelectionSet decodesTo Backend.Object.Reconciler
     -> SelectionSet decodesTo RootMutation
 resetReconciler requiredArgs____ object____ =
-    Object.selectionForCompositeField "resetReconciler" [ Argument.required "name" requiredArgs____.name (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
+    Object.selectionForCompositeField "resetReconciler" [ Argument.required "name" requiredArgs____.name (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
 
 
 type alias AssignGlobalRoleToUserRequiredArguments =
-    { role : Backend.ScalarCodecs.RoleName
-    , userID : Backend.ScalarCodecs.Uuid
+    { role : ScalarCodecs.RoleName
+    , userID : ScalarCodecs.Uuid
     }
 
 
@@ -115,12 +115,12 @@ assignGlobalRoleToUser :
     -> SelectionSet decodesTo Backend.Object.User
     -> SelectionSet decodesTo RootMutation
 assignGlobalRoleToUser requiredArgs____ object____ =
-    Object.selectionForCompositeField "assignGlobalRoleToUser" [ Argument.required "role" requiredArgs____.role (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecRoleName), Argument.required "userID" requiredArgs____.userID (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+    Object.selectionForCompositeField "assignGlobalRoleToUser" [ Argument.required "role" requiredArgs____.role (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecRoleName), Argument.required "userID" requiredArgs____.userID (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
 
 
 type alias RevokeGlobalRoleFromUserRequiredArguments =
-    { role : Backend.ScalarCodecs.RoleName
-    , userID : Backend.ScalarCodecs.Uuid
+    { role : ScalarCodecs.RoleName
+    , userID : ScalarCodecs.Uuid
     }
 
 
@@ -139,7 +139,7 @@ revokeGlobalRoleFromUser :
     -> SelectionSet decodesTo Backend.Object.User
     -> SelectionSet decodesTo RootMutation
 revokeGlobalRoleFromUser requiredArgs____ object____ =
-    Object.selectionForCompositeField "revokeGlobalRoleFromUser" [ Argument.required "role" requiredArgs____.role (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecRoleName), Argument.required "userID" requiredArgs____.userID (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+    Object.selectionForCompositeField "revokeGlobalRoleFromUser" [ Argument.required "role" requiredArgs____.role (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecRoleName), Argument.required "userID" requiredArgs____.userID (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
 
 
 type alias CreateTeamRequiredArguments =
@@ -164,7 +164,7 @@ createTeam requiredArgs____ object____ =
 
 
 type alias UpdateTeamRequiredArguments =
-    { teamId : Backend.ScalarCodecs.Uuid
+    { teamId : ScalarCodecs.Uuid
     , input : Backend.InputObject.UpdateTeamInput
     }
 
@@ -184,7 +184,7 @@ updateTeam :
     -> SelectionSet decodesTo Backend.Object.Team
     -> SelectionSet decodesTo RootMutation
 updateTeam requiredArgs____ object____ =
-    Object.selectionForCompositeField "updateTeam" [ Argument.required "teamId" requiredArgs____.teamId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid), Argument.required "input" requiredArgs____.input Backend.InputObject.encodeUpdateTeamInput ] object____ Basics.identity
+    Object.selectionForCompositeField "updateTeam" [ Argument.required "teamId" requiredArgs____.teamId (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid), Argument.required "input" requiredArgs____.input Backend.InputObject.encodeUpdateTeamInput ] object____ Basics.identity
 
 
 type alias RemoveUsersFromTeamRequiredArguments =
@@ -207,7 +207,7 @@ removeUsersFromTeam requiredArgs____ object____ =
 
 
 type alias SynchronizeTeamRequiredArguments =
-    { teamId : Backend.ScalarCodecs.Uuid }
+    { teamId : ScalarCodecs.Uuid }
 
 
 {-| Manually synchronize a team
@@ -225,7 +225,7 @@ synchronizeTeam :
     -> SelectionSet decodesTo Backend.Object.TeamSync
     -> SelectionSet decodesTo RootMutation
 synchronizeTeam requiredArgs____ object____ =
-    Object.selectionForCompositeField "synchronizeTeam" [ Argument.required "teamId" requiredArgs____.teamId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+    Object.selectionForCompositeField "synchronizeTeam" [ Argument.required "teamId" requiredArgs____.teamId (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
 
 
 type alias AddTeamMembersRequiredArguments =

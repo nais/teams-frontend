@@ -8,7 +8,6 @@ import Backend.InputObject
 import Backend.Interface
 import Backend.Object
 import Backend.Scalar
-import Backend.ScalarCodecs
 import Backend.Union
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -17,6 +16,7 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
+import ScalarCodecs
 
 
 {-| The team that will be synced.
@@ -30,6 +30,6 @@ team object____ =
 
 {-| The correlation ID for the sync.
 -}
-correlationID : SelectionSet Backend.ScalarCodecs.Uuid Backend.Object.TeamSync
+correlationID : SelectionSet ScalarCodecs.Uuid Backend.Object.TeamSync
 correlationID =
-    Object.selectionForField "ScalarCodecs.Uuid" "correlationID" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
+    Object.selectionForField "ScalarCodecs.Uuid" "correlationID" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)

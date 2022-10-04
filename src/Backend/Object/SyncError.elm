@@ -8,7 +8,6 @@ import Backend.InputObject
 import Backend.Interface
 import Backend.Object
 import Backend.Scalar
-import Backend.ScalarCodecs
 import Backend.Union
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -17,20 +16,21 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
+import ScalarCodecs
 
 
 {-| Creation time of the error.
 -}
-createdAt : SelectionSet Backend.ScalarCodecs.Time Backend.Object.SyncError
+createdAt : SelectionSet ScalarCodecs.Time Backend.Object.SyncError
 createdAt =
-    Object.selectionForField "ScalarCodecs.Time" "createdAt" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecTime |> .decoder)
+    Object.selectionForField "ScalarCodecs.Time" "createdAt" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecTime |> .decoder)
 
 
 {-| The name of the third party system as configured by Console.
 -}
-system : SelectionSet Backend.ScalarCodecs.SystemName Backend.Object.SyncError
+system : SelectionSet ScalarCodecs.SystemName Backend.Object.SyncError
 system =
-    Object.selectionForField "ScalarCodecs.SystemName" "system" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSystemName |> .decoder)
+    Object.selectionForField "ScalarCodecs.SystemName" "system" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSystemName |> .decoder)
 
 
 {-| Error message.
