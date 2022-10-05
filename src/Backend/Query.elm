@@ -8,6 +8,7 @@ import Backend.InputObject
 import Backend.Interface
 import Backend.Object
 import Backend.Scalar
+import Backend.ScalarCodecs
 import Backend.Union
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -16,7 +17,6 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode exposing (Decoder)
-import ScalarCodecs
 
 
 {-| The currently authenticated user.
@@ -39,9 +39,9 @@ reconcilers object____ =
 
 {-| List all Console roles.
 -}
-roles : SelectionSet (List ScalarCodecs.RoleName) RootQuery
+roles : SelectionSet (List Backend.ScalarCodecs.RoleName) RootQuery
 roles =
-    Object.selectionForField "(List ScalarCodecs.RoleName)" "roles" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecRoleName |> .decoder |> Decode.list)
+    Object.selectionForField "(List ScalarCodecs.RoleName)" "roles" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecRoleName |> .decoder |> Decode.list)
 
 
 {-| Get a collection of teams.
@@ -54,7 +54,7 @@ teams object____ =
 
 
 type alias TeamRequiredArguments =
-    { id : ScalarCodecs.Uuid }
+    { id : Backend.ScalarCodecs.Uuid }
 
 
 {-| Get a specific team.
@@ -67,7 +67,7 @@ team :
     -> SelectionSet decodesTo Backend.Object.Team
     -> SelectionSet decodesTo RootQuery
 team requiredArgs____ object____ =
-    Object.selectionForCompositeField "team" [ Argument.required "id" requiredArgs____.id (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+    Object.selectionForCompositeField "team" [ Argument.required "id" requiredArgs____.id (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
 
 
 {-| Get a collection of users, sorted by name.
@@ -80,7 +80,7 @@ users object____ =
 
 
 type alias UserRequiredArguments =
-    { id : ScalarCodecs.Uuid }
+    { id : Backend.ScalarCodecs.Uuid }
 
 
 {-| Get a specific user.
@@ -93,7 +93,7 @@ user :
     -> SelectionSet decodesTo Backend.Object.User
     -> SelectionSet decodesTo RootQuery
 user requiredArgs____ object____ =
-    Object.selectionForCompositeField "user" [ Argument.required "id" requiredArgs____.id (ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+    Object.selectionForCompositeField "user" [ Argument.required "id" requiredArgs____.id (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
 
 
 type alias UserByEmailRequiredArguments =

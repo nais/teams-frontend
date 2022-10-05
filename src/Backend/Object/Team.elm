@@ -8,6 +8,7 @@ import Backend.InputObject
 import Backend.Interface
 import Backend.Object
 import Backend.Scalar
+import Backend.ScalarCodecs
 import Backend.Union
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -16,21 +17,20 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
-import ScalarCodecs
 
 
 {-| ID of the team.
 -}
-id : SelectionSet ScalarCodecs.Uuid Backend.Object.Team
+id : SelectionSet Backend.ScalarCodecs.Uuid Backend.Object.Team
 id =
-    Object.selectionForField "ScalarCodecs.Uuid" "id" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
+    Object.selectionForField "ScalarCodecs.Uuid" "id" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
 {-| Unique slug of the team.
 -}
-slug : SelectionSet ScalarCodecs.Slug Backend.Object.Team
+slug : SelectionSet Backend.ScalarCodecs.Slug Backend.Object.Team
 slug =
-    Object.selectionForField "ScalarCodecs.Slug" "slug" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSlug |> .decoder)
+    Object.selectionForField "ScalarCodecs.Slug" "slug" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSlug |> .decoder)
 
 
 {-| Display name of the team.
@@ -49,9 +49,9 @@ purpose =
 
 {-| Metadata attached to the team as a key => value map.
 -}
-metadata : SelectionSet (Maybe ScalarCodecs.Map) Backend.Object.Team
+metadata : SelectionSet (Maybe Backend.ScalarCodecs.Map) Backend.Object.Team
 metadata =
-    Object.selectionForField "(Maybe ScalarCodecs.Map)" "metadata" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecMap |> .decoder |> Decode.nullable)
+    Object.selectionForField "(Maybe ScalarCodecs.Map)" "metadata" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecMap |> .decoder |> Decode.nullable)
 
 
 {-| Audit logs for this team.

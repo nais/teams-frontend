@@ -8,6 +8,7 @@ import Backend.InputObject
 import Backend.Interface
 import Backend.Object
 import Backend.Scalar
+import Backend.ScalarCodecs
 import Backend.Union
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -16,35 +17,34 @@ import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
-import ScalarCodecs
 
 
 {-| ID of the log entry.
 -}
-id : SelectionSet ScalarCodecs.Uuid Backend.Object.AuditLog
+id : SelectionSet Backend.ScalarCodecs.Uuid Backend.Object.AuditLog
 id =
-    Object.selectionForField "ScalarCodecs.Uuid" "id" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
+    Object.selectionForField "ScalarCodecs.Uuid" "id" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
 {-| String representation of the action performed.
 -}
-action : SelectionSet ScalarCodecs.AuditAction Backend.Object.AuditLog
+action : SelectionSet Backend.ScalarCodecs.AuditAction Backend.Object.AuditLog
 action =
-    Object.selectionForField "ScalarCodecs.AuditAction" "action" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecAuditAction |> .decoder)
+    Object.selectionForField "ScalarCodecs.AuditAction" "action" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecAuditAction |> .decoder)
 
 
 {-| The related system.
 -}
-systemName : SelectionSet ScalarCodecs.SystemName Backend.Object.AuditLog
+systemName : SelectionSet Backend.ScalarCodecs.SystemName Backend.Object.AuditLog
 systemName =
-    Object.selectionForField "ScalarCodecs.SystemName" "systemName" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSystemName |> .decoder)
+    Object.selectionForField "ScalarCodecs.SystemName" "systemName" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSystemName |> .decoder)
 
 
 {-| The related correlation ID.
 -}
-correlationID : SelectionSet ScalarCodecs.Uuid Backend.Object.AuditLog
+correlationID : SelectionSet Backend.ScalarCodecs.Uuid Backend.Object.AuditLog
 correlationID =
-    Object.selectionForField "ScalarCodecs.Uuid" "correlationID" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
+    Object.selectionForField "ScalarCodecs.Uuid" "correlationID" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
 {-| The identity of the actor who performed the action. When this field is empty it means that some backend process performed the action. The value, when present, is either the name of a service account, or the email address of a user.
@@ -63,9 +63,9 @@ targetUser =
 
 {-| The target team slug, if any.
 -}
-targetTeamSlug : SelectionSet (Maybe ScalarCodecs.Slug) Backend.Object.AuditLog
+targetTeamSlug : SelectionSet (Maybe Backend.ScalarCodecs.Slug) Backend.Object.AuditLog
 targetTeamSlug =
-    Object.selectionForField "(Maybe ScalarCodecs.Slug)" "targetTeamSlug" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSlug |> .decoder |> Decode.nullable)
+    Object.selectionForField "(Maybe ScalarCodecs.Slug)" "targetTeamSlug" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSlug |> .decoder |> Decode.nullable)
 
 
 {-| Log entry message.
@@ -77,6 +77,6 @@ message =
 
 {-| Creation time of the log entry.
 -}
-createdAt : SelectionSet ScalarCodecs.Time Backend.Object.AuditLog
+createdAt : SelectionSet Backend.ScalarCodecs.Time Backend.Object.AuditLog
 createdAt =
-    Object.selectionForField "ScalarCodecs.Time" "createdAt" [] (ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecTime |> .decoder)
+    Object.selectionForField "ScalarCodecs.Time" "createdAt" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecTime |> .decoder)

@@ -9,7 +9,6 @@ import Backend.Object.Team as Team
 import Backend.Object.TeamMember as TeamMember
 import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (Slug, Uuid)
-import ScalarCodecs
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
 import Queries.UserQueries exposing (UserData, userDataSelection)
@@ -47,7 +46,7 @@ getTeamsQuery =
     Query.teams teamDataSelection
 
 
-getTeamQuery : ScalarCodecs.Uuid -> SelectionSet TeamData RootQuery
+getTeamQuery : Scalar.Uuid -> SelectionSet TeamData RootQuery
 getTeamQuery id =
     Query.team { id = id } teamDataSelection
 

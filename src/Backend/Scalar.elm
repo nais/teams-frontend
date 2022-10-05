@@ -9,6 +9,7 @@ import Graphql.Internal.Builder.Object as Object
 import Graphql.Internal.Encode
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
+import Dict exposing (Dict)
 
 
 type AuditAction
@@ -20,7 +21,7 @@ type Id
 
 
 type Map
-    = Map String
+    = Map (Dict String String)
 
 
 type ReconcilerName
@@ -117,8 +118,8 @@ defaultCodecs =
         , decoder = Object.scalarDecoder |> Decode.map Id
         }
     , codecMap =
-        { encoder = \(Map raw) -> Encode.string raw
-        , decoder = Object.scalarDecoder |> Decode.map Map
+        { encoder = \(Map raw) -> Encode.dict (\s -> s) Encode.string raw
+        , decoder = Decode.dict Decode.string |> Decode.map Map
         }
     , codecReconcilerName =
         { encoder = \(ReconcilerName raw) -> Encode.string raw

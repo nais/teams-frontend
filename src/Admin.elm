@@ -1,26 +1,27 @@
 module Admin exposing (..)
 
-import Backend.Scalar exposing (ReconcilerName(..))
+import Backend.Scalar exposing (Map(..), ReconcilerName(..))
 import CreateTeam exposing (Msg(..))
 import Dict exposing (Dict)
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, div, form, h2, h3, input, label, li, p, text, ul)
 import Html.Attributes exposing (classList, for, id, type_, value)
 import Html.Events exposing (onInput, onSubmit)
-import Queries.Do exposing (query)
-import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, getReconcilersQuery)
+import Queries.Do exposing (mutate, query)
+import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, getReconcilersQuery, updateReconcilerConfigMutation)
 import Session exposing (Session)
 
 
 type alias Model =
     { session : Session
-    , reconcilerData : Result String (List ReconcilerData)
-    , reconcilerConfig : Dict String String
+    , reconcilersData : Result String (List ReconcilerData)
+    , reconcilersConfig : Dict String String
     }
 
 
 type Msg
-    = GotReconcilerResponse (Result (Graphql.Http.Error (List ReconcilerData)) (List ReconcilerData))
+    = GotReconcilersResponse (Result (Graphql.Http.Error (List ReconcilerData)) (List ReconcilerData))
+    | GotUpdateReconcilerResponse (Result (Graphql.Http.Error ReconcilerData) ReconcilerData)
     | Submit ReconcilerName
     | OnInput String String
 
@@ -28,32 +29,74 @@ type Msg
 init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
-      , reconcilerData = Err "not fetched yet"
-      , reconcilerConfig = Dict.empty
+      , reconcilersData = Err "not fetched yet"
+      , reconcilersConfig = Dict.empty
       }
-    , query getReconcilersQuery GotReconcilerResponse
+    , query getReconcilersQuery GotReconcilersResponse
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Submit _ ->
-            ( model, Cmd.none )
+        Submit reconcilerName ->
+            let
+                (ReconcilerName name) =
+                    reconcilerName
+
+                config =
+                    Map (Dict.filter (\k _ -> String.startsWith name k) model.reconcilersConfig)
+            in
+            ( model, mutate (updateReconcilerConfigMutation reconcilerName config) GotUpdateReconcilerResponse )
 
         OnInput k v ->
-            ( { model | reconcilerConfig = Dict.insert k v model.reconcilerConfig }, Cmd.none )
+            ( { model | reconcilersConfig = Dict.insert k v model.reconcilersConfig }, Cmd.none )
 
-        GotReconcilerResponse r ->
+        GotUpdateReconcilerResponse r ->
             case r of
                 Ok rd ->
-                    ( { model | reconcilerData = Ok rd }, Cmd.none )
+                    case model.reconcilersData of
+                        Ok rds ->
+                            ( { model | reconcilersData = Ok (List.map (mapReconciler rd) rds) }, Cmd.none )
+
+                        Err e ->
+                            ( { model | reconcilersData = Err e }, Cmd.none )
 
                 Err (Graphql.Http.HttpError _) ->
-                    ( { model | reconcilerData = Err "graphql http error" }, Cmd.none )
+                    ( { model | reconcilersData = Err "graphql http error" }, Cmd.none )
 
                 Err (GraphqlError _ _) ->
-                    ( { model | reconcilerData = Err "graphql error" }, Cmd.none )
+                    ( { model | reconcilersData = Err "graphql error" }, Cmd.none )
+
+        GotReconcilersResponse r ->
+            case r of
+                Ok rds ->
+                    ( { model | reconcilersData = Ok rds }, Cmd.none )
+
+                Err (Graphql.Http.HttpError _) ->
+                    ( { model | reconcilersData = Err "graphql http error" }, Cmd.none )
+
+                Err (GraphqlError _ _) ->
+                    ( { model | reconcilersData = Err "graphql error" }, Cmd.none )
+
+
+mapReconciler : ReconcilerData -> ReconcilerData -> ReconcilerData
+mapReconciler new existing =
+    if new.name == existing.name then
+        new
+
+    else
+        existing
+
+
+view : Model -> Html Msg
+view model =
+    case model.reconcilersData of
+        Ok rd ->
+            renderForms rd
+
+        Err e ->
+            text e
 
 
 configElement : (String -> String -> Msg) -> ReconcilerConfigData -> Html Msg
@@ -70,8 +113,8 @@ configElement msg rcd =
         ]
 
 
-b2s : Bool -> String
-b2s b =
+boolToString : Bool -> String
+boolToString b =
     if b then
         "true"
 
@@ -100,17 +143,22 @@ reconcilerConfig rd =
         , p [] [ text rd.description ]
         , form [ onSubmit (Submit rd.name) ]
             [ ul []
-                (List.map (configElement OnInput) rd.config
-                    ++ [ li []
-                            [ label [ for (reconcilerEnabledId rd) ] [ text "enabled" ]
-                            , input
-                                [ type_ "checkbox"
-                                , value (b2s rd.enabled)
-                                , id (reconcilerEnabledId rd)
-                                , onInput (OnInput (reconcilerEnabledId rd))
-                                ]
-                                []
+                (li []
+                    [ label [ for (reconcilerEnabledId rd) ] [ text "enabled" ]
+                    , input
+                        [ type_ "checkbox"
+                        , value (boolToString rd.enabled)
+                        , id (reconcilerEnabledId rd)
+                        , onInput (OnInput (reconcilerEnabledId rd))
+                        ]
+                        []
+                    ]
+                    :: List.map (configElement OnInput) rd.config
+                    ++ [ input
+                            [ type_ "submit"
+                            , value "Save"
                             ]
+                            []
                        ]
                 )
             ]
@@ -123,18 +171,3 @@ renderForms lrd =
         (h2 [] [ text "Set up reconcilers" ]
             :: List.map reconcilerConfig lrd
         )
-
-
-view : Model -> Html Msg
-view model =
-    case model.reconcilerData of
-        Ok rd ->
-            renderForms rd
-
-        Err e ->
-            text e
-
-
-reconcilerNameStr : ReconcilerName -> String
-reconcilerNameStr (ReconcilerName s) =
-    s

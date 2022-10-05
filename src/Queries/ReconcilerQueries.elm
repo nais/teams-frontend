@@ -1,12 +1,13 @@
 module Queries.ReconcilerQueries exposing (..)
 
+import Backend.Mutation as Mutation
 import Backend.Object
 import Backend.Object.Reconciler as Reconciler
 import Backend.Object.ReconcilerConfig as ReconcilerConfig
 import Backend.Query as Query
-import Backend.Scalar exposing (ReconcilerName)
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
+import Backend.Scalar exposing (ReconcilerName, Map)
 
 
 type alias ReconcilerConfigData =
@@ -31,6 +32,20 @@ type alias ReconcilerData =
 getReconcilersQuery : SelectionSet (List ReconcilerData) RootQuery
 getReconcilersQuery =
     Query.reconcilers reconcilerDataSelection
+
+
+updateReconcilerConfigMutation : ReconcilerName -> Map -> SelectionSet ReconcilerData Graphql.Operation.RootMutation
+updateReconcilerConfigMutation name config =
+    Mutation.configureReconciler { name = name, config = config } reconcilerDataSelection
+
+
+enableReconcilerMutation : ReconcilerName -> SelectionSet ReconcilerData Graphql.Operation.RootMutation
+enableReconcilerMutation name =
+    Mutation.enableReconciler { name = name } reconcilerDataSelection
+
+disableReconcilerMutation : ReconcilerName -> SelectionSet ReconcilerData Graphql.Operation.RootMutation
+disableReconcilerMutation name =
+    Mutation.disableReconciler { name = name } reconcilerDataSelection
 
 
 reconcilerDataSelection : SelectionSet ReconcilerData Backend.Object.Reconciler
