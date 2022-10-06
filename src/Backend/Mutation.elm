@@ -59,14 +59,14 @@ disableReconciler requiredArgs____ object____ =
 
 type alias ConfigureReconcilerRequiredArguments =
     { name : Backend.ScalarCodecs.ReconcilerName
-    , config : Backend.ScalarCodecs.Map
+    , config : List Backend.InputObject.ReconcilerConfigInput
     }
 
 
 {-| Configure a reconciler.
 
   - name - The name of the reconciler to configure.
-  - config - Configuration options as a key => value map.
+  - config - List of reconciler config inputs.
 
 -}
 configureReconciler :
@@ -74,7 +74,7 @@ configureReconciler :
     -> SelectionSet decodesTo Backend.Object.Reconciler
     -> SelectionSet decodesTo RootMutation
 configureReconciler requiredArgs____ object____ =
-    Object.selectionForCompositeField "configureReconciler" [ Argument.required "name" requiredArgs____.name (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName), Argument.required "config" requiredArgs____.config (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecMap) ] object____ Basics.identity
+    Object.selectionForCompositeField "configureReconciler" [ Argument.required "name" requiredArgs____.name (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName), Argument.required "config" requiredArgs____.config (Backend.InputObject.encodeReconcilerConfigInput |> Encode.list) ] object____ Basics.identity
 
 
 type alias ResetReconcilerRequiredArguments =

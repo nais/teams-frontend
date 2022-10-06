@@ -116,6 +116,35 @@ encodeCreateTeamInput input____ =
         [ ( "slug", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) input____.slug |> Just ), ( "name", Encode.string input____.name |> Just ), ( "purpose", Encode.string |> Encode.optional input____.purpose ) ]
 
 
+buildReconcilerConfigInput :
+    ReconcilerConfigInputRequiredFields
+    -> ReconcilerConfigInput
+buildReconcilerConfigInput required____ =
+    { key = required____.key, value = required____.value }
+
+
+type alias ReconcilerConfigInputRequiredFields =
+    { key : Backend.ScalarCodecs.ReconcilerConfigKey
+    , value : String
+    }
+
+
+{-| Type for the ReconcilerConfigInput input object.
+-}
+type alias ReconcilerConfigInput =
+    { key : Backend.ScalarCodecs.ReconcilerConfigKey
+    , value : String
+    }
+
+
+{-| Encode a ReconcilerConfigInput into a value that can be used as an argument.
+-}
+encodeReconcilerConfigInput : ReconcilerConfigInput -> Value
+encodeReconcilerConfigInput input____ =
+    Encode.maybeObject
+        [ ( "key", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerConfigKey) input____.key |> Just ), ( "value", Encode.string input____.value |> Just ) ]
+
+
 buildRemoveUsersFromTeamInput :
     RemoveUsersFromTeamInputRequiredFields
     -> RemoveUsersFromTeamInput

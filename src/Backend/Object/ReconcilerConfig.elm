@@ -21,9 +21,9 @@ import Json.Decode as Decode
 
 {-| Configuration key.
 -}
-key : SelectionSet String Backend.Object.ReconcilerConfig
+key : SelectionSet Backend.ScalarCodecs.ReconcilerConfigKey Backend.Object.ReconcilerConfig
 key =
-    Object.selectionForField "String" "key" [] Decode.string
+    Object.selectionForField "ScalarCodecs.ReconcilerConfigKey" "key" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecReconcilerConfigKey |> .decoder)
 
 
 {-| The human-friendly name of the configuration key.

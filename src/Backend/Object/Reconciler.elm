@@ -68,3 +68,12 @@ configured =
 runOrder : SelectionSet Int Backend.Object.Reconciler
 runOrder =
     Object.selectionForField "Int" "runOrder" [] Decode.int
+
+
+{-| Audit logs for this reconciler.
+-}
+auditLogs :
+    SelectionSet decodesTo Backend.Object.AuditLog
+    -> SelectionSet (List decodesTo) Backend.Object.Reconciler
+auditLogs object____ =
+    Object.selectionForCompositeField "auditLogs" [] object____ (Basics.identity >> Decode.list)

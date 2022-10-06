@@ -7,14 +7,15 @@ import Backend.Object.ReconcilerConfig as ReconcilerConfig
 import Backend.Query as Query
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
-import Backend.Scalar exposing (ReconcilerName, Map)
+import Backend.Scalar exposing (ReconcilerName)
+import Backend.InputObject exposing (ReconcilerConfigInput)
 
 
 type alias ReconcilerConfigData =
     { configured : Bool
     , description : String
     , displayName : String
-    , key : String
+    , key : Backend.Scalar.ReconcilerConfigKey
     }
 
 
@@ -34,7 +35,7 @@ getReconcilersQuery =
     Query.reconcilers reconcilerDataSelection
 
 
-updateReconcilerConfigMutation : ReconcilerName -> Map -> SelectionSet ReconcilerData Graphql.Operation.RootMutation
+updateReconcilerConfigMutation : ReconcilerName -> List ReconcilerConfigInput -> SelectionSet ReconcilerData Graphql.Operation.RootMutation
 updateReconcilerConfigMutation name config =
     Mutation.configureReconciler { name = name, config = config } reconcilerDataSelection
 

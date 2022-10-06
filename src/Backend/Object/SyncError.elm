@@ -26,11 +26,11 @@ createdAt =
     Object.selectionForField "ScalarCodecs.Time" "createdAt" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecTime |> .decoder)
 
 
-{-| The name of the third party system as configured by Console.
+{-| The name of the reconciler.
 -}
-system : SelectionSet Backend.ScalarCodecs.SystemName Backend.Object.SyncError
-system =
-    Object.selectionForField "ScalarCodecs.SystemName" "system" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSystemName |> .decoder)
+reconciler : SelectionSet Backend.ScalarCodecs.ReconcilerName Backend.Object.SyncError
+reconciler =
+    Object.selectionForField "ScalarCodecs.ReconcilerName" "reconciler" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecReconcilerName |> .decoder)
 
 
 {-| Error message.

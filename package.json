@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "gqlgen": "elm-graphql http://localhost:3000/query --base Backend --output src "
+    "gqlgen": "elm-graphql http://localhost:3000/query --base Backend --output src"
   },
   "author": "nais features",
   "license": "MIT",

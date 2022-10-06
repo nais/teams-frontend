@@ -12,12 +12,20 @@ type alias AuditAction =
     Backend.Scalar.AuditAction
 
 
+type alias AuditLogsTargetType =
+    Backend.Scalar.AuditLogsTargetType
+
+
 type alias Id =
     Backend.Scalar.Id
 
 
 type alias Map =
     Backend.Scalar.Map
+
+
+type alias ReconcilerConfigKey =
+    Backend.Scalar.ReconcilerConfigKey
 
 
 type alias ReconcilerName =
@@ -44,12 +52,14 @@ type alias Uuid =
     Backend.Scalar.Uuid
 
 
-codecs : Backend.Scalar.Codecs AuditAction Id Map ReconcilerName RoleName Slug SystemName Time Uuid
+codecs : Backend.Scalar.Codecs AuditAction AuditLogsTargetType Id Map ReconcilerConfigKey ReconcilerName RoleName Slug SystemName Time Uuid
 codecs =
     Backend.Scalar.defineCodecs
         { codecAuditAction = defaultCodecs.codecAuditAction
+        , codecAuditLogsTargetType = defaultCodecs.codecAuditLogsTargetType
         , codecId = defaultCodecs.codecId
         , codecMap = defaultCodecs.codecMap
+        , codecReconcilerConfigKey = defaultCodecs.codecReconcilerConfigKey
         , codecReconcilerName = defaultCodecs.codecReconcilerName
         , codecRoleName = defaultCodecs.codecRoleName
         , codecSlug = defaultCodecs.codecSlug

@@ -54,18 +54,18 @@ actor =
     Object.selectionForField "(Maybe String)" "actor" [] (Decode.string |> Decode.nullable)
 
 
-{-| The target user, if any. For service accounts this is the name of the service account, while for users this will be the email address of the user.
+{-| The type of the audit log target.
 -}
-targetUser : SelectionSet (Maybe String) Backend.Object.AuditLog
-targetUser =
-    Object.selectionForField "(Maybe String)" "targetUser" [] (Decode.string |> Decode.nullable)
+targetType : SelectionSet Backend.ScalarCodecs.AuditLogsTargetType Backend.Object.AuditLog
+targetType =
+    Object.selectionForField "ScalarCodecs.AuditLogsTargetType" "targetType" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecAuditLogsTargetType |> .decoder)
 
 
-{-| The target team slug, if any.
+{-| The identifier of the target.
 -}
-targetTeamSlug : SelectionSet (Maybe Backend.ScalarCodecs.Slug) Backend.Object.AuditLog
-targetTeamSlug =
-    Object.selectionForField "(Maybe ScalarCodecs.Slug)" "targetTeamSlug" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSlug |> .decoder |> Decode.nullable)
+targetIdentifier : SelectionSet String Backend.Object.AuditLog
+targetIdentifier =
+    Object.selectionForField "String" "targetIdentifier" [] Decode.string
 
 
 {-| Log entry message.
