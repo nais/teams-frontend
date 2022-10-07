@@ -1,9 +1,8 @@
 module Admin exposing (..)
 
 import Backend.Scalar exposing (Map(..), ReconcilerConfigKey(..), ReconcilerName(..))
-import CreateTeam exposing (Msg(..))
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, div, form, h2, h3, input, label, li, p, text, ul)
+import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, ul)
 import Html.Attributes exposing (classList, for, id, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Queries.Do exposing (mutate, query)
@@ -107,13 +106,6 @@ updateReconcilerFormInput reconciler key value formInput =
         formInput
 
 
-assocToKeyValue : ( k, v ) -> { key : k, value : v }
-assocToKeyValue ( key, value ) =
-    { key = key
-    , value = value
-    }
-
-
 mapReconciler : ReconcilerData -> ReconcilerData -> ReconcilerData
 mapReconciler new existing =
     if new.name == existing.name then
@@ -192,11 +184,7 @@ reconcilerConfig rd =
                         []
                     ]
                     :: List.map (configElement (OnInput rd.name)) rd.config
-                    ++ [ input
-                            [ type_ "submit"
-                            , value "Save"
-                            ]
-                            []
+                    ++ [ button [ type_ "submit" ] [ text "Save" ]
                        ]
                 )
             ]
