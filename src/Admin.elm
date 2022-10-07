@@ -2,6 +2,7 @@ module Admin exposing (..)
 
 import Backend.InputObject exposing (ReconcilerConfigInput)
 import Backend.Scalar exposing (Map(..), ReconcilerConfigKey(..), ReconcilerName(..))
+import ConfigValue exposing (ConfigValue(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, ul)
 import Html.Attributes exposing (checked, class, classList, for, id, type_, value)
@@ -14,12 +15,8 @@ import Session exposing (Session)
 type alias Model =
     { session : Session
     , reconcilers : Result String (List ReconcilerData)
-    , input : List ReconcilerInput
+    , input : List ReconcilerData
     }
-
-
-type ReconcilerInput
-    = ReconcilerInput ReconcilerName Bool (List ReconcilerConfigInput)
 
 
 type Msg
@@ -40,21 +37,6 @@ init session =
     )
 
 
-inputName : ReconcilerInput -> ReconcilerName
-inputName (ReconcilerInput name _ _) =
-    name
-
-
-inputEnabled : ReconcilerInput -> Bool
-inputEnabled (ReconcilerInput _ enabled _) =
-    enabled
-
-
-inputConfigs : ReconcilerInput -> List ReconcilerConfigInput
-inputConfigs (ReconcilerInput _ _ cfgs) =
-    cfgs
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -63,20 +45,24 @@ update msg model =
             let
                 config =
                     model.input
-                        |> List.filter (\i -> inputName i == reconcilerName)
-                        |> List.map inputConfigs
+                        |> List.filter (\i -> i.name == reconcilerName)
+                        |> List.map (\i -> i.config)
                         |> List.head
-            in
-            case config of
-                Just cfg ->
-                    ( model, mutate (updateReconcilerConfigMutation reconcilerName cfg) GotUpdateReconcilerResponse )
 
-                Nothing ->
-                    -- Impossible code path
-                    ( model, Cmd.none )
+                inputs =
+                    case config of
+                        Just cfg ->
+                            cfg
+                                |> List.filter (\kv -> ConfigValue.hasValue kv.value)
+                                |> List.map (\kv -> { key = kv.key, value = ConfigValue.string kv.value })
+
+                        Nothing ->
+                            []
+            in
+            ( model, mutate (updateReconcilerConfigMutation reconcilerName inputs) GotUpdateReconcilerResponse )
 
         OnInput reconciler configKey value ->
-            ( { model | input = List.map (mapReconcilerInput reconciler configKey value) model.input }, Cmd.none )
+            ( { model | input = List.map (mapReconcilerConfigValue reconciler configKey value) model.input }, Cmd.none )
 
         GotUpdateReconcilerResponse r ->
             case r of
@@ -97,7 +83,7 @@ update msg model =
         GotReconcilersResponse r ->
             case r of
                 Ok rds ->
-                    ( { model | reconcilers = Ok rds, input = initialInput rds }, Cmd.none )
+                    ( { model | reconcilers = Ok rds, input = rds }, Cmd.none )
 
                 Err (Graphql.Http.HttpError _) ->
                     ( { model | reconcilers = Err "graphql http error" }, Cmd.none )
@@ -114,46 +100,31 @@ checkboxToBool string =
     string == "on"
 
 
-inputFromReconciler : ReconcilerData -> ReconcilerInput
-inputFromReconciler rd =
-    ReconcilerInput rd.name
-        rd.enabled
-        (List.map (\c -> { key = c.key, value = "" }) rd.config)
-
-
-initialInput : List ReconcilerData -> List ReconcilerInput
-initialInput rds =
-    List.map inputFromReconciler rds
-
-
-mapReconcilerEnabled : ReconcilerName -> Bool -> ReconcilerInput -> ReconcilerInput
-mapReconcilerEnabled name enabled reconcilerInput =
-    if inputName reconcilerInput == name then
-        ReconcilerInput name enabled (inputConfigs reconcilerInput)
+mapReconcilerEnabled : ReconcilerName -> Bool -> ReconcilerData -> ReconcilerData
+mapReconcilerEnabled name enabled reconciler =
+    if reconciler.name == name then
+        { reconciler | enabled = enabled }
 
     else
-        reconcilerInput
+        reconciler
 
 
-mapReconcilerConfig : ReconcilerConfigKey -> String -> ReconcilerConfigInput -> ReconcilerConfigInput
+mapReconcilerConfig : ReconcilerConfigKey -> String -> ReconcilerConfigData -> ReconcilerConfigData
 mapReconcilerConfig key value input =
     if input.key == key then
-        { key = key, value = value }
+        { input | key = key, value = ConfigValue value }
 
     else
         input
 
 
-mapReconcilerInput : ReconcilerName -> ReconcilerConfigKey -> String -> ReconcilerInput -> ReconcilerInput
-mapReconcilerInput reconciler key value input =
-    if inputName input == reconciler then
-        ReconcilerInput
-            reconciler
-            (inputEnabled input)
-            (List.map (mapReconcilerConfig key value) (inputConfigs input))
+mapReconcilerConfigValue : ReconcilerName -> ReconcilerConfigKey -> String -> ReconcilerData -> ReconcilerData
+mapReconcilerConfigValue name key value reconciler =
+    if reconciler.name == name then
+        { reconciler | config = List.map (mapReconcilerConfig key value) reconciler.config }
 
     else
-        input
+        reconciler
 
 
 mapReconciler : ReconcilerData -> ReconcilerData -> ReconcilerData
