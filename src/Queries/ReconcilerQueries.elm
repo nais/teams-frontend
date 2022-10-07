@@ -1,14 +1,20 @@
 module Queries.ReconcilerQueries exposing (..)
 
+import Backend.InputObject exposing (ReconcilerConfigInput)
 import Backend.Mutation as Mutation
 import Backend.Object
 import Backend.Object.Reconciler as Reconciler
 import Backend.Object.ReconcilerConfig as ReconcilerConfig
 import Backend.Query as Query
+import Backend.Scalar exposing (ReconcilerName)
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
-import Backend.Scalar exposing (ReconcilerName)
-import Backend.InputObject exposing (ReconcilerConfigInput)
+
+
+type ConfigString
+    = Just String
+    | Nothing
+    | Secret
 
 
 type alias ReconcilerConfigData =
@@ -16,6 +22,7 @@ type alias ReconcilerConfigData =
     , description : String
     , displayName : String
     , key : Backend.Scalar.ReconcilerConfigKey
+    , value : ConfigString
     }
 
 
@@ -44,6 +51,7 @@ enableReconcilerMutation : ReconcilerName -> SelectionSet ReconcilerData Graphql
 enableReconcilerMutation name =
     Mutation.enableReconciler { name = name } reconcilerDataSelection
 
+
 disableReconcilerMutation : ReconcilerName -> SelectionSet ReconcilerData Graphql.Operation.RootMutation
 disableReconcilerMutation name =
     Mutation.disableReconciler { name = name } reconcilerDataSelection
@@ -63,8 +71,9 @@ reconcilerDataSelection =
 
 reconcilerConfigDataSelection : SelectionSet ReconcilerConfigData Backend.Object.ReconcilerConfig
 reconcilerConfigDataSelection =
-    Graphql.SelectionSet.map4 ReconcilerConfigData
-        ReconcilerConfig.configured
-        ReconcilerConfig.description
-        ReconcilerConfig.displayName
-        ReconcilerConfig.key
+    Graphql.SelectionSet.succeed ReconcilerConfigData
+        |> Graphql.SelectionSet.with ReconcilerConfig.configured
+        |> Graphql.SelectionSet.with ReconcilerConfig.description
+        |> Graphql.SelectionSet.with ReconcilerConfig.displayName
+        |> Graphql.SelectionSet.with ReconcilerConfig.key
+        |> Graphql.SelectionSet.hardcoded Nothing
