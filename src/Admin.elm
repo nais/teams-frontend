@@ -3,7 +3,7 @@ module Admin exposing (..)
 import Backend.Scalar exposing (Map(..), ReconcilerConfigKey(..), ReconcilerName(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, ul)
-import Html.Attributes exposing (classList, for, id, type_, value)
+import Html.Attributes exposing (checked, class, classList, for, id, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Queries.Do exposing (mutate, query)
 import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, getReconcilersQuery, updateReconcilerConfigMutation)
@@ -46,6 +46,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Submit reconcilerName ->
+            -- TODO (show some confirmation dialog -> send gql msg)
             let
                 config =
                     model.reconcilerFormInputs
@@ -85,7 +86,6 @@ update msg model =
                     ( { model | reconcilers = Err "graphql error" }, Cmd.none )
 
         OnToggle reconcilerName t ->
-            -- TODO toggle reconcilers (show some confirmation dialog -> send gql msg)
             ( model, Cmd.none )
 
 
@@ -123,6 +123,20 @@ view model =
 
         Err e ->
             text e
+
+
+toggleReconcilerElement : ReconcilerData -> Html Msg
+toggleReconcilerElement rd =
+    li [ class "checkbox" ]
+        [ label [ for (reconcilerEnabledId rd) ] [ text "Enabled" ]
+        , input
+            [ type_ "checkbox"
+            , checked rd.enabled
+            , id (reconcilerEnabledId rd)
+            , onInput (OnToggle rd.name)
+            ]
+            []
+        ]
 
 
 configElement : (ReconcilerConfigKey -> String -> Msg) -> ReconcilerConfigData -> Html Msg
@@ -163,31 +177,20 @@ reconcilerEnabledId rd =
 
 reconcilerConfig : ReconcilerData -> Html Msg
 reconcilerConfig rd =
-    p
-        [ classList
+    form
+        [ onSubmit (Submit rd.name)
+        , classList
             [ ( "reconcilerConfigured", rd.configured )
             , ( "reconcilerNotConfigured", not rd.configured )
             ]
         ]
         [ h3 [] [ text rd.displayname ]
         , p [] [ text rd.description ]
-        , form [ onSubmit (Submit rd.name) ]
-            [ ul []
-                (li []
-                    [ label [ for (reconcilerEnabledId rd) ] [ text "enabled" ]
-                    , input
-                        [ type_ "checkbox"
-                        , value (boolToString rd.enabled)
-                        , id (reconcilerEnabledId rd)
-                        , onInput (OnToggle rd.name)
-                        ]
-                        []
-                    ]
-                    :: List.map (configElement (OnInput rd.name)) rd.config
-                    ++ [ button [ type_ "submit" ] [ text "Save" ]
-                       ]
-                )
-            ]
+        , ul []
+            (toggleReconcilerElement rd
+                :: List.map (configElement (OnInput rd.name)) rd.config
+            )
+        , button [ type_ "submit" ] [ text "Save" ]
         ]
 
 

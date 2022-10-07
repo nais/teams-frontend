@@ -243,3 +243,14 @@ button:hover, .button:hover {
     border-top: 0;
     border-bottom: 0;
 }
+
+.checkbox {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-direction: row;
+}
+
+.checkbox label {
+    order: 9;
+}
