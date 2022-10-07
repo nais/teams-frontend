@@ -1,5 +1,6 @@
 module Admin exposing (..)
 
+import Backend.InputObject exposing (ReconcilerConfigInput)
 import Backend.Scalar exposing (Map(..), ReconcilerConfigKey(..), ReconcilerName(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, ul)
@@ -13,15 +14,12 @@ import Session exposing (Session)
 type alias Model =
     { session : Session
     , reconcilers : Result String (List ReconcilerData)
-    , reconcilerFormInputs : List ReconcilerFormInput
+    , input : List ReconcilerInput
     }
 
 
-type alias ReconcilerFormInput =
-    { reconcilerName : ReconcilerName
-    , key : ReconcilerConfigKey
-    , value : String
-    }
+type ReconcilerInput
+    = ReconcilerInput ReconcilerName Bool (List ReconcilerConfigInput)
 
 
 type Msg
@@ -36,10 +34,25 @@ init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
       , reconcilers = Err "not fetched yet"
-      , reconcilerFormInputs = []
+      , input = []
       }
     , query getReconcilersQuery GotReconcilersResponse
     )
+
+
+inputName : ReconcilerInput -> ReconcilerName
+inputName (ReconcilerInput name _ _) =
+    name
+
+
+inputEnabled : ReconcilerInput -> Bool
+inputEnabled (ReconcilerInput _ enabled _) =
+    enabled
+
+
+inputConfigs : ReconcilerInput -> List ReconcilerConfigInput
+inputConfigs (ReconcilerInput _ _ cfgs) =
+    cfgs
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -49,14 +62,21 @@ update msg model =
             -- TODO (show some confirmation dialog -> send gql msg)
             let
                 config =
-                    model.reconcilerFormInputs
-                        |> List.filter (\i -> i.reconcilerName == reconcilerName)
-                        |> List.map (\i -> { key = i.key, value = i.value })
+                    model.input
+                        |> List.filter (\i -> inputName i == reconcilerName)
+                        |> List.map inputConfigs
+                        |> List.head
             in
-            ( model, mutate (updateReconcilerConfigMutation reconcilerName config) GotUpdateReconcilerResponse )
+            case config of
+                Just cfg ->
+                    ( model, mutate (updateReconcilerConfigMutation reconcilerName cfg) GotUpdateReconcilerResponse )
+
+                Nothing ->
+                    -- Impossible code path
+                    ( model, Cmd.none )
 
         OnInput reconciler configKey value ->
-            ( { model | reconcilerFormInputs = List.map (updateReconcilerFormInput reconciler configKey value) model.reconcilerFormInputs }, Cmd.none )
+            ( { model | input = List.map (mapReconcilerInput reconciler configKey value) model.input }, Cmd.none )
 
         GotUpdateReconcilerResponse r ->
             case r of
@@ -77,7 +97,7 @@ update msg model =
         GotReconcilersResponse r ->
             case r of
                 Ok rds ->
-                    ( { model | reconcilers = Ok rds, reconcilerFormInputs = initialConfigData rds }, Cmd.none )
+                    ( { model | reconcilers = Ok rds, input = initialInput rds }, Cmd.none )
 
                 Err (Graphql.Http.HttpError _) ->
                     ( { model | reconcilers = Err "graphql http error" }, Cmd.none )
@@ -85,25 +105,55 @@ update msg model =
                 Err (GraphqlError _ _) ->
                     ( { model | reconcilers = Err "graphql error" }, Cmd.none )
 
-        OnToggle reconcilerName t ->
-            ( model, Cmd.none )
+        OnToggle reconcilerName value ->
+            ( { model | input = List.map (mapReconcilerEnabled reconcilerName (checkboxToBool value)) model.input }, Cmd.none )
 
 
-initialConfigData : List ReconcilerData -> List ReconcilerFormInput
-initialConfigData rds =
-    List.concatMap (\rd -> List.map (\c -> { reconcilerName = rd.name, key = c.key, value = "" }) rd.config) rds
+checkboxToBool : String -> Bool
+checkboxToBool string =
+    string == "on"
 
 
-updateReconcilerFormInput : ReconcilerName -> ReconcilerConfigKey -> String -> ReconcilerFormInput -> ReconcilerFormInput
-updateReconcilerFormInput reconciler key value formInput =
-    if key == formInput.key && reconciler == formInput.reconcilerName then
-        { reconcilerName = reconciler
-        , key = key
-        , value = value
-        }
+inputFromReconciler : ReconcilerData -> ReconcilerInput
+inputFromReconciler rd =
+    ReconcilerInput rd.name
+        rd.enabled
+        (List.map (\c -> { key = c.key, value = "" }) rd.config)
+
+
+initialInput : List ReconcilerData -> List ReconcilerInput
+initialInput rds =
+    List.map inputFromReconciler rds
+
+
+mapReconcilerEnabled : ReconcilerName -> Bool -> ReconcilerInput -> ReconcilerInput
+mapReconcilerEnabled name enabled reconcilerInput =
+    if inputName reconcilerInput == name then
+        ReconcilerInput name enabled (inputConfigs reconcilerInput)
 
     else
-        formInput
+        reconcilerInput
+
+
+mapReconcilerConfig : ReconcilerConfigKey -> String -> ReconcilerConfigInput -> ReconcilerConfigInput
+mapReconcilerConfig key value input =
+    if input.key == key then
+        { key = key, value = value }
+
+    else
+        input
+
+
+mapReconcilerInput : ReconcilerName -> ReconcilerConfigKey -> String -> ReconcilerInput -> ReconcilerInput
+mapReconcilerInput reconciler key value input =
+    if inputName input == reconciler then
+        ReconcilerInput
+            reconciler
+            (inputEnabled input)
+            (List.map (mapReconcilerConfig key value) (inputConfigs input))
+
+    else
+        input
 
 
 mapReconciler : ReconcilerData -> ReconcilerData -> ReconcilerData
@@ -175,8 +225,8 @@ reconcilerEnabledId rd =
     name ++ ":enabled"
 
 
-reconcilerConfig : ReconcilerData -> Html Msg
-reconcilerConfig rd =
+viewReconcilerConfig : ReconcilerData -> Html Msg
+viewReconcilerConfig rd =
     form
         [ onSubmit (Submit rd.name)
         , classList
@@ -198,5 +248,5 @@ renderForms : List ReconcilerData -> Html Msg
 renderForms lrd =
     div []
         (h2 [] [ text "Set up reconcilers" ]
-            :: List.map reconcilerConfig lrd
+            :: List.map viewReconcilerConfig lrd
         )
