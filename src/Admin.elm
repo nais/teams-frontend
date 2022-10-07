@@ -1,6 +1,5 @@
 module Admin exposing (..)
 
-import Backend.InputObject exposing (ReconcilerConfigInput)
 import Backend.Scalar exposing (Map(..), ReconcilerConfigKey(..), ReconcilerName(..))
 import CreateTeam exposing (Msg(..))
 import Graphql.Http exposing (RawError(..))
@@ -14,8 +13,15 @@ import Session exposing (Session)
 
 type alias Model =
     { session : Session
-    , reconcilersData : Result String (List ReconcilerData)
-    , reconcilersConfig : List ReconcilerConfigInput
+    , reconcilers : Result String (List ReconcilerData)
+    , reconcilerFormInputs : List ReconcilerFormInput
+    }
+
+
+type alias ReconcilerFormInput =
+    { reconcilerName : ReconcilerName
+    , key : ReconcilerConfigKey
+    , value : String
     }
 
 
@@ -23,15 +29,15 @@ type Msg
     = GotReconcilersResponse (Result (Graphql.Http.Error (List ReconcilerData)) (List ReconcilerData))
     | GotUpdateReconcilerResponse (Result (Graphql.Http.Error ReconcilerData) ReconcilerData)
     | Submit ReconcilerName
-    | OnInput ReconcilerConfigKey String
+    | OnInput ReconcilerName ReconcilerConfigKey String
     | OnToggle ReconcilerName String
 
 
 init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
-      , reconcilersData = Err "not fetched yet"
-      , reconcilersConfig = []
+      , reconcilers = Err "not fetched yet"
+      , reconcilerFormInputs = []
       }
     , query getReconcilersQuery GotReconcilersResponse
     )
@@ -43,68 +49,62 @@ update msg model =
         Submit reconcilerName ->
             let
                 config =
-                    List.filter (configForReconciler reconcilerName) model.reconcilersConfig
+                    model.reconcilerFormInputs
+                        |> List.filter (\i -> i.reconcilerName == reconcilerName)
+                        |> List.map (\i -> { key = i.key, value = i.value })
             in
             ( model, mutate (updateReconcilerConfigMutation reconcilerName config) GotUpdateReconcilerResponse )
 
-        OnInput k v ->
-            ( { model | reconcilersConfig = List.map (updateReconcilerConfigForKey k v) model.reconcilersConfig }, Cmd.none )
+        OnInput reconciler configKey value ->
+            ( { model | reconcilerFormInputs = List.map (updateReconcilerFormInput reconciler configKey value) model.reconcilerFormInputs }, Cmd.none )
 
         GotUpdateReconcilerResponse r ->
             case r of
                 Ok rd ->
-                    case model.reconcilersData of
+                    case model.reconcilers of
                         Ok rds ->
-                            ( { model | reconcilersData = Ok (List.map (mapReconciler rd) rds) }, Cmd.none )
+                            ( { model | reconcilers = Ok (List.map (mapReconciler rd) rds) }, Cmd.none )
 
                         Err e ->
-                            ( { model | reconcilersData = Err e }, Cmd.none )
+                            ( { model | reconcilers = Err e }, Cmd.none )
 
                 Err (Graphql.Http.HttpError _) ->
-                    ( { model | reconcilersData = Err "graphql http error" }, Cmd.none )
+                    ( { model | reconcilers = Err "graphql http error" }, Cmd.none )
 
                 Err (GraphqlError _ _) ->
-                    ( { model | reconcilersData = Err "graphql error" }, Cmd.none )
+                    ( { model | reconcilers = Err "graphql error" }, Cmd.none )
 
         GotReconcilersResponse r ->
             case r of
                 Ok rds ->
-                    ( { model | reconcilersData = Ok rds, reconcilersConfig = initialConfigData rds }, Cmd.none )
+                    ( { model | reconcilers = Ok rds, reconcilerFormInputs = initialConfigData rds }, Cmd.none )
 
                 Err (Graphql.Http.HttpError _) ->
-                    ( { model | reconcilersData = Err "graphql http error" }, Cmd.none )
+                    ( { model | reconcilers = Err "graphql http error" }, Cmd.none )
 
                 Err (GraphqlError _ _) ->
-                    ( { model | reconcilersData = Err "graphql error" }, Cmd.none )
+                    ( { model | reconcilers = Err "graphql error" }, Cmd.none )
 
         OnToggle reconcilerName t ->
             -- TODO toggle reconcilers (show some confirmation dialog -> send gql msg)
             ( model, Cmd.none )
 
 
-initialConfigData : List ReconcilerData -> List ReconcilerConfigInput
+initialConfigData : List ReconcilerData -> List ReconcilerFormInput
 initialConfigData rds =
-    List.concatMap (\rd -> List.map (\c -> { key = c.key, value = "" }) rd.config) rds
+    List.concatMap (\rd -> List.map (\c -> { reconcilerName = rd.name, key = c.key, value = "" }) rd.config) rds
 
 
-configForReconciler : ReconcilerName -> ReconcilerConfigInput -> Bool
-configForReconciler (ReconcilerName r) input =
-    let
-        (ReconcilerConfigKey key) =
-            input.key
-    in
-    String.startsWith (String.split ":" r |> List.head |> Maybe.withDefault "notareconciler") key
-
-
-updateReconcilerConfigForKey : ReconcilerConfigKey -> String -> ReconcilerConfigInput -> ReconcilerConfigInput
-updateReconcilerConfigForKey k v i =
-    if k == i.key then
-        { key = k
-        , value = v
+updateReconcilerFormInput : ReconcilerName -> ReconcilerConfigKey -> String -> ReconcilerFormInput -> ReconcilerFormInput
+updateReconcilerFormInput reconciler key value formInput =
+    if key == formInput.key && reconciler == formInput.reconcilerName then
+        { reconcilerName = reconciler
+        , key = key
+        , value = value
         }
 
     else
-        i
+        formInput
 
 
 assocToKeyValue : ( k, v ) -> { key : k, value : v }
@@ -125,7 +125,7 @@ mapReconciler new existing =
 
 view : Model -> Html Msg
 view model =
-    case model.reconcilersData of
+    case model.reconcilers of
         Ok rd ->
             renderForms rd
 
@@ -191,7 +191,7 @@ reconcilerConfig rd =
                         ]
                         []
                     ]
-                    :: List.map (configElement OnInput) rd.config
+                    :: List.map (configElement (OnInput rd.name)) rd.config
                     ++ [ input
                             [ type_ "submit"
                             , value "Save"
