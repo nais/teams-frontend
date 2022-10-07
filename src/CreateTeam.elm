@@ -3,7 +3,7 @@ module CreateTeam exposing (..)
 import Backend.Scalar
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, div, form, h2, input, label, li, p, text, ul)
+import Html exposing (Html, button, div, form, h2, input, label, li, p, text, ul)
 import Html.Attributes exposing (class, for, placeholder, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Queries.Do
@@ -112,7 +112,7 @@ createTeamForm model =
                 , textbox PurposeChanged "purpose" "Purpose of the team" "Making sure customers have a good user experience"
                 ]
                 :: errorView model.error
-                ++ [ input [ type_ "submit", value "Create new team" ] []
+                ++ [ button [ type_ "submit" ] [ text "Create new team" ]
                    ]
             )
         ]
