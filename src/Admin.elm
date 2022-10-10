@@ -8,7 +8,7 @@ import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text
 import Html.Attributes exposing (checked, class, classList, for, id, type_, value)
 import Html.Events exposing (onCheck, onInput, onSubmit)
 import Queries.Do exposing (mutate, query)
-import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, enableReconcilerMutation, getReconcilersQuery, updateReconcilerConfigMutation)
+import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, disableReconcilerMutation, enableReconcilerMutation, getReconcilersQuery, updateReconcilerConfigMutation)
 import Session exposing (Session)
 
 
@@ -52,7 +52,7 @@ update msg model =
                 Ok rd ->
                     case model.reconcilers of
                         Ok rds ->
-                            enableReconciler rd.name { model | reconcilers = Ok (List.map (mapReconciler rd) rds) }
+                            enableDisableReconciler rd { model | reconcilers = Ok (List.map (mapReconciler rd) rds) }
 
                         Err e ->
                             ( { model | reconcilers = Err e }, Cmd.none )
@@ -117,9 +117,17 @@ saveReconcilerConfig name model =
     ( model, mutate (updateReconcilerConfigMutation name inputs) GotUpdateReconcilerResponse )
 
 
-enableReconciler : ReconcilerName -> Model -> ( Model, Cmd Msg )
-enableReconciler name model =
-    ( model, mutate (enableReconcilerMutation name) GotEnableReconcilerResponse )
+enableDisableReconciler : ReconcilerData -> Model -> ( Model, Cmd Msg )
+enableDisableReconciler reconciler model =
+    let
+        func =
+            if reconciler.enabled then
+                disableReconcilerMutation
+
+            else
+                enableReconcilerMutation
+    in
+    ( model, mutate (func reconciler.name) GotEnableReconcilerResponse )
 
 
 mapReconcilerEnabled : ReconcilerName -> Bool -> ReconcilerData -> ReconcilerData
