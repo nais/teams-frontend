@@ -8,7 +8,7 @@ import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text
 import Html.Attributes exposing (checked, class, classList, for, id, type_, value)
 import Html.Events exposing (onCheck, onInput, onSubmit)
 import Queries.Do exposing (mutate, query)
-import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, getReconcilersQuery, updateReconcilerConfigMutation)
+import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, enableReconcilerMutation, getReconcilersQuery, updateReconcilerConfigMutation)
 import Session exposing (Session)
 
 
@@ -22,6 +22,7 @@ type alias Model =
 type Msg
     = GotReconcilersResponse (Result (Graphql.Http.Error (List ReconcilerData)) (List ReconcilerData))
     | GotUpdateReconcilerResponse (Result (Graphql.Http.Error ReconcilerData) ReconcilerData)
+    | GotEnableReconcilerResponse (Result (Graphql.Http.Error ReconcilerData) ReconcilerData)
     | Submit ReconcilerName
     | OnInput ReconcilerName ReconcilerConfigKey String
     | OnToggle ReconcilerName Bool
@@ -40,31 +41,29 @@ init session =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Submit reconcilerName ->
-            -- TODO (show some confirmation dialog -> send gql msg)
-            let
-                config =
-                    model.input
-                        |> List.filter (\i -> i.name == reconcilerName)
-                        |> List.map (\i -> i.config)
-                        |> List.head
-
-                inputs =
-                    case config of
-                        Just cfg ->
-                            cfg
-                                |> List.filter (\kv -> ConfigValue.hasValue kv.value)
-                                |> List.map (\kv -> { key = kv.key, value = ConfigValue.string kv.value })
-
-                        Nothing ->
-                            []
-            in
-            ( model, mutate (updateReconcilerConfigMutation reconcilerName inputs) GotUpdateReconcilerResponse )
+        Submit name ->
+            saveReconcilerConfig name model
 
         OnInput reconciler configKey value ->
             ( { model | input = List.map (mapReconcilerConfigValue reconciler configKey value) model.input }, Cmd.none )
 
         GotUpdateReconcilerResponse r ->
+            case r of
+                Ok rd ->
+                    case model.reconcilers of
+                        Ok rds ->
+                            enableReconciler rd.name { model | reconcilers = Ok (List.map (mapReconciler rd) rds) }
+
+                        Err e ->
+                            ( { model | reconcilers = Err e }, Cmd.none )
+
+                Err (Graphql.Http.HttpError _) ->
+                    ( { model | reconcilers = Err "graphql http error" }, Cmd.none )
+
+                Err (GraphqlError _ _) ->
+                    ( { model | reconcilers = Err "graphql error" }, Cmd.none )
+
+        GotEnableReconcilerResponse r ->
             case r of
                 Ok rd ->
                     case model.reconcilers of
@@ -91,8 +90,36 @@ update msg model =
                 Err (GraphqlError _ _) ->
                     ( { model | reconcilers = Err "graphql error" }, Cmd.none )
 
-        OnToggle reconcilerName value ->
-            ( { model | input = List.map (mapReconcilerEnabled reconcilerName value) model.input }, Cmd.none )
+        OnToggle name value ->
+            ( { model | input = List.map (mapReconcilerEnabled name value) model.input }, Cmd.none )
+
+
+saveReconcilerConfig : ReconcilerName -> Model -> ( Model, Cmd Msg )
+saveReconcilerConfig name model =
+    -- TODO (show some confirmation dialog -> send gql msg)
+    let
+        config =
+            model.input
+                |> List.filter (\i -> i.name == name)
+                |> List.map (\i -> i.config)
+                |> List.head
+
+        inputs =
+            case config of
+                Just cfg ->
+                    cfg
+                        |> List.filter (\kv -> ConfigValue.hasValue kv.value)
+                        |> List.map (\kv -> { key = kv.key, value = ConfigValue.string kv.value })
+
+                Nothing ->
+                    []
+    in
+    ( model, mutate (updateReconcilerConfigMutation name inputs) GotUpdateReconcilerResponse )
+
+
+enableReconciler : ReconcilerName -> Model -> ( Model, Cmd Msg )
+enableReconciler name model =
+    ( model, mutate (enableReconcilerMutation name) GotEnableReconcilerResponse )
 
 
 mapReconcilerEnabled : ReconcilerName -> Bool -> ReconcilerData -> ReconcilerData
@@ -129,6 +156,11 @@ mapReconciler new existing =
 
     else
         existing
+
+
+reconcilerName : ReconcilerName -> String
+reconcilerName (ReconcilerName s) =
+    s
 
 
 view : Model -> Html Msg
@@ -184,11 +216,7 @@ boolToString b =
 
 reconcilerEnabledId : ReconcilerData -> String
 reconcilerEnabledId rd =
-    let
-        (ReconcilerName name) =
-            rd.name
-    in
-    name ++ ":enabled"
+    reconcilerName rd.name ++ ":enabled"
 
 
 viewReconcilerConfig : ReconcilerData -> Html Msg
