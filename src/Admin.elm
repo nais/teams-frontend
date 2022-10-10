@@ -14,7 +14,6 @@ import Session exposing (Session)
 type alias Model =
     { session : Session
     , reconcilers : Result String (List ReconcilerData)
-    , input : List ReconcilerData
     }
 
 
@@ -31,10 +30,18 @@ init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
       , reconcilers = Err "not fetched yet"
-      , input = []
       }
     , query getReconcilersQuery GotReconcilersResponse
     )
+
+
+mapReconcilers fn reconcilers =
+    case reconcilers of
+        Ok r ->
+            Ok (List.map fn r)
+
+        Err e ->
+            Err e
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -44,17 +51,12 @@ update msg model =
             saveReconcilerConfig name model
 
         OnInput reconciler configKey value ->
-            ( { model | input = List.map (mapReconcilerConfigValue reconciler configKey value) model.input }, Cmd.none )
+            ( { model | reconcilers = mapReconcilers (mapReconcilerConfigValue reconciler configKey value) model.reconcilers }, Cmd.none )
 
         GotUpdateReconcilerResponse r ->
             case r of
                 Ok rd ->
-                    case model.reconcilers of
-                        Ok rds ->
-                            enableDisableReconciler rd { model | reconcilers = Ok (List.map (mapReconciler rd) rds) }
-
-                        Err e ->
-                            ( { model | reconcilers = Err e }, Cmd.none )
+                    enableDisableReconciler rd { model | reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }
 
                 Err (Graphql.Http.HttpError _) ->
                     ( { model | reconcilers = Err "graphql http error" }, Cmd.none )
@@ -65,12 +67,7 @@ update msg model =
         GotEnableReconcilerResponse r ->
             case r of
                 Ok rd ->
-                    case model.reconcilers of
-                        Ok rds ->
-                            ( { model | reconcilers = Ok (List.map (mapReconciler rd) rds) }, Cmd.none )
-
-                        Err e ->
-                            ( { model | reconcilers = Err e }, Cmd.none )
+                    ( { model | reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }, Cmd.none )
 
                 Err (Graphql.Http.HttpError _) ->
                     ( { model | reconcilers = Err "graphql http error" }, Cmd.none )
@@ -81,7 +78,7 @@ update msg model =
         GotReconcilersResponse r ->
             case r of
                 Ok rds ->
-                    ( { model | reconcilers = Ok rds, input = rds }, Cmd.none )
+                    ( { model | reconcilers = Ok rds }, Cmd.none )
 
                 Err (Graphql.Http.HttpError _) ->
                     ( { model | reconcilers = Err "graphql http error" }, Cmd.none )
@@ -90,7 +87,7 @@ update msg model =
                     ( { model | reconcilers = Err "graphql error" }, Cmd.none )
 
         OnToggle name value ->
-            ( { model | input = List.map (mapReconcilerEnabled name value) model.input }, Cmd.none )
+            ( { model | reconcilers = mapReconcilers (mapReconcilerEnabled name value) model.reconcilers }, Cmd.none )
 
 
 saveReconcilerConfig : ReconcilerName -> Model -> ( Model, Cmd Msg )
@@ -98,10 +95,15 @@ saveReconcilerConfig name model =
     -- TODO (show some confirmation dialog -> send gql msg)
     let
         config =
-            model.input
-                |> List.filter (\i -> i.name == name)
-                |> List.map (\i -> i.config)
-                |> List.head
+            case model.reconcilers of
+                Ok recs ->
+                    recs
+                        |> List.filter (\i -> i.name == name)
+                        |> List.map (\i -> i.config)
+                        |> List.head
+
+                _ ->
+                    Nothing
 
         inputs =
             case config of
@@ -174,7 +176,7 @@ view : Model -> Html Msg
 view model =
     case model.reconcilers of
         Ok rd ->
-            renderForms model.input
+            renderForms rd
 
         Err e ->
             text e
@@ -219,15 +221,6 @@ configElement msg rcd =
         , input [ type_ "text", id idKey, onInput (msg rcd.key), value (secretText rcd) ] []
         , p [] [ text rcd.description ]
         ]
-
-
-boolToString : Bool -> String
-boolToString b =
-    if b then
-        "true"
-
-    else
-        "false"
 
 
 reconcilerEnabledId : ReconcilerData -> String
