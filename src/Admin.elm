@@ -6,7 +6,7 @@ import ConfigValue exposing (ConfigValue(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, ul)
 import Html.Attributes exposing (checked, class, classList, for, id, type_, value)
-import Html.Events exposing (onInput, onSubmit)
+import Html.Events exposing (onCheck, onInput, onSubmit)
 import Queries.Do exposing (mutate, query)
 import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, getReconcilersQuery, updateReconcilerConfigMutation)
 import Session exposing (Session)
@@ -24,7 +24,7 @@ type Msg
     | GotUpdateReconcilerResponse (Result (Graphql.Http.Error ReconcilerData) ReconcilerData)
     | Submit ReconcilerName
     | OnInput ReconcilerName ReconcilerConfigKey String
-    | OnToggle ReconcilerName String
+    | OnToggle ReconcilerName Bool
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -92,12 +92,7 @@ update msg model =
                     ( { model | reconcilers = Err "graphql error" }, Cmd.none )
 
         OnToggle reconcilerName value ->
-            ( { model | input = List.map (mapReconcilerEnabled reconcilerName (checkboxToBool value)) model.input }, Cmd.none )
-
-
-checkboxToBool : String -> Bool
-checkboxToBool string =
-    string == "on"
+            ( { model | input = List.map (mapReconcilerEnabled reconcilerName value) model.input }, Cmd.none )
 
 
 mapReconcilerEnabled : ReconcilerName -> Bool -> ReconcilerData -> ReconcilerData
@@ -140,7 +135,7 @@ view : Model -> Html Msg
 view model =
     case model.reconcilers of
         Ok rd ->
-            renderForms rd
+            renderForms model.input
 
         Err e ->
             text e
@@ -154,7 +149,7 @@ toggleReconcilerElement rd =
             [ type_ "checkbox"
             , checked rd.enabled
             , id (reconcilerEnabledId rd)
-            , onInput (OnToggle rd.name)
+            , onCheck (OnToggle rd.name)
             ]
             []
         ]
