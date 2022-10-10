@@ -45,3 +45,17 @@ description =
 configured : SelectionSet Bool Backend.Object.ReconcilerConfig
 configured =
     Object.selectionForField "Bool" "configured" [] Decode.bool
+
+
+{-| Whether or not the configuration value is considered a secret. Secret values will not be exposed through the API.
+-}
+secret : SelectionSet Bool Backend.Object.ReconcilerConfig
+secret =
+    Object.selectionForField "Bool" "secret" [] Decode.bool
+
+
+{-| Configuration value. This will be set to null if the value is considered a secret.
+-}
+value : SelectionSet (Maybe String) Backend.Object.ReconcilerConfig
+value =
+    Object.selectionForField "(Maybe String)" "value" [] (Decode.string |> Decode.nullable)

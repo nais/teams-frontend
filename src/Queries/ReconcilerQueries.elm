@@ -7,9 +7,8 @@ import Backend.Object.Reconciler as Reconciler
 import Backend.Object.ReconcilerConfig as ReconcilerConfig
 import Backend.Query as Query
 import Backend.Scalar exposing (ReconcilerName)
-import ConfigValue exposing (ConfigValue(..))
 import Graphql.Operation exposing (RootQuery)
-import Graphql.SelectionSet exposing (SelectionSet)
+import Graphql.SelectionSet exposing (SelectionSet, mapOrFail)
 
 
 type alias ReconcilerConfigData =
@@ -17,7 +16,8 @@ type alias ReconcilerConfigData =
     , description : String
     , displayName : String
     , key : Backend.Scalar.ReconcilerConfigKey
-    , value : ConfigValue
+    , value : Maybe String
+    , secret : Bool
     }
 
 
@@ -71,4 +71,5 @@ reconcilerConfigDataSelection =
         |> Graphql.SelectionSet.with ReconcilerConfig.description
         |> Graphql.SelectionSet.with ReconcilerConfig.displayName
         |> Graphql.SelectionSet.with ReconcilerConfig.key
-        |> Graphql.SelectionSet.hardcoded NotConfigured
+        |> Graphql.SelectionSet.with ReconcilerConfig.value
+        |> Graphql.SelectionSet.with ReconcilerConfig.secret

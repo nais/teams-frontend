@@ -2,7 +2,6 @@ module Admin exposing (..)
 
 import Backend.InputObject exposing (ReconcilerConfigInput)
 import Backend.Scalar exposing (Map(..), ReconcilerConfigKey(..), ReconcilerName(..))
-import ConfigValue exposing (ConfigValue(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, ul)
 import Html.Attributes exposing (checked, class, classList, for, id, type_, value)
@@ -108,8 +107,8 @@ saveReconcilerConfig name model =
             case config of
                 Just cfg ->
                     cfg
-                        |> List.filter (\kv -> ConfigValue.hasValue kv.value)
-                        |> List.map (\kv -> { key = kv.key, value = ConfigValue.string kv.value })
+                        |> List.filter (\kv -> not (kv.value == Nothing))
+                        |> List.map (\kv -> { key = kv.key, value = Maybe.withDefault "" kv.value })
 
                 Nothing ->
                     []
@@ -142,7 +141,7 @@ mapReconcilerEnabled name enabled reconciler =
 mapReconcilerConfig : ReconcilerConfigKey -> String -> ReconcilerConfigData -> ReconcilerConfigData
 mapReconcilerConfig key value input =
     if input.key == key then
-        { input | key = key, value = ConfigValue value }
+        { input | key = key, value = Just value }
 
     else
         input
@@ -195,6 +194,15 @@ toggleReconcilerElement rd =
         ]
 
 
+secretText : ReconcilerConfigData -> String
+secretText rcd =
+    if rcd.configured && rcd.secret && rcd.value == Nothing then
+        "*****"
+
+    else
+        Maybe.withDefault "" rcd.value
+
+
 configElement : (ReconcilerConfigKey -> String -> Msg) -> ReconcilerConfigData -> Html Msg
 configElement msg rcd =
     let
@@ -208,7 +216,7 @@ configElement msg rcd =
             ]
         ]
         [ label [ for idKey ] [ text rcd.displayName ]
-        , input [ type_ "text", id idKey, onInput (msg rcd.key) ] []
+        , input [ type_ "text", id idKey, onInput (msg rcd.key), value (secretText rcd) ] []
         , p [] [ text rcd.description ]
         ]
 
