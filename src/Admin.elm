@@ -56,7 +56,7 @@ update msg model =
         GotUpdateReconcilerResponse r ->
             case r of
                 Ok rd ->
-                    enableDisableReconciler rd { model | reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }
+                    enableDisableReconciler rd model
 
                 Err (Graphql.Http.HttpError _) ->
                     ( { model | reconcilers = Err "graphql http error" }, Cmd.none )
@@ -123,10 +123,10 @@ enableDisableReconciler reconciler model =
     let
         func =
             if reconciler.enabled then
-                disableReconcilerMutation
+                enableReconcilerMutation
 
             else
-                enableReconcilerMutation
+                disableReconcilerMutation
     in
     ( model, mutate (func reconciler.name) GotEnableReconcilerResponse )
 
