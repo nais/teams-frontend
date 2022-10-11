@@ -4,7 +4,7 @@ import Backend.InputObject exposing (ReconcilerConfigInput)
 import Backend.Scalar exposing (Map(..), ReconcilerConfigKey(..), ReconcilerName(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, ul)
-import Html.Attributes exposing (checked, class, classList, for, id, type_, value)
+import Html.Attributes exposing (checked, class, classList, for, id, placeholder, type_, value)
 import Html.Events exposing (onCheck, onInput, onSubmit)
 import Queries.Do exposing (mutate, query)
 import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, disableReconcilerMutation, enableReconcilerMutation, getReconcilersQuery, updateReconcilerConfigMutation)
@@ -155,7 +155,11 @@ mapReconcilerEnabled name enabled reconciler =
 mapReconcilerConfig : ReconcilerConfigKey -> String -> ReconcilerConfigData -> ReconcilerConfigData
 mapReconcilerConfig key value input =
     if input.key == key then
-        { input | key = key, value = Just value }
+        if value == "" then
+            { input | key = key, value = Nothing }
+
+        else
+            { input | key = key, value = Just value }
 
     else
         input
@@ -219,13 +223,27 @@ toggleReconcilerElement rd =
         ]
 
 
-secretText : ReconcilerConfigData -> String
-secretText rcd =
-    if rcd.configured && rcd.secret && rcd.value == Nothing then
-        "*****"
+isConfiguredSecret : ReconcilerConfigData -> Bool
+isConfiguredSecret rcd =
+    rcd.configured && rcd.secret && rcd.value == Nothing
+
+
+secretHelpText : ReconcilerConfigData -> List (Html msg)
+secretHelpText rcd =
+    if isConfiguredSecret rcd then
+        [ p [ class "secret-help-text" ] [ text "This value is already configured. It is hidden because it is secret." ] ]
 
     else
-        Maybe.withDefault "" rcd.value
+        []
+
+
+placeholderText : ReconcilerConfigData -> String
+placeholderText rcd =
+    if isConfiguredSecret rcd then
+        "********"
+
+    else
+        ""
 
 
 configElement : (ReconcilerConfigKey -> String -> Msg) -> ReconcilerConfigData -> Html Msg
@@ -240,10 +258,13 @@ configElement msg rcd =
             , ( "reconcilerNotConfigured", not rcd.configured )
             ]
         ]
-        [ label [ for idKey ] [ text rcd.displayName ]
-        , input [ type_ "text", id idKey, onInput (msg rcd.key), value (secretText rcd) ] []
-        , p [] [ text rcd.description ]
-        ]
+        ([ label [ for idKey ] [ text rcd.displayName ]
+         , input [ type_ "text", id idKey, onInput (msg rcd.key), value (Maybe.withDefault "" rcd.value), placeholder (placeholderText rcd) ] []
+         ]
+            ++ secretHelpText rcd
+            ++ [ p [] [ text rcd.description ]
+               ]
+        )
 
 
 reconcilerEnabledId : ReconcilerData -> String

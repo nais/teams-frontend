@@ -127,12 +127,6 @@ nav li.active a {
     border-color: var(--link);
 }
 
-h2 {
-    font-size: 1.25rem;
-    font-weight: bold;
-    margin: 2em 0 1em;
-}
-
 table {
     width: 100%;
     border-collapse: collapse;
@@ -153,7 +147,7 @@ td:last-child{
 }*/
 
 form {
-    margin: 2rem 0;
+    margin: 1rem 0 3rem;
     padding: 0;
 }
 
@@ -174,12 +168,25 @@ form ul li {
 form label {
     text-align: left;
     margin: 0 0 0.5rem;
+    font-weight: bold;
 }
 
 input[type="text"] {
     padding: 0.5rem;
     border-radius: 1rem;
     border: 1px solid var(--gray);
+}
+
+.checkbox {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-direction: row;
+}
+
+.checkbox label {
+    order: 9;
+    font-weight: normal;
 }
 
 thead {
@@ -212,8 +219,10 @@ button, .button {
     color: var(--white);
     font-weight: bold;
     cursor: pointer;
-    text-decoration: none;
+    text-decoration: none !important;
     display: inline-block;
+    line-height: 1em;
+    font-size: 1rem;
 }
 
 button.red, .button.red {
@@ -224,10 +233,7 @@ button:hover, .button:hover {
     text-decoration: underline;
 }
 
-/* form ul li {
-    flex-direction: row;
-} */
-
+/*
 .reconcilerConfigured {
     border: 5px solid var(--green);
     padding-left: 5px;
@@ -243,18 +249,35 @@ button:hover, .button:hover {
     border-top: 0;
     border-bottom: 0;
 }
+ */
 
-.checkbox {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    flex-direction: row;
+h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 2em 0 1em;
 }
 
-.checkbox label {
-    order: 9;
+h3 {
+    font-size: 1.33rem;
+    font-weight: bold;
+    margin: 2em 0 1em;
+}
+
+h4 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin: 2em 0 1em;
 }
 
 h2, h3, h4, h5, h6 {
     margin: 0.75em 0 0.5em;
+}
+
+p {
+    margin: 0.5em 0;
+    line-height: 1.5em;
+}
+
+p.secret-help-text {
+    font-style: italic;
 }
