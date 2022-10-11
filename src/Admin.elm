@@ -56,7 +56,19 @@ update msg model =
         GotUpdateReconcilerResponse r ->
             case r of
                 Ok rd ->
-                    enableDisableReconciler rd model
+                    let
+                        updatedModel =
+                            { model | reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }
+
+                        maybeExisting =
+                            filterReconciler rd.name model
+                    in
+                    case maybeExisting of
+                        Just existing ->
+                            ( updatedModel, enableDisableReconciler existing )
+
+                        Nothing ->
+                            ( updatedModel, Cmd.none )
 
                 Err (Graphql.Http.HttpError _) ->
                     ( { model | reconcilers = Err "graphql http error" }, Cmd.none )
@@ -118,8 +130,8 @@ saveReconcilerConfig name model =
     ( model, mutate (updateReconcilerConfigMutation name inputs) GotUpdateReconcilerResponse )
 
 
-enableDisableReconciler : ReconcilerData -> Model -> ( Model, Cmd Msg )
-enableDisableReconciler reconciler model =
+enableDisableReconciler : ReconcilerData -> Cmd Msg
+enableDisableReconciler reconciler =
     let
         func =
             if reconciler.enabled then
@@ -128,7 +140,7 @@ enableDisableReconciler reconciler model =
             else
                 disableReconcilerMutation
     in
-    ( model, mutate (func reconciler.name) GotEnableReconcilerResponse )
+    mutate (func reconciler.name) GotEnableReconcilerResponse
 
 
 mapReconcilerEnabled : ReconcilerName -> Bool -> ReconcilerData -> ReconcilerData
@@ -165,6 +177,17 @@ mapReconciler new existing =
 
     else
         existing
+
+
+filterReconciler : ReconcilerName -> Model -> Maybe ReconcilerData
+filterReconciler name model =
+    case model.reconcilers of
+        Ok reconcilers ->
+            List.filter (\rd -> rd.name == name) reconcilers
+                |> List.head
+
+        _ ->
+            Nothing
 
 
 reconcilerName : ReconcilerName -> String
