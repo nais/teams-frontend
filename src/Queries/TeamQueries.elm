@@ -11,7 +11,7 @@ import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (Slug, Uuid)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
-import Queries.UserQueries exposing (UserData, userDataSelection)
+import Queries.UserQueries exposing (UserData, userDataSelection, userDataWithRoleSelection)
 
 
 

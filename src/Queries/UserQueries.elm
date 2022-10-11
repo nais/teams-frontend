@@ -4,12 +4,11 @@ import Backend.Object
 import Backend.Object.Role as Role
 import Backend.Object.User as User
 import Backend.Query as Query
-import Backend.Scalar exposing (Uuid)
+import Backend.Scalar exposing (RoleName, Uuid)
 import Backend.Union
 import Backend.Union.AuthenticatedUser as AuthenticatedUser
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
-import Backend.Scalar exposing (RoleName)
 
 
 
@@ -36,23 +35,27 @@ getMeQuery =
     Query.me meSelection
 
 
-getUserQuery : String -> SelectionSet UserData RootQuery
-getUserQuery email =
-    Query.userByEmail { email = email } userDataSelection
-
-
 getAllUsers : SelectionSet (List UserData) RootQuery
 getAllUsers =
     Query.users userDataSelection
 
 
-userDataSelection : SelectionSet UserData Backend.Object.User
-userDataSelection =
+userDataWithRoleSelection : SelectionSet UserData Backend.Object.User
+userDataWithRoleSelection =
     SelectionSet.map4 UserData
         User.id
         User.email
         User.name
         (User.roles roleDataSelection)
+
+
+userDataSelection : SelectionSet UserData Backend.Object.User
+userDataSelection =
+    SelectionSet.succeed UserData
+        |> SelectionSet.with User.id
+        |> SelectionSet.with User.email
+        |> SelectionSet.with User.name
+        |> SelectionSet.hardcoded []
 
 
 roleDataSelection : SelectionSet RoleData Backend.Object.Role
@@ -66,6 +69,6 @@ roleDataSelection =
 meSelection : SelectionSet (Maybe UserData) Backend.Union.AuthenticatedUser
 meSelection =
     AuthenticatedUser.fragments
-        { onUser = SelectionSet.map Just userDataSelection
+        { onUser = SelectionSet.map Just userDataWithRoleSelection
         , onServiceAccount = SelectionSet.map (\_ -> Nothing) SelectionSet.empty
         }
