@@ -6,6 +6,7 @@ import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, div, h2, h3, p, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class)
 import Queries.Do exposing (query)
+import Queries.Error exposing (errorToString)
 import Queries.TeamQueries exposing (AuditLogData, TeamData, TeamMemberData, getTeamQuery)
 import Route exposing (link)
 import Session exposing (Session, User(..))
@@ -44,16 +45,8 @@ update msg model =
                 Ok team ->
                     ( { model | team = Team team }, Cmd.none )
 
-                Err (Graphql.Http.HttpError _) ->
-                    ( { model | team = Error "Can't talk to server, are we connected?" }, Cmd.none )
-
-                Err (GraphqlError _ errors) ->
-                    let
-                        errstr =
-                            List.map (\error -> error.message) errors
-                                |> String.join ","
-                    in
-                    ( { model | team = Error errstr }, Cmd.none )
+                Err e ->
+                    ( { model | team = Error (errorToString e) }, Cmd.none )
 
 
 slugstr : Backend.Scalar.Slug -> String

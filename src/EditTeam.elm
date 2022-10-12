@@ -8,6 +8,7 @@ import Html exposing (Html, button, datalist, div, form, h2, input, label, li, o
 import Html.Attributes exposing (class, colspan, disabled, for, id, list, placeholder, readonly, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Queries.Do
+import Queries.Error exposing (errorToString)
 import Queries.TeamQueries exposing (TeamData, TeamMemberData, updateTeamMutation)
 import Queries.UserQueries exposing (UserData)
 import Session exposing (Session, User(..))
@@ -64,7 +65,7 @@ update msg model =
                 (updateTeamMutation
                     model.team.id
                     { purpose = Graphql.OptionalArgument.fromMaybe model.team.purpose
-                    , name = Graphql.OptionalArgument.Present  (slugstr model.team.slug)
+                    , name = Graphql.OptionalArgument.Present (slugstr model.team.slug)
                     }
                 )
                 GotUpdateTeamResponse
@@ -74,37 +75,37 @@ update msg model =
             ( { model | error = Nothing, team = team }, Cmd.none )
 
         GotTeamResponse (Err e) ->
-            handleGraphQLError model e
+            ( { model | error = Just (errorToString e) }, Cmd.none )
 
         GotUpdateTeamResponse (Ok _) ->
             ( { model | error = Nothing }, Cmd.none )
 
         GotUpdateTeamResponse (Err e) ->
-            handleGraphQLError model e
+            ( { model | error = Just (errorToString e) }, Cmd.none )
 
         GotSetTeamMemberRoleResponse (Ok team) ->
             ( { model | error = Nothing, team = team }, Cmd.none )
 
         GotSetTeamMemberRoleResponse (Err e) ->
-            handleGraphQLError model e
+            ( { model | error = Just (errorToString e) }, Cmd.none )
 
         GotRemoveTeamMemberResponse (Ok team) ->
             ( { model | error = Nothing, team = team }, Cmd.none )
 
         GotRemoveTeamMemberResponse (Err e) ->
-            handleGraphQLError model e
+            ( { model | error = Just (errorToString e) }, Cmd.none )
 
         GotAddTeamMemberResponse (Ok team) ->
             ( { model | error = Nothing, team = team }, Cmd.none )
 
         GotAddTeamMemberResponse (Err e) ->
-            handleGraphQLError model e
+            ( { model | error = Just (errorToString e) }, Cmd.none )
 
         GotUserListResponse (Ok userList) ->
             ( { model | error = Nothing, userList = userList }, Cmd.none )
 
         GotUserListResponse (Err e) ->
-            handleGraphQLError model e
+            ( { model | error = Just (errorToString e) }, Cmd.none )
 
         PurposeChanged purpose ->
             ( { model | team = mapTeamPurpose purpose model.team }, Cmd.none )
@@ -122,31 +123,15 @@ update msg model =
         AddMemberSearchChanged query ->
             case List.head (List.filter (matchExactUser query) model.userList) of
                 Just u ->
-                    (  model , addTeamMember model.team u )
+                    ( model, addTeamMember model.team u )
 
                 Nothing ->
-                    (  model , Cmd.none )
+                    ( model, Cmd.none )
 
 
 matchExactUser : String -> UserData -> Bool
 matchExactUser query user =
     nameAndEmail user == query
-
-
-
-handleGraphQLError : Model -> RawError parsedData httpError -> ( Model, Cmd msg )
-handleGraphQLError model err =
-    case err of
-        Graphql.Http.HttpError _ ->
-            ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
-
-        GraphqlError _ errors ->
-            let
-                errstr =
-                    List.map (\error -> error.message) errors
-                        |> String.join ","
-            in
-            ( { model | error = Just errstr }, Cmd.none )
 
 
 stringOrNothing : String -> Maybe String
@@ -199,6 +184,7 @@ slugstr : Slug -> String
 slugstr (Slug s) =
     s
 
+
 mapTeamPurpose : String -> TeamData -> TeamData
 mapTeamPurpose purpose team =
     { team | purpose = Just purpose }
@@ -230,6 +216,7 @@ removeTeamMember team user =
     Queries.Do.mutate
         (Queries.TeamQueries.removeMemberFromTeamMutation team user)
         GotRemoveTeamMemberResponse
+
 
 addTeamMember : TeamData -> UserData -> Cmd Msg
 addTeamMember team user =

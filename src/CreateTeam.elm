@@ -4,9 +4,10 @@ import Backend.Scalar
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
 import Html exposing (Html, button, div, form, h2, input, label, li, p, text, ul)
-import Html.Attributes exposing (class, for, placeholder, type_, value)
+import Html.Attributes exposing (class, for, placeholder, type_)
 import Html.Events exposing (onInput, onSubmit)
 import Queries.Do
+import Queries.Error exposing (errorToString)
 import Queries.TeamQueries exposing (TeamData, createTeamMutation)
 import Session exposing (Session)
 
@@ -55,16 +56,8 @@ update msg model =
         GotTeamCreatedResponse (Ok _) ->
             ( { model | error = Nothing }, Cmd.none )
 
-        GotTeamCreatedResponse (Err (Graphql.Http.HttpError _)) ->
-            ( { model | error = Just "Can't talk to server, are we connected?" }, Cmd.none )
-
-        GotTeamCreatedResponse (Err (GraphqlError _ errors)) ->
-            let
-                errstr =
-                    List.map (\error -> error.message) errors
-                        |> String.join ","
-            in
-            ( { model | error = Just errstr }, Cmd.none )
+        GotTeamCreatedResponse (Err e) ->
+            ( { model | error = Just (errorToString e) }, Cmd.none )
 
         SlugChanged s ->
             ( { model | slug = s }, Cmd.none )

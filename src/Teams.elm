@@ -5,14 +5,16 @@ import Graphql.Http
 import Html exposing (Html, div, h2, p, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class)
 import Queries.Do exposing (query)
+import Queries.Error exposing (errorToString)
 import Queries.TeamQueries exposing (TeamData, getTeamsQuery)
 import Route exposing (link)
 import Session exposing (Session)
 
 
 type alias Model =
-    { teams : List TeamData
-    , session : Session
+    { session : Session
+    , teams : List TeamData
+    , error : Maybe String
     }
 
 
@@ -25,6 +27,7 @@ init : Session -> ( Model, Cmd Msg )
 init session =
     ( { teams = []
       , session = session
+      , error = Nothing
       }
     , query getTeamsQuery GotTeamsResponse
     )
@@ -41,8 +44,8 @@ update msg model =
                 Ok teams ->
                     ( { model | teams = teams }, Cmd.none )
 
-                Err _ ->
-                    ( model, Cmd.none )
+                Err e ->
+                    ( { model | error = Just (errorToString e) }, Cmd.none )
 
 
 slugstr : Backend.Scalar.Slug -> String
@@ -85,4 +88,9 @@ teamTable teams =
 
 view : Model -> Html Msg
 view model =
-    teamTable model.teams
+    case model.error of
+        Nothing ->
+            teamTable model.teams
+
+        Just err ->
+            text err
