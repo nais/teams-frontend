@@ -63,6 +63,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
   rollout:
+    permissions:
+      id-token: write
     needs: ["build_and_push"]
     runs-on: fasit-deploy
     if: github.ref == 'refs/heads/main'
