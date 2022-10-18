@@ -4,8 +4,8 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Object exposing (TeamMetadata(..))
 import Backend.Scalar exposing (RoleName(..))
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, div, h2, h3, p, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (class, colspan)
+import Html exposing (Html, div, em, h2, h3, p, span, table, tbody, td, text, th, thead, tr)
+import Html.Attributes exposing (class, colspan, title)
 import Queries.Do exposing (query)
 import Queries.Error exposing (errorToString)
 import Queries.TeamQueries exposing (AuditLogData, KeyValueData, TeamData, TeamMemberData, getTeamQuery)
@@ -75,10 +75,18 @@ memberRow member =
 
 logRow : AuditLogData -> Html Msg
 logRow log =
+    let
+        actor =
+            case log.actor of
+                Nothing ->
+                    span [ title <| "Performed automatically by the console backend module '" ++ actionstr log.action ++ "'." ] [ text "System" ]
+
+                Just s ->
+                    span [ title <| "Triggered by '" ++ s ++ "' and performed by '" ++ actionstr log.action ++ "'." ] [ text s ]
+    in
     tr []
         [ td [] [ text (timestr log.createdAt) ]
-        , td [] [ text (Maybe.withDefault "" log.actor) ]
-        , td [] [ text (actionstr log.action) ]
+        , td [] [ actor ]
         , td [] [ text log.message ]
         ]
 
@@ -142,8 +150,7 @@ view model =
                             [ thead []
                                 [ tr []
                                     [ th [] [ text "Timestamp" ]
-                                    , th [] [ text "Actor" ]
-                                    , th [] [ text "Action" ]
+                                    , th [] [ text "Changed by" ]
                                     , th [] [ text "Message" ]
                                     ]
                                 ]
