@@ -291,3 +291,43 @@ setTeamMemberRole :
     -> SelectionSet decodesTo RootMutation
 setTeamMemberRole requiredArgs____ object____ =
     Object.selectionForCompositeField "setTeamMemberRole" [ Argument.required "input" requiredArgs____.input Backend.InputObject.encodeSetTeamMemberRoleInput ] object____ Basics.identity
+
+
+type alias DisableTeamRequiredArguments =
+    { teamId : Backend.ScalarCodecs.Uuid }
+
+
+{-| Disable a team
+
+When a team is disabled it will no longer be included during team reconciliation.
+
+The team will be returned on success.
+
+  - teamId - The ID of the team to disable.
+
+-}
+disableTeam :
+    DisableTeamRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Team
+    -> SelectionSet decodesTo RootMutation
+disableTeam requiredArgs____ object____ =
+    Object.selectionForCompositeField "disableTeam" [ Argument.required "teamId" requiredArgs____.teamId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+
+
+type alias EnableTeamRequiredArguments =
+    { teamId : Backend.ScalarCodecs.Uuid }
+
+
+{-| Enable a previously disabled team
+
+The team will be returned on success.
+
+  - teamId - The ID of the team to enable.
+
+-}
+enableTeam :
+    EnableTeamRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Team
+    -> SelectionSet decodesTo RootMutation
+enableTeam requiredArgs____ object____ =
+    Object.selectionForCompositeField "enableTeam" [ Argument.required "teamId" requiredArgs____.teamId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity

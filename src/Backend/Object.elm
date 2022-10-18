@@ -41,6 +41,10 @@ type TeamMembership
     = TeamMembership
 
 
+type TeamMetadata
+    = TeamMetadata
+
+
 type TeamSync
     = TeamSync
 

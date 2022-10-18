@@ -1,13 +1,14 @@
 module Team exposing (..)
 
 import Backend.Enum.TeamRole exposing (TeamRole(..))
+import Backend.Object exposing (TeamMetadata(..))
 import Backend.Scalar exposing (RoleName(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, div, h2, h3, p, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, colspan)
 import Queries.Do exposing (query)
 import Queries.Error exposing (errorToString)
-import Queries.TeamQueries exposing (AuditLogData, TeamData, TeamMemberData, getTeamQuery)
+import Queries.TeamQueries exposing (AuditLogData, KeyValueData, TeamData, TeamMemberData, getTeamQuery)
 import Route exposing (link)
 import Session exposing (Session, User(..))
 
@@ -90,21 +91,43 @@ simpleRow header content =
         ]
 
 
+metadataRow : KeyValueData -> Html msg
+metadataRow kv =
+    case kv.value of
+        Just v ->
+            simpleRow kv.key v
+
+        Nothing ->
+            simpleRow kv.key ""
+
+
+editorButton : Model -> TeamData -> List (Html msg)
+editorButton model team =
+    if editor team (Session.user model.session) then
+        [ p [] [ link (Route.EditTeam team.id) [ class "button" ] [ text "Edit" ] ] ]
+
+    else
+        []
+
+
 view : Model -> Html Msg
 view model =
     case model.team of
         Team team ->
             div []
-                ([ h2 [] [ text ("Teams → " ++ slugstr team.slug) ]
-                 , p [] [ text (Maybe.withDefault "N/A" team.purpose) ]
-                 ]
-                    ++ (if editor team (Session.user model.session) then
-                            [ p [] [ link (Route.EditTeam team.id) [ class "button" ] [ text "Edit" ] ] ]
-
-                        else
-                            []
-                       )
-                    ++ [ h3 [] [ text "Members" ]
+                (editorButton model team
+                    ++ [ h2 [] [ text ("Teams → " ++ slugstr team.slug) ]
+                       , p [] [ text (Maybe.withDefault "N/A" team.purpose) ]
+                       , table []
+                            [ thead []
+                                [ tr []
+                                    [ th [ colspan 2 ] [ text "Metadata" ]
+                                    ]
+                                ]
+                            , tbody []
+                                (List.map metadataRow team.metadata)
+                            ]
+                       , h3 [] [ text "Members" ]
                        , table []
                             [ thead []
                                 [ tr []

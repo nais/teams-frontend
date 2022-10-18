@@ -47,6 +47,7 @@ init session id =
             , purpose = Nothing
             , members = []
             , auditLogs = []
+            , metadata = []
             }
       }
     , Cmd.batch

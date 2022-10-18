@@ -4,16 +4,10 @@
 
 module Backend.Object.Team exposing (..)
 
-import Backend.InputObject
-import Backend.Interface
 import Backend.Object
 import Backend.Scalar
 import Backend.ScalarCodecs
-import Backend.Union
-import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
-import Graphql.Internal.Encode as Encode exposing (Value)
-import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
@@ -47,11 +41,13 @@ purpose =
     Object.selectionForField "(Maybe String)" "purpose" [] (Decode.string |> Decode.nullable)
 
 
-{-| Metadata attached to the team as a key => value map.
+{-| Metadata attached to the team.
 -}
-metadata : SelectionSet (Maybe Backend.ScalarCodecs.Map) Backend.Object.Team
-metadata =
-    Object.selectionForField "(Maybe ScalarCodecs.Map)" "metadata" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecMap |> .decoder |> Decode.nullable)
+metadata :
+    SelectionSet decodesTo Backend.Object.TeamMetadata
+    -> SelectionSet (List decodesTo) Backend.Object.Team
+metadata object____ =
+    Object.selectionForCompositeField "metadata" [] object____ (Basics.identity >> Decode.list)
 
 
 {-| Audit logs for this team.
@@ -79,3 +75,10 @@ syncErrors :
     -> SelectionSet (List decodesTo) Backend.Object.Team
 syncErrors object____ =
     Object.selectionForCompositeField "syncErrors" [] object____ (Basics.identity >> Decode.list)
+
+
+{-| Whether or not the team is enabled.
+-}
+enabled : SelectionSet Bool Backend.Object.Team
+enabled =
+    Object.selectionForField "Bool" "enabled" [] Decode.bool

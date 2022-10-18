@@ -7,11 +7,12 @@ import Backend.Object
 import Backend.Object.AuditLog as AuditLog
 import Backend.Object.Team as Team
 import Backend.Object.TeamMember as TeamMember
+import Backend.Object.TeamMetadata as TeamMetadata
 import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (Slug, Uuid)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
-import Queries.UserQueries exposing (UserData, userDataSelection, userDataWithRoleSelection)
+import Queries.UserQueries exposing (UserData, userDataSelection)
 
 
 
@@ -32,12 +33,19 @@ type alias AuditLogData =
     }
 
 
+type alias KeyValueData =
+    { key : String
+    , value : Maybe String
+    }
+
+
 type alias TeamData =
     { id : Uuid
     , slug : Slug
     , purpose : Maybe String
     , members : List TeamMemberData
     , auditLogs : List AuditLogData
+    , metadata : List KeyValueData
     }
 
 
@@ -97,12 +105,13 @@ setTeamMemberRoleMutation team member role =
 
 teamDataSelection : SelectionSet TeamData Backend.Object.Team
 teamDataSelection =
-    Graphql.SelectionSet.map5 TeamData
+    Graphql.SelectionSet.map6 TeamData
         Team.id
         Team.slug
         Team.purpose
         (Team.members teamMemberSelection)
         (Team.auditLogs auditLogSelection)
+        (Team.metadata keyValueSelection)
 
 
 teamMemberSelection : SelectionSet TeamMemberData Backend.Object.TeamMember
@@ -119,3 +128,10 @@ auditLogSelection =
         AuditLog.actor
         AuditLog.message
         AuditLog.createdAt
+
+
+keyValueSelection : SelectionSet KeyValueData Backend.Object.TeamMetadata
+keyValueSelection =
+    Graphql.SelectionSet.map2 KeyValueData
+        TeamMetadata.key
+        TeamMetadata.value

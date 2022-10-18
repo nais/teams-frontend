@@ -1,18 +1,14 @@
 module Admin exposing (..)
 
-import Backend.InputObject exposing (ReconcilerConfigInput)
-import Backend.Scalar exposing (Map(..), ReconcilerConfigKey(..), ReconcilerName(..))
+import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
 import Graphql.Http exposing (RawError(..))
-import Graphql.Http.GraphqlError
 import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, ul)
 import Html.Attributes exposing (checked, class, classList, for, id, placeholder, type_, value)
 import Html.Events exposing (onCheck, onInput, onSubmit)
-import Http
-import Json.Decode
 import Queries.Do exposing (mutate, query)
+import Queries.Error
 import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, disableReconcilerMutation, enableReconcilerMutation, getReconcilersQuery, updateReconcilerConfigMutation)
 import Session exposing (Session)
-import Queries.Error
 
 
 type alias Model =
@@ -75,7 +71,7 @@ update msg model =
                             ( updatedModel, Cmd.none )
 
                 Err e ->
-                    ( { model | reconcilers = Err (Queries.Error.errorToString e)}, Cmd.none )
+                    ( { model | reconcilers = Err (Queries.Error.errorToString e) }, Cmd.none )
 
         GotEnableReconcilerResponse r ->
             case r of
@@ -83,7 +79,7 @@ update msg model =
                     ( { model | reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }, Cmd.none )
 
                 Err e ->
-                    ( { model | reconcilers = Err (Queries.Error.errorToString e)}, Cmd.none )
+                    ( { model | reconcilers = Err (Queries.Error.errorToString e) }, Cmd.none )
 
         GotReconcilersResponse r ->
             case r of
@@ -91,7 +87,7 @@ update msg model =
                     ( { model | reconcilers = Ok rds }, Cmd.none )
 
                 Err e ->
-                    ( { model | reconcilers = Err (Queries.Error.errorToString e)}, Cmd.none )
+                    ( { model | reconcilers = Err (Queries.Error.errorToString e) }, Cmd.none )
 
         OnToggle name value ->
             ( { model | reconcilers = mapReconcilers (mapReconcilerEnabled name value) model.reconcilers }, Cmd.none )
