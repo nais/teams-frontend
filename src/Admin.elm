@@ -2,7 +2,7 @@ module Admin exposing (..)
 
 import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, ul)
+import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, textarea, ul)
 import Html.Attributes exposing (checked, class, classList, for, id, placeholder, type_, value)
 import Html.Events exposing (onCheck, onInput, onSubmit)
 import Queries.Do exposing (mutate, query)
@@ -242,6 +242,14 @@ configElement msg rcd =
     let
         (ReconcilerConfigKey idKey) =
             rcd.key
+
+        element =
+            case idKey of
+                "github:app_private_key" ->
+                    textarea [ id idKey, onInput (msg rcd.key), value (Maybe.withDefault "" rcd.value), placeholder (placeholderText rcd) ] []
+
+                _ ->
+                    input [ type_ "text", id idKey, onInput (msg rcd.key), value (Maybe.withDefault "" rcd.value), placeholder (placeholderText rcd) ] []
     in
     li
         [ classList
@@ -250,7 +258,7 @@ configElement msg rcd =
             ]
         ]
         ([ label [ for idKey ] [ text rcd.displayName ]
-         , input [ type_ "text", id idKey, onInput (msg rcd.key), value (Maybe.withDefault "" rcd.value), placeholder (placeholderText rcd) ] []
+         , element
          ]
             ++ secretHelpText rcd
             ++ [ p [] [ text rcd.description ]
