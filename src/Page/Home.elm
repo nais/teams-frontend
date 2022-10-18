@@ -1,4 +1,4 @@
-module Home exposing (..)
+module Page.Home exposing (..)
 
 import Browser.Navigation
 import Graphql.Http

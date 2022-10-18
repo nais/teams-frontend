@@ -1,4 +1,4 @@
-module Team exposing (..)
+module Page.Team exposing (..)
 
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Object exposing (TeamMetadata(..))

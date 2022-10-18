@@ -1,4 +1,4 @@
-module Error exposing (..)
+module Page.Error exposing (..)
 
 import Html exposing (Html, div, text)
 import Session exposing (Session)

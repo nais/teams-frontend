@@ -3,19 +3,19 @@ module Main exposing (..)
 import Admin
 import Browser exposing (Document)
 import Browser.Navigation as Nav
-import CreateTeam
-import EditTeam
-import Error
 import Graphql.Http
-import Home
 import Html exposing (div, h1, header, li, main_, nav, p, text, ul)
 import Html.Attributes exposing (classList)
+import Page.CreateTeam as CreateTeam
+import Page.EditTeam as EditTeam
+import Page.Error as Error
+import Page.Home as Home
+import Page.Team as Team
+import Page.Teams as Teams
 import Queries.Do exposing (query)
 import Queries.UserQueries as UserQueries exposing (UserData)
 import Route exposing (Route(..), link)
 import Session exposing (Session, User(..))
-import Team
-import Teams
 import Url
 
 
@@ -189,7 +189,8 @@ view model =
                 ]
             ]
         , nav []
-            [ ul [] -- Remember to update isActiveRoute with model/route combo
+            [ ul []
+                -- Remember to update isActiveRoute with model/route combo
                 ([ menuItem model Route.Home "Home"
                  , menuItem model Route.Teams "Teams"
                  ]

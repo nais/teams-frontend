@@ -1,4 +1,4 @@
-module CreateTeam exposing (..)
+module Page.CreateTeam exposing (..)
 
 import Backend.Scalar
 import Graphql.Http exposing (RawError(..))

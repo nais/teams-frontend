@@ -1,4 +1,4 @@
-module EditTeam exposing (..)
+module Page.EditTeam exposing (..)
 
 import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.Scalar exposing (Slug(..), Uuid)

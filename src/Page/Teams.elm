@@ -1,4 +1,4 @@
-module Teams exposing (..)
+module Page.Teams exposing (..)
 
 import Backend.Scalar
 import Graphql.Http
