@@ -68,7 +68,7 @@ update msg model =
                 Ok rd ->
                     let
                         updatedModel =
-                            { model | reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }
+                            { model | error = Nothing, reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }
 
                         maybeExisting =
                             filterReconciler rd.name model
@@ -86,7 +86,7 @@ update msg model =
         GotEnableReconcilerResponse r ->
             case r of
                 Ok rd ->
-                    ( { model | reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }, Cmd.none )
+                    ( { model | error = Nothing, reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }, Cmd.none )
 
                 Err e ->
                     ( { model | error = Just (Queries.Error.errorToString e) }, Cmd.none )
