@@ -5,6 +5,7 @@ import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, textarea, ul)
 import Html.Attributes exposing (checked, class, classList, for, id, placeholder, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput, onSubmit)
+import Json.Decode as Decode
 import Queries.Do exposing (mutate, query)
 import Queries.Error
 import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, disableReconcilerMutation, enableReconcilerMutation, getReconcilersQuery, updateReconcilerConfigMutation)
@@ -28,6 +29,7 @@ type Msg
     | OnToggle ReconcilerName Bool
     | AckError
     | Reload
+    | NoOp
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -108,6 +110,9 @@ update msg model =
 
         OnToggle name value ->
             ( { model | reconcilers = mapReconcilers (mapReconcilerEnabled name value) model.reconcilers }, Cmd.none )
+
+        NoOp ->
+            ( model, Cmd.none )
 
 
 saveReconcilerConfig : ReconcilerName -> Model -> ( Model, Cmd Msg )
@@ -305,10 +310,15 @@ viewForm lrd =
         )
 
 
+onClickStopPropagation : msg -> Html.Attribute msg
+onClickStopPropagation msg =
+    Html.Events.stopPropagationOn "click" <| Decode.succeed ( msg, True )
+
+
 modal : String -> Msg -> List (Html Msg) -> Html Msg
 modal title hide content =
     div [ class "modal", onClick hide ]
-        [ div [] ([ h3 [] [ text title ] ] ++ content) ]
+        [ div [ onClickStopPropagation NoOp ] ([ h3 [] [ text title ] ] ++ content) ]
 
 
 viewLoadFailure : String -> Html Msg
