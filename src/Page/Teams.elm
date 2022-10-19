@@ -7,29 +7,28 @@ import Html.Attributes exposing (class)
 import Queries.Do exposing (query)
 import Queries.Error exposing (errorToString)
 import Queries.TeamQueries exposing (TeamData, getTeamsQuery)
+import RemoteData exposing (RemoteData(..))
 import Route exposing (link)
 import Session exposing (Session)
 
 
 type alias Model =
     { session : Session
-    , teams : List TeamData
-    , error : Maybe String
+    , teams : RemoteData (Graphql.Http.Error (List TeamData)) (List TeamData)
     }
 
 
 type Msg
     = NoOp
-    | GotTeamsResponse (Result (Graphql.Http.Error (List TeamData)) (List TeamData))
+    | GotTeamsResponse (RemoteData (Graphql.Http.Error (List TeamData)) (List TeamData))
 
 
 init : Session -> ( Model, Cmd Msg )
 init session =
-    ( { teams = []
+    ( { teams = Loading
       , session = session
-      , error = Nothing
       }
-    , query getTeamsQuery GotTeamsResponse
+    , query getTeamsQuery (RemoteData.fromResult >> GotTeamsResponse)
     )
 
 
@@ -40,12 +39,7 @@ update msg model =
             ( model, Cmd.none )
 
         GotTeamsResponse r ->
-            case r of
-                Ok teams ->
-                    ( { model | teams = teams }, Cmd.none )
-
-                Err e ->
-                    ( { model | error = Just (errorToString e) }, Cmd.none )
+            ( { model | teams = r }, Cmd.none )
 
 
 slugstr : Backend.Scalar.Slug -> String
@@ -65,27 +59,35 @@ row team =
 
 teamTable : List TeamData -> Html Msg
 teamTable teams =
-    div []
-        [ h2 [] [ text "Operations" ]
-        , p [] [ link Route.CreateTeam [ class "button" ] [ text "Create new" ] ]
-        , h2 [] [ text "List of teams" ]
-        , table []
-            [ thead []
-                [ tr []
-                    [ th [] [ text "Slug" ]
-                    , th [] [ text "Purpose" ]
-                    ]
+    table []
+        [ thead []
+            [ tr []
+                [ th [] [ text "Slug" ]
+                , th [] [ text "Purpose" ]
                 ]
-            , tbody [] (List.map row teams)
             ]
+        , tbody [] (List.map row teams)
         ]
 
 
 view : Model -> Html Msg
 view model =
-    case model.error of
-        Nothing ->
-            teamTable model.teams
+    div []
+        [ h2 [] [ text "Operations" ]
+        , p [] [ link Route.CreateTeam [ class "button" ] [ text "Create new" ] ]
+        , h2 [] [ text "List of teams" ]
+        , div []
+            [ case model.teams of
+                Success teams ->
+                    teamTable teams
 
-        Just err ->
-            text err
+                Failure err ->
+                    text <| errorToString err
+
+                Loading ->
+                    text <| "Loading teams..."
+
+                NotAsked ->
+                    text <| "Data not loaded"
+            ]
+        ]
