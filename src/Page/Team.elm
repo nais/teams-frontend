@@ -8,32 +8,27 @@ import Html.Attributes exposing (class, colspan, title)
 import Queries.Do exposing (query)
 import Queries.Error exposing (errorToString)
 import Queries.TeamQueries exposing (AuditLogData, KeyValueData, TeamData, TeamMemberData, getTeamQuery)
+import RemoteData exposing (RemoteData(..))
 import Route exposing (link)
 import Session exposing (Session, User(..))
 
 
-type Team
-    = Team TeamData
-    | Loading
-    | Error String
-
-
 type alias Model =
-    { team : Team
+    { team : RemoteData (Graphql.Http.Error TeamData) TeamData
     , session : Session
     }
 
 
 type Msg
-    = GotTeamResponse (Result (Graphql.Http.Error TeamData) TeamData)
+    = GotTeamResponse (RemoteData (Graphql.Http.Error TeamData) TeamData)
 
 
 init : Session -> Backend.Scalar.Uuid -> ( Model, Cmd Msg )
 init session id =
-    ( { team = Loading
+    ( { team = NotAsked
       , session = session
       }
-    , query (getTeamQuery id) GotTeamResponse
+    , query (getTeamQuery id) (RemoteData.fromResult >> GotTeamResponse)
     )
 
 
@@ -41,12 +36,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotTeamResponse r ->
-            case r of
-                Ok team ->
-                    ( { model | team = Team team }, Cmd.none )
-
-                Err e ->
-                    ( { model | team = Error (errorToString e) }, Cmd.none )
+            ( { model | team = r }, Cmd.none )
 
 
 slugstr : Backend.Scalar.Slug -> String
@@ -120,7 +110,7 @@ editorButton model team =
 view : Model -> Html Msg
 view model =
     case model.team of
-        Team team ->
+        Success team ->
             div []
                 (editorButton model team
                     ++ [ h2 [] [ text ("Teams → " ++ slugstr team.slug) ]
@@ -158,11 +148,14 @@ view model =
                        ]
                 )
 
-        Loading ->
-            div [] [ text "spinner" ]
+        Failure err ->
+            div [ class "error" ] [ text <| errorToString err ]
 
-        Error msg ->
-            div [ class "error" ] [ text msg ]
+        Loading ->
+            div [] [ text "Loading data..." ]
+
+        NotAsked ->
+            div [] [ text "No data loaded" ]
 
 
 teamRoleForUser : TeamData -> User -> Maybe TeamRole
