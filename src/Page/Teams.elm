@@ -53,18 +53,13 @@ slugstr (Backend.Scalar.Slug u) =
     u
 
 
-uuidstr : Backend.Scalar.Uuid -> String
-uuidstr (Backend.Scalar.Uuid u) =
-    u
-
-
 row : TeamData -> Html Msg
 row team =
     tr []
         [ td []
             [ link (Route.Team team.id) [] [ text (slugstr team.slug) ]
             ]
-        , td [] [ text (Maybe.withDefault "" team.purpose) ]
+        , td [] [ text team.purpose ]
         ]
 
 

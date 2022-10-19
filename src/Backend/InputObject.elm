@@ -78,25 +78,16 @@ encodeAddTeamOwnersInput input____ =
 
 buildCreateTeamInput :
     CreateTeamInputRequiredFields
-    -> (CreateTeamInputOptionalFields -> CreateTeamInputOptionalFields)
     -> CreateTeamInput
-buildCreateTeamInput required____ fillOptionals____ =
-    let
-        optionals____ =
-            fillOptionals____
-                { purpose = Absent }
-    in
-    { slug = required____.slug, name = required____.name, purpose = optionals____.purpose }
+buildCreateTeamInput required____ =
+    { slug = required____.slug, name = required____.name, purpose = required____.purpose }
 
 
 type alias CreateTeamInputRequiredFields =
     { slug : Backend.ScalarCodecs.Slug
     , name : String
+    , purpose : String
     }
-
-
-type alias CreateTeamInputOptionalFields =
-    { purpose : OptionalArgument String }
 
 
 {-| Type for the CreateTeamInput input object.
@@ -104,7 +95,7 @@ type alias CreateTeamInputOptionalFields =
 type alias CreateTeamInput =
     { slug : Backend.ScalarCodecs.Slug
     , name : String
-    , purpose : OptionalArgument String
+    , purpose : String
     }
 
 
@@ -113,7 +104,7 @@ type alias CreateTeamInput =
 encodeCreateTeamInput : CreateTeamInput -> Value
 encodeCreateTeamInput input____ =
     Encode.maybeObject
-        [ ( "slug", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) input____.slug |> Just ), ( "name", Encode.string input____.name |> Just ), ( "purpose", Encode.string |> Encode.optional input____.purpose ) ]
+        [ ( "slug", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) input____.slug |> Just ), ( "name", Encode.string input____.name |> Just ), ( "purpose", Encode.string input____.purpose |> Just ) ]
 
 
 buildReconcilerConfigInput :

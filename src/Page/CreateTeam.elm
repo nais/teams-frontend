@@ -2,7 +2,6 @@ module Page.CreateTeam exposing (..)
 
 import Backend.Scalar
 import Graphql.Http exposing (RawError(..))
-import Graphql.OptionalArgument
 import Html exposing (Html, button, div, form, h2, input, label, li, p, text, ul)
 import Html.Attributes exposing (class, for, placeholder, type_)
 import Html.Events exposing (onInput, onSubmit)
@@ -15,7 +14,7 @@ import Session exposing (Session)
 type alias Model =
     { session : Session
     , slug : String
-    , purpose : Maybe String
+    , purpose : String
     , error : Maybe String
     }
 
@@ -30,7 +29,7 @@ type Msg
 init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
-      , purpose = Nothing
+      , purpose = ""
       , slug = ""
       , error = Nothing
       }
@@ -46,7 +45,7 @@ update msg model =
             , Queries.Do.mutate
                 (createTeamMutation
                     { name = model.slug
-                    , purpose = Graphql.OptionalArgument.fromMaybe model.purpose
+                    , purpose = model.purpose
                     , slug = Backend.Scalar.Slug model.slug
                     }
                 )
@@ -63,16 +62,7 @@ update msg model =
             ( { model | slug = s }, Cmd.none )
 
         PurposeChanged s ->
-            ( { model | purpose = stringOrBlank s }, Cmd.none )
-
-
-stringOrBlank : String -> Maybe String
-stringOrBlank s =
-    if s == "" then
-        Nothing
-
-    else
-        Just s
+            ( { model | purpose = s }, Cmd.none )
 
 
 textbox : (String -> Msg) -> String -> String -> String -> Html Msg

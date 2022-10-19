@@ -42,7 +42,7 @@ type alias KeyValueData =
 type alias TeamData =
     { id : Uuid
     , slug : Slug
-    , purpose : Maybe String
+    , purpose : String
     , members : List TeamMemberData
     , auditLogs : List AuditLogData
     , metadata : List KeyValueData

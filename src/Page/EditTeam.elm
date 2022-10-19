@@ -44,7 +44,7 @@ init session id =
       , team =
             { id = id
             , slug = Slug ""
-            , purpose = Nothing
+            , purpose = ""
             , members = []
             , auditLogs = []
             , metadata = []
@@ -65,7 +65,7 @@ update msg model =
             , Queries.Do.mutate
                 (updateTeamMutation
                     model.team.id
-                    { purpose = Graphql.OptionalArgument.fromMaybe model.team.purpose
+                    { purpose = Graphql.OptionalArgument.Present model.team.purpose
                     , name = Graphql.OptionalArgument.Present (slugstr model.team.slug)
                     }
                 )
@@ -135,20 +135,11 @@ matchExactUser query user =
     nameAndEmail user == query
 
 
-stringOrNothing : String -> Maybe String
-stringOrNothing s =
-    if s == "" then
-        Nothing
-
-    else
-        Just s
-
-
-textbox : (String -> Msg) -> Maybe String -> String -> String -> String -> Html Msg
+textbox : (String -> Msg) -> String -> String -> String -> String -> Html Msg
 textbox msg val id lbl placeholder =
     li []
         [ label [ for id ] [ text lbl ]
-        , input [ type_ "text", Html.Attributes.placeholder placeholder, onInput msg, value (Maybe.withDefault "" val) ] []
+        , input [ type_ "text", Html.Attributes.placeholder placeholder, onInput msg, value val ] []
         ]
 
 
@@ -188,7 +179,7 @@ slugstr (Slug s) =
 
 mapTeamPurpose : String -> TeamData -> TeamData
 mapTeamPurpose purpose team =
-    { team | purpose = Just purpose }
+    { team | purpose = purpose }
 
 
 getTeam : Uuid -> Cmd Msg

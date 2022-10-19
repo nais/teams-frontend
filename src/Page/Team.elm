@@ -1,10 +1,9 @@
 module Page.Team exposing (..)
 
 import Backend.Enum.TeamRole exposing (TeamRole(..))
-import Backend.Object exposing (TeamMetadata(..))
 import Backend.Scalar exposing (RoleName(..))
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, div, em, h2, h3, p, span, table, tbody, td, text, th, thead, tr)
+import Html exposing (Html, div, h2, h3, p, span, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class, colspan, title)
 import Queries.Do exposing (query)
 import Queries.Error exposing (errorToString)
@@ -125,7 +124,7 @@ view model =
             div []
                 (editorButton model team
                     ++ [ h2 [] [ text ("Teams → " ++ slugstr team.slug) ]
-                       , p [] [ text (Maybe.withDefault "N/A" team.purpose) ]
+                       , p [] [ text team.purpose ]
                        , table []
                             [ thead []
                                 [ tr []
