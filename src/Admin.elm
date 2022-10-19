@@ -4,7 +4,7 @@ import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, textarea, ul)
 import Html.Attributes exposing (checked, class, classList, for, id, placeholder, type_, value)
-import Html.Events exposing (onCheck, onInput, onSubmit)
+import Html.Events exposing (onCheck, onClick, onInput, onSubmit)
 import Queries.Do exposing (mutate, query)
 import Queries.Error
 import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, disableReconcilerMutation, enableReconcilerMutation, getReconcilersQuery, updateReconcilerConfigMutation)
@@ -26,6 +26,8 @@ type Msg
     | Submit ReconcilerName
     | OnInput ReconcilerName ReconcilerConfigKey String
     | OnToggle ReconcilerName Bool
+    | AckError
+    | Reload
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -34,8 +36,12 @@ init session =
       , error = Nothing
       , reconcilers = NotAsked
       }
-    , query getReconcilersQuery (RemoteData.fromResult >> GotReconcilersResponse)
+    , loadData
     )
+
+
+loadData =
+    query getReconcilersQuery (RemoteData.fromResult >> GotReconcilersResponse)
 
 
 mapReconcilers : (a -> b) -> RemoteData error (List a) -> RemoteData error (List b)
@@ -57,6 +63,12 @@ mapReconcilers fn reconcilers =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        AckError ->
+            ( { model | error = Nothing }, Cmd.none )
+
+        Reload ->
+            ( { model | reconcilers = NotAsked, error = Nothing }, loadData )
+
         Submit name ->
             saveReconcilerConfig name model
 
@@ -293,17 +305,41 @@ viewForm lrd =
         )
 
 
+modal : String -> Msg -> List (Html Msg) -> Html Msg
+modal title hide content =
+    div [ class "modal", onClick hide ]
+        [ div [] ([ h3 [] [ text title ] ] ++ content) ]
+
+
+viewLoadFailure : String -> Html Msg
+viewLoadFailure e =
+    div []
+        [ h3 [] [ text "Failed to load data from server" ]
+        , p [ class "server-error-message" ] [ text e ]
+        , button [ onClick Reload ] [ text "Try again" ]
+        ]
+
+
 view : Model -> Html Msg
 view model =
     case model.reconcilers of
         Success rd ->
-            viewForm rd
+            case model.error of
+                Nothing ->
+                    viewForm rd
+
+                Just error ->
+                    modal "Server error"
+                        AckError
+                        [ div [ class "server-error-message" ] [ text error ]
+                        , button [ onClick AckError ] [ text "Got it" ]
+                        ]
 
         NotAsked ->
-            text "No data loaded yet"
+            h3 [] [ text "No data loaded yet" ]
 
         Loading ->
-            text "Loading reconcilers..."
+            h3 [] [ text "Loading reconcilers..." ]
 
         Failure e ->
-            text <| Queries.Error.errorToString e
+            viewLoadFailure (Queries.Error.errorToString e)
