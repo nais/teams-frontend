@@ -8,17 +8,19 @@ import Html.Events exposing (onCheck, onInput, onSubmit)
 import Queries.Do exposing (mutate, query)
 import Queries.Error
 import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, disableReconcilerMutation, enableReconcilerMutation, getReconcilersQuery, updateReconcilerConfigMutation)
+import RemoteData exposing (RemoteData(..))
 import Session exposing (Session)
 
 
 type alias Model =
     { session : Session
-    , reconcilers : Result String (List ReconcilerData)
+    , error : Maybe String
+    , reconcilers : RemoteData (Graphql.Http.Error (List ReconcilerData)) (List ReconcilerData)
     }
 
 
 type Msg
-    = GotReconcilersResponse (Result (Graphql.Http.Error (List ReconcilerData)) (List ReconcilerData))
+    = GotReconcilersResponse (RemoteData (Graphql.Http.Error (List ReconcilerData)) (List ReconcilerData))
     | GotUpdateReconcilerResponse (Result (Graphql.Http.Error ReconcilerData) ReconcilerData)
     | GotEnableReconcilerResponse (Result (Graphql.Http.Error ReconcilerData) ReconcilerData)
     | Submit ReconcilerName
@@ -29,19 +31,27 @@ type Msg
 init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
-      , reconcilers = Err "not fetched yet"
+      , error = Nothing
+      , reconcilers = NotAsked
       }
-    , query getReconcilersQuery GotReconcilersResponse
+    , query getReconcilersQuery (RemoteData.fromResult >> GotReconcilersResponse)
     )
 
 
+mapReconcilers : (a -> b) -> RemoteData error (List a) -> RemoteData error (List b)
 mapReconcilers fn reconcilers =
     case reconcilers of
-        Ok r ->
-            Ok (List.map fn r)
+        NotAsked ->
+            NotAsked
 
-        Err e ->
-            Err e
+        Loading ->
+            Loading
+
+        Failure e ->
+            Failure e
+
+        Success r ->
+            Success (List.map fn r)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -71,7 +81,7 @@ update msg model =
                             ( updatedModel, Cmd.none )
 
                 Err e ->
-                    ( { model | reconcilers = Err (Queries.Error.errorToString e) }, Cmd.none )
+                    ( { model | error = Just (Queries.Error.errorToString e) }, Cmd.none )
 
         GotEnableReconcilerResponse r ->
             case r of
@@ -79,15 +89,10 @@ update msg model =
                     ( { model | reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }, Cmd.none )
 
                 Err e ->
-                    ( { model | reconcilers = Err (Queries.Error.errorToString e) }, Cmd.none )
+                    ( { model | error = Just (Queries.Error.errorToString e) }, Cmd.none )
 
         GotReconcilersResponse r ->
-            case r of
-                Ok rds ->
-                    ( { model | reconcilers = Ok rds }, Cmd.none )
-
-                Err e ->
-                    ( { model | reconcilers = Err (Queries.Error.errorToString e) }, Cmd.none )
+            ( { model | reconcilers = r }, Cmd.none )
 
         OnToggle name value ->
             ( { model | reconcilers = mapReconcilers (mapReconcilerEnabled name value) model.reconcilers }, Cmd.none )
@@ -99,7 +104,7 @@ saveReconcilerConfig name model =
     let
         config =
             case model.reconcilers of
-                Ok recs ->
+                Success recs ->
                     recs
                         |> List.filter (\i -> i.name == name)
                         |> List.map (\i -> i.config)
@@ -177,7 +182,7 @@ mapReconciler new existing =
 filterReconciler : ReconcilerName -> Model -> Maybe ReconcilerData
 filterReconciler name model =
     case model.reconcilers of
-        Ok reconcilers ->
+        Success reconcilers ->
             List.filter (\rd -> rd.name == name) reconcilers
                 |> List.head
 
@@ -188,16 +193,6 @@ filterReconciler name model =
 reconcilerName : ReconcilerName -> String
 reconcilerName (ReconcilerName s) =
     s
-
-
-view : Model -> Html Msg
-view model =
-    case model.reconcilers of
-        Ok rd ->
-            renderForms rd
-
-        Err e ->
-            text e
 
 
 toggleReconcilerElement : ReconcilerData -> Html Msg
@@ -290,9 +285,25 @@ viewReconcilerConfig rd =
         ]
 
 
-renderForms : List ReconcilerData -> Html Msg
-renderForms lrd =
+viewForm : List ReconcilerData -> Html Msg
+viewForm lrd =
     div []
         (h2 [] [ text "Set up reconcilers" ]
             :: List.map viewReconcilerConfig lrd
         )
+
+
+view : Model -> Html Msg
+view model =
+    case model.reconcilers of
+        Success rd ->
+            viewForm rd
+
+        NotAsked ->
+            text "No data loaded yet"
+
+        Loading ->
+            text "Loading reconcilers..."
+
+        Failure e ->
+            text <| Queries.Error.errorToString e
