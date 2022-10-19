@@ -11,7 +11,8 @@ import Backend.Object.TeamMetadata as TeamMetadata
 import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (Slug, Uuid)
 import Graphql.Operation exposing (RootMutation, RootQuery)
-import Graphql.SelectionSet exposing (SelectionSet)
+import Graphql.SelectionSet exposing (SelectionSet, with)
+import ISO8601
 import Queries.UserQueries exposing (UserData, userDataSelection)
 
 
@@ -29,7 +30,7 @@ type alias AuditLogData =
     { action : Scalar.AuditAction
     , actor : Maybe String
     , message : String
-    , createdAt : Scalar.Time
+    , createdAt : ISO8601.Time
     }
 
 
@@ -123,11 +124,11 @@ teamMemberSelection =
 
 auditLogSelection : SelectionSet AuditLogData Backend.Object.AuditLog
 auditLogSelection =
-    Graphql.SelectionSet.map4 AuditLogData
-        AuditLog.action
-        AuditLog.actor
-        AuditLog.message
-        AuditLog.createdAt
+    Graphql.SelectionSet.succeed AuditLogData
+        |> with AuditLog.action
+        |> with AuditLog.actor
+        |> with AuditLog.message
+        |> with (AuditLog.createdAt |> mapToDateTime)
 
 
 keyValueSelection : SelectionSet KeyValueData Backend.Object.TeamMetadata
@@ -135,3 +136,12 @@ keyValueSelection =
     Graphql.SelectionSet.map2 KeyValueData
         TeamMetadata.key
         TeamMetadata.value
+
+
+mapToDateTime : SelectionSet Scalar.Time scope -> SelectionSet ISO8601.Time scope
+mapToDateTime =
+    Graphql.SelectionSet.mapOrFail
+        (\(Scalar.Time value) ->
+            ISO8601.fromString value
+                |> Result.mapError (\_ -> "Failed to parse " ++ value ++ " as ISO8601 timestamp.")
+        )

@@ -5,12 +5,14 @@ import Backend.Scalar exposing (RoleName(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, div, h2, h3, p, span, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class, colspan, title)
+import ISO8601
 import Queries.Do exposing (query)
 import Queries.Error exposing (errorToString)
 import Queries.TeamQueries exposing (AuditLogData, KeyValueData, TeamData, TeamMemberData, getTeamQuery)
 import RemoteData exposing (RemoteData(..))
 import Route exposing (link)
 import Session exposing (Session, User(..))
+import Time
 
 
 type alias Model =
@@ -44,9 +46,23 @@ slugstr (Backend.Scalar.Slug u) =
     u
 
 
-timestr : Backend.Scalar.Time -> String
-timestr (Backend.Scalar.Time u) =
-    u
+timestr : ISO8601.Time -> String
+timestr u =
+    let
+        pad len int =
+            String.fromInt int |> String.padLeft len '0'
+    in
+    pad 4 u.year
+        ++ "-"
+        ++ pad 2 u.month
+        ++ "-"
+        ++ pad 2 u.day
+        ++ " "
+        ++ pad 2 u.hour
+        ++ ":"
+        ++ pad 2 u.minute
+        ++ ":"
+        ++ pad 2 u.second
 
 
 actionstr : Backend.Scalar.AuditAction -> String
