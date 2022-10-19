@@ -1,6 +1,6 @@
 module Queries.TeamQueries exposing (..)
 
-import Backend.Enum.TeamRole exposing (TeamRole)
+import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.InputObject exposing (CreateTeamInput, UpdateTeamInput)
 import Backend.Mutation as Mutation
 import Backend.Object
@@ -145,3 +145,13 @@ mapToDateTime =
             ISO8601.fromString value
                 |> Result.mapError (\_ -> "Failed to parse " ++ value ++ " as ISO8601 timestamp.")
         )
+
+
+roleString : TeamRole -> String
+roleString teamRole =
+    case teamRole of
+        Member ->
+            "Member"
+
+        Owner ->
+            "Owner"

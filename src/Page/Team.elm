@@ -4,15 +4,14 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (RoleName(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, div, h2, h3, p, span, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (class, colspan, title)
+import Html.Attributes exposing (class, classList, colspan, title)
 import ISO8601
 import Queries.Do exposing (query)
 import Queries.Error exposing (errorToString)
-import Queries.TeamQueries exposing (AuditLogData, KeyValueData, TeamData, TeamMemberData, getTeamQuery)
+import Queries.TeamQueries exposing (AuditLogData, KeyValueData, TeamData, TeamMemberData, getTeamQuery, roleString)
 import RemoteData exposing (RemoteData(..))
 import Route exposing (link)
 import Session exposing (Session, User(..))
-import Time
 
 
 type alias Model =
@@ -74,7 +73,7 @@ memberRow : TeamMemberData -> Html Msg
 memberRow member =
     tr []
         [ td [] [ text member.user.email ]
-        , td [] [ text (Backend.Enum.TeamRole.toString member.role) ]
+        , td [ classList [ ( "team-owner", member.role == Owner ) ] ] [ text <| roleString member.role ]
         ]
 
 

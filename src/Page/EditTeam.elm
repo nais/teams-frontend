@@ -9,7 +9,7 @@ import Html.Attributes exposing (class, colspan, disabled, for, id, list, placeh
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Queries.Do
 import Queries.Error exposing (errorToString)
-import Queries.TeamQueries exposing (TeamData, TeamMemberData, updateTeamMutation)
+import Queries.TeamQueries exposing (TeamData, TeamMemberData, roleString, updateTeamMutation)
 import Queries.UserQueries exposing (UserData)
 import Session exposing (Session, User(..))
 
@@ -258,13 +258,16 @@ memberView model =
 roleOption : TeamMemberData -> TeamRole -> Html Msg
 roleOption member role =
     let
-        roleStr =
+        roleID =
             Backend.Enum.TeamRole.toString role
+
+        roleStr =
+            roleString role
     in
     option
         [ onClick (RoleDropDownClicked member role)
         , selected (role == member.role)
-        , value roleStr
+        , value roleID
         ]
         [ text roleStr ]
 

@@ -314,6 +314,11 @@ p.secret-help-text {
 }
 
 .server-error-message {
-    color: #a00;
+    color: var(--red);
+    font-weight: bold;
+}
+
+.team-owner {
+    color: var(--red);
     font-weight: bold;
 }
