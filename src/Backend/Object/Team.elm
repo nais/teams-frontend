@@ -33,13 +33,6 @@ slug =
     Object.selectionForField "ScalarCodecs.Slug" "slug" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSlug |> .decoder)
 
 
-{-| Display name of the team.
--}
-name : SelectionSet String Backend.Object.Team
-name =
-    Object.selectionForField "String" "name" [] Decode.string
-
-
 {-| Purpose of the team.
 -}
 purpose : SelectionSet String Backend.Object.Team

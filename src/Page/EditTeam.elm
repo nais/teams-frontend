@@ -66,7 +66,6 @@ update msg model =
                 (updateTeamMutation
                     model.team.id
                     { purpose = Graphql.OptionalArgument.Present model.team.purpose
-                    , name = Graphql.OptionalArgument.Present (slugstr model.team.slug)
                     }
                 )
                 GotUpdateTeamResponse

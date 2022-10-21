@@ -80,12 +80,11 @@ buildCreateTeamInput :
     CreateTeamInputRequiredFields
     -> CreateTeamInput
 buildCreateTeamInput required____ =
-    { slug = required____.slug, name = required____.name, purpose = required____.purpose }
+    { slug = required____.slug, purpose = required____.purpose }
 
 
 type alias CreateTeamInputRequiredFields =
     { slug : Backend.ScalarCodecs.Slug
-    , name : String
     , purpose : String
     }
 
@@ -94,7 +93,6 @@ type alias CreateTeamInputRequiredFields =
 -}
 type alias CreateTeamInput =
     { slug : Backend.ScalarCodecs.Slug
-    , name : String
     , purpose : String
     }
 
@@ -104,7 +102,7 @@ type alias CreateTeamInput =
 encodeCreateTeamInput : CreateTeamInput -> Value
 encodeCreateTeamInput input____ =
     Encode.maybeObject
-        [ ( "slug", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) input____.slug |> Just ), ( "name", Encode.string input____.name |> Just ), ( "purpose", Encode.string input____.purpose |> Just ) ]
+        [ ( "slug", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) input____.slug |> Just ), ( "purpose", Encode.string input____.purpose |> Just ) ]
 
 
 buildReconcilerConfigInput :
@@ -203,23 +201,19 @@ buildUpdateTeamInput fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { name = Absent, purpose = Absent }
+                { purpose = Absent }
     in
-    { name = optionals____.name, purpose = optionals____.purpose }
+    { purpose = optionals____.purpose }
 
 
 type alias UpdateTeamInputOptionalFields =
-    { name : OptionalArgument String
-    , purpose : OptionalArgument String
-    }
+    { purpose : OptionalArgument String }
 
 
 {-| Type for the UpdateTeamInput input object.
 -}
 type alias UpdateTeamInput =
-    { name : OptionalArgument String
-    , purpose : OptionalArgument String
-    }
+    { purpose : OptionalArgument String }
 
 
 {-| Encode a UpdateTeamInput into a value that can be used as an argument.
@@ -227,4 +221,4 @@ type alias UpdateTeamInput =
 encodeUpdateTeamInput : UpdateTeamInput -> Value
 encodeUpdateTeamInput input____ =
     Encode.maybeObject
-        [ ( "name", Encode.string |> Encode.optional input____.name ), ( "purpose", Encode.string |> Encode.optional input____.purpose ) ]
+        [ ( "purpose", Encode.string |> Encode.optional input____.purpose ) ]

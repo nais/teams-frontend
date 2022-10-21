@@ -44,8 +44,7 @@ update msg model =
             ( model
             , Queries.Do.mutate
                 (createTeamMutation
-                    { name = model.slug
-                    , purpose = model.purpose
+                    { purpose = model.purpose
                     , slug = Backend.Scalar.Slug model.slug
                     }
                 )

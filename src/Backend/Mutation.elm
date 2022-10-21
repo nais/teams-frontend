@@ -171,7 +171,7 @@ type alias UpdateTeamRequiredArguments =
 
 {-| Update an existing team
 
-This mutation can be used to update the team name and team purpose. It is not possible to update the team slug.
+This mutation can be used to update the team purpose. It is not possible to update the team slug.
 
 The updated team will be returned on success.
 
