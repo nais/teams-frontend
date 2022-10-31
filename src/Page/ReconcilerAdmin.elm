@@ -1,4 +1,4 @@
-module Admin exposing (..)
+module Page.ReconcilerAdmin exposing (..)
 
 import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
 import Graphql.Http exposing (RawError(..))

@@ -1,6 +1,5 @@
 module Main exposing (..)
 
-import Admin
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Graphql.Http
@@ -10,6 +9,7 @@ import Page.CreateTeam as CreateTeam
 import Page.EditTeam as EditTeam
 import Page.Error as Error
 import Page.Home as Home
+import Page.ReconcilerAdmin as ReconcilerAdmin
 import Page.Team as Team
 import Page.Teams as Teams
 import Queries.Do exposing (query)
@@ -25,7 +25,7 @@ import Url
 
 type Model
     = Home Home.Model
-    | Admin Admin.Model
+    | Admin ReconcilerAdmin.Model
     | Team Team.Model
     | EditTeam EditTeam.Model
     | Teams Teams.Model
@@ -41,7 +41,7 @@ type Msg
     = NoOp
     | GotMeResponse Url.Url (Result (Graphql.Http.Error (Maybe UserData)) (Maybe UserData))
     | GotHomeMsg Home.Msg
-    | GotAdminMsg Admin.Msg
+    | GotAdminMsg ReconcilerAdmin.Msg
     | GotTeamMsg Team.Msg
     | GotEditTeamMsg EditTeam.Msg
     | GotTeamsMsg Teams.Msg
@@ -81,7 +81,7 @@ changeRouteTo maybeRoute session =
                     ( Home (Home.init session maybeRoute), Cmd.none )
 
                 Just Route.Admin ->
-                    Admin.init session |> updateWith Admin GotAdminMsg
+                    ReconcilerAdmin.init session |> updateWith Admin GotAdminMsg
 
                 Just Route.CreateTeam ->
                     CreateTeam.init session |> updateWith CreateTeam GotCreateTeamMsg
@@ -118,7 +118,7 @@ update msg model =
             Home.update subMsg subModel |> updateWith Home GotHomeMsg
 
         ( GotAdminMsg subMsg, Admin subModel ) ->
-            Admin.update subMsg subModel |> updateWith Admin GotAdminMsg
+            ReconcilerAdmin.update subMsg subModel |> updateWith Admin GotAdminMsg
 
         ( GotTeamMsg subMsg, Team subModel ) ->
             Team.update subMsg subModel |> updateWith Team GotTeamMsg
@@ -161,7 +161,7 @@ view model =
                     Home.view subModel |> Html.map GotHomeMsg
 
                 Admin subModel ->
-                    Admin.view subModel |> Html.map GotAdminMsg
+                    ReconcilerAdmin.view subModel |> Html.map GotAdminMsg
 
                 Team subModel ->
                     Team.view subModel |> Html.map GotTeamMsg
