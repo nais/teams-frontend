@@ -3,7 +3,7 @@ module Main exposing (..)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Graphql.Http
-import Html exposing (div, h1, header, li, main_, nav, p, text, ul)
+import Html exposing (Html, div, h1, header, li, main_, nav, p, text, ul)
 import Html.Attributes exposing (classList)
 import Page.CreateTeam as CreateTeam
 import Page.EditTeam as EditTeam
@@ -14,6 +14,7 @@ import Page.Team as Team
 import Page.Teams as Teams
 import Queries.Do exposing (query)
 import Queries.UserQueries as UserQueries exposing (UserData)
+import RemoteData exposing (RemoteData(..))
 import Route exposing (Route(..), link)
 import Session exposing (Session, User(..))
 import Url
@@ -78,9 +79,11 @@ changeRouteTo maybeRoute session =
         LoggedIn _ ->
             case maybeRoute of
                 Just Route.Home ->
-                    ( Home (Home.init session maybeRoute), Cmd.none )
+                    ( Home (Home.init session maybeRoute)
+                    , Nav.pushUrl (Session.navKey session) (Route.routeToString Route.Teams)
+                    )
 
-                Just Route.Admin ->
+                Just Route.ReconcilerAdmin ->
                     ReconcilerAdmin.init session |> updateWith Admin GotAdminMsg
 
                 Just Route.CreateTeam ->
@@ -188,24 +191,57 @@ view model =
                 , p [] [ text (Session.username (Session.user (toSession model))) ]
                 ]
             ]
-        , nav []
-            [ ul []
-                -- Remember to update isActiveRoute with model/route combo
-                ([ menuItem model Route.Home "Home"
-                 , menuItem model Route.Teams "Teams"
-                 ]
-                    ++ (if Session.isGlobalAdmin (Session.user (toSession model)) then
-                            [ menuItem model Route.Admin "Admin" ]
-
-                        else
-                            []
-                       )
-                )
-            ]
+        , viewNav model
         , main_ []
             [ html ]
         ]
     }
+
+
+viewNav : Model -> Html msg
+viewNav model =
+    let
+        user =
+            Session.user (toSession model)
+
+        teamsButton =
+            [ menuItem model Route.Teams "Teams" ]
+
+        ephemeralButtons =
+            case model of
+                Team teamPage ->
+                    case teamPage.team of
+                        Success team ->
+                            [ menuItem model (Route.Team team.id) (EditTeam.slugstr team.slug) ]
+
+                        _ ->
+                            []
+
+                EditTeam edit ->
+                    [ menuItem model (Route.Team edit.team.id) (EditTeam.slugstr edit.team.slug)
+                    , menuItem model (Route.EditTeam edit.team.id) "Edit team"
+                    ]
+
+                CreateTeam _ ->
+                    [ menuItem model Route.CreateTeam "Create team"
+                    ]
+
+                _ ->
+                    []
+
+        adminButton =
+            if Session.isGlobalAdmin (Session.user (toSession model)) then
+                [ menuItem model Route.ReconcilerAdmin "Synchronizers" ]
+
+            else
+                []
+    in
+    case user of
+        LoggedIn _ ->
+            nav [] [ ul [] (teamsButton ++ ephemeralButtons ++ adminButton) ]
+
+        _ ->
+            nav [] [ ul [] [ menuItem model Route.Home "Login" ] ]
 
 
 isActiveRoute : Model -> Route -> Bool
@@ -217,13 +253,16 @@ isActiveRoute model target =
         ( Teams _, Route.Teams ) ->
             True
 
-        ( CreateTeam _, Route.Teams ) ->
+        ( CreateTeam _, Route.CreateTeam ) ->
             True
 
-        ( Team _, Route.Teams ) ->
+        ( Team _, Route.Team _ ) ->
             True
 
-        ( Admin _, Route.Admin ) ->
+        ( EditTeam _, Route.EditTeam _ ) ->
+            True
+
+        ( Admin _, Route.ReconcilerAdmin ) ->
             True
 
         ( _, _ ) ->
@@ -235,7 +274,6 @@ menuItem model target title =
     let
         classes =
             [ ( "active", isActiveRoute model target ) -- Remember to update isActiveRoute with model/route combo
-            , ( "nav-right", title == "Admin" )
             ]
     in
     li [ classList classes ] [ link target [] [ text title ] ]

@@ -11,7 +11,7 @@ import Url.Parser as Parser exposing ((</>), Parser, oneOf, s, string)
 
 type Route
     = Home
-    | Admin
+    | ReconcilerAdmin
     | Teams
     | CreateTeam
     | Team Backend.Scalar.Uuid
@@ -22,7 +22,7 @@ parser : Parser (Route -> a) a
 parser =
     oneOf
         [ Parser.map Home Parser.top
-        , Parser.map Admin (s "admin")
+        , Parser.map ReconcilerAdmin (s "admin" </> s "synchronization")
         , Parser.map Teams (s "teams")
         , Parser.map CreateTeam (s "teams" </> s "create")
         , Parser.map (\s -> EditTeam (Uuid s)) (s "teams" </> string </> s "edit")
@@ -61,8 +61,8 @@ routeToString page =
                 Home ->
                     [ "" ]
 
-                Admin ->
-                    [ "admin" ]
+                ReconcilerAdmin ->
+                    [ "admin", "synchronization" ]
 
                 Teams ->
                     [ "teams" ]

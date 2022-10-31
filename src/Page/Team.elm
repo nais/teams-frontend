@@ -159,10 +159,11 @@ view model =
     case model.team of
         Success team ->
             div []
-                (editorButton model team
-                    ++ [ h2 [] [ text ("Teams → " ++ slugstr team.slug) ]
-                       , p [] [ text team.purpose ]
-                       , table []
+                ([ h2 [] [ text ("Viewing team \"" ++ slugstr team.slug ++ "\"") ]
+                 , p [] [ text team.purpose ]
+                 ]
+                    ++ editorButton model team
+                    ++ [ table []
                             [ thead []
                                 [ tr []
                                     [ th [ colspan 2 ] [ text "Metadata" ]

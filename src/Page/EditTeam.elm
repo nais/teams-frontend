@@ -156,7 +156,7 @@ errorView maybeString =
 formView : Model -> Html Msg
 formView model =
     div []
-        [ h2 [] [ text ("Teams → Change " ++ slugstr model.team.slug) ]
+        [ h2 [] [ text ("Edit team \"" ++ slugstr model.team.slug ++ "\"") ]
         , form [ onSubmit SubmitForm ]
             (ul []
                 [ li []
