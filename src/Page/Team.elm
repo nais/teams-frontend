@@ -8,7 +8,7 @@ import Html.Attributes exposing (class, classList, colspan, title)
 import ISO8601
 import Queries.Do exposing (query)
 import Queries.Error exposing (errorToString)
-import Queries.TeamQueries exposing (AuditLogData, KeyValueData, TeamData, TeamMemberData, getTeamQuery, roleString)
+import Queries.TeamQueries exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, getTeamQuery, roleString)
 import RemoteData exposing (RemoteData(..))
 import Route exposing (link)
 import Session exposing (Session, User(..))
@@ -77,6 +77,15 @@ memberRow member =
         ]
 
 
+errorRow : SyncErrorData -> Html Msg
+errorRow log =
+    tr []
+        [ td [] [ text (timestr log.timestamp) ]
+        , td [] [ text log.reconcilerName ]
+        , td [] [ text log.message ]
+        ]
+
+
 logRow : AuditLogData -> Html Msg
 logRow log =
     let
@@ -122,6 +131,29 @@ editorButton model team =
         []
 
 
+viewProblems syncErrors =
+    case syncErrors of
+        [] ->
+            text ""
+
+        _ ->
+            div []
+                [ h3 [ class "error" ] [ text "External systems out of sync" ]
+                , p [] [ text "Team data is stored in our database, but up-to-date information could not be transferred to some external systems. The messages below may indicate what went wrong." ]
+                , p [] [ text "Console will automatically retry any failed synchronization. This will resolve transient errors, but in case one or more systems are misconfigured, these errors will persist. In that case, contact NAIS support." ]
+                , table []
+                    [ thead []
+                        [ tr []
+                            [ th [] [ text "Timestamp" ]
+                            , th [] [ text "Subsystem" ]
+                            , th [] [ text "Error message" ]
+                            ]
+                        ]
+                    , tbody [] (List.map errorRow syncErrors)
+                    ]
+                ]
+
+
 view : Model -> Html Msg
 view model =
     case model.team of
@@ -149,7 +181,8 @@ view model =
                                 ]
                             , tbody [] (List.map memberRow team.members)
                             ]
-                       , h3 [] [ text "Logs" ]
+                       , viewProblems team.syncErrors
+                       , h3 [] [ text "Change and synchronization logs" ]
                        , table []
                             [ thead []
                                 [ tr []

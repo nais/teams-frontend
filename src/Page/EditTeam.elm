@@ -48,6 +48,7 @@ init session id =
             , members = []
             , auditLogs = []
             , metadata = []
+            , syncErrors = []
             }
       }
     , Cmd.batch

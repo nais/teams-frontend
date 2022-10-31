@@ -5,11 +5,12 @@ import Backend.InputObject exposing (CreateTeamInput, UpdateTeamInput)
 import Backend.Mutation as Mutation
 import Backend.Object
 import Backend.Object.AuditLog as AuditLog
+import Backend.Object.SyncError as SyncError
 import Backend.Object.Team as Team
 import Backend.Object.TeamMember as TeamMember
 import Backend.Object.TeamMetadata as TeamMetadata
 import Backend.Query as Query
-import Backend.Scalar as Scalar exposing (Slug, Uuid)
+import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug, Uuid)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet, with)
 import ISO8601
@@ -40,6 +41,13 @@ type alias KeyValueData =
     }
 
 
+type alias SyncErrorData =
+    { timestamp : ISO8601.Time
+    , reconcilerName : String
+    , message : String
+    }
+
+
 type alias TeamData =
     { id : Uuid
     , slug : Slug
@@ -47,6 +55,7 @@ type alias TeamData =
     , members : List TeamMemberData
     , auditLogs : List AuditLogData
     , metadata : List KeyValueData
+    , syncErrors : List SyncErrorData
     }
 
 
@@ -57,17 +66,17 @@ getTeamsQuery =
 
 getTeamQuery : Scalar.Uuid -> SelectionSet TeamData RootQuery
 getTeamQuery id =
-    Query.team { id = id } teamDataSelection
+    Query.team { id = id } teamDataFullSelection
 
 
 createTeamMutation : CreateTeamInput -> SelectionSet TeamData RootMutation
 createTeamMutation team =
-    Mutation.createTeam { input = team } teamDataSelection
+    Mutation.createTeam { input = team } teamDataFullSelection
 
 
 updateTeamMutation : Uuid -> UpdateTeamInput -> SelectionSet TeamData RootMutation
 updateTeamMutation id team =
-    Mutation.updateTeam { teamId = id, input = team } teamDataSelection
+    Mutation.updateTeam { teamId = id, input = team } teamDataFullSelection
 
 
 addMemberToTeamMutation : TeamData -> UserData -> SelectionSet TeamData RootMutation
@@ -78,7 +87,7 @@ addMemberToTeamMutation team user =
             , userIds = [ user.id ]
             }
         }
-        teamDataSelection
+        teamDataFullSelection
 
 
 removeMemberFromTeamMutation : TeamData -> UserData -> SelectionSet TeamData RootMutation
@@ -89,7 +98,7 @@ removeMemberFromTeamMutation team user =
             , teamId = team.id
             }
         }
-        teamDataSelection
+        teamDataFullSelection
 
 
 setTeamMemberRoleMutation : TeamData -> TeamMemberData -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
@@ -101,18 +110,31 @@ setTeamMemberRoleMutation team member role =
             , role = role
             }
         }
-        teamDataSelection
+        teamDataFullSelection
 
 
 teamDataSelection : SelectionSet TeamData Backend.Object.Team
 teamDataSelection =
-    Graphql.SelectionSet.map6 TeamData
-        Team.id
-        Team.slug
-        Team.purpose
-        (Team.members teamMemberSelection)
-        (Team.auditLogs auditLogSelection)
-        (Team.metadata keyValueSelection)
+    Graphql.SelectionSet.succeed TeamData
+        |> with Team.id
+        |> with Team.slug
+        |> with Team.purpose
+        |> with (Team.members teamMemberSelection)
+        |> Graphql.SelectionSet.hardcoded []
+        |> Graphql.SelectionSet.hardcoded []
+        |> Graphql.SelectionSet.hardcoded []
+
+
+teamDataFullSelection : SelectionSet TeamData Backend.Object.Team
+teamDataFullSelection =
+    Graphql.SelectionSet.succeed TeamData
+        |> with Team.id
+        |> with Team.slug
+        |> with Team.purpose
+        |> with (Team.members teamMemberSelection)
+        |> with (Team.auditLogs auditLogSelection)
+        |> with (Team.metadata keyValueSelection)
+        |> with (Team.syncErrors syncErrorSelection)
 
 
 teamMemberSelection : SelectionSet TeamMemberData Backend.Object.TeamMember
@@ -136,6 +158,14 @@ keyValueSelection =
     Graphql.SelectionSet.map2 KeyValueData
         TeamMetadata.key
         TeamMetadata.value
+
+
+syncErrorSelection : SelectionSet SyncErrorData Backend.Object.SyncError
+syncErrorSelection =
+    Graphql.SelectionSet.succeed SyncErrorData
+        |> with (SyncError.createdAt |> mapToDateTime)
+        |> with (Graphql.SelectionSet.map (\(ReconcilerName x) -> x) SyncError.reconciler)
+        |> with SyncError.error
 
 
 mapToDateTime : SelectionSet Scalar.Time scope -> SelectionSet ISO8601.Time scope

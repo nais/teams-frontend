@@ -130,6 +130,7 @@ nav li.active a {
 table {
     width: 100%;
     border-collapse: collapse;
+    margin: 0.5rem 0 2rem;
 }
 
 td, th {
@@ -203,6 +204,25 @@ tbody tr:nth-child(odd) {
 
 tbody.meta tr {
     background: inherit
+}
+
+tbody.errors {
+    background: var(--red);
+    color: var(--white);
+}
+
+tbody.errors tr:nth-child(even) {
+    background: inherit !important;
+}
+
+tbody.errors tr:nth-child(odd) {
+    background: inherit !important;
+}
+
+h3.error {
+    background: var(--red);
+    color: white;
+    padding: 0.25em 0;
 }
 
 div.error {
