@@ -2,8 +2,8 @@ module Page.ReconcilerAdmin exposing (..)
 
 import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, button, div, form, h2, h3, input, label, li, p, text, textarea, ul)
-import Html.Attributes exposing (checked, class, classList, for, id, placeholder, type_, value)
+import Html exposing (Html, a, button, div, form, h2, h3, input, label, li, p, text, textarea, ul)
+import Html.Attributes exposing (checked, class, classList, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput, onSubmit)
 import Json.Decode as Decode
 import Queries.Do exposing (mutate, query)
@@ -249,6 +249,53 @@ placeholderText rcd =
         ""
 
 
+reconcilerDescription : ReconcilerData -> Html msg
+reconcilerDescription rd =
+    -- Use this function to override reconciler descriptions
+    case rd.name of
+        ReconcilerName "google:workspace-admin" ->
+            div []
+                [ p []
+                    [ text "Maintains "
+                    , a [ href "https://accounts.google.com" ] [ text "Google Accounts" ]
+                    , text " groups and memberships."
+                    ]
+                , p []
+                    [ text "These groups are used for security features such as user authentication and authorization. "
+                    , text "The groups are assigned permissions on Google Cloud Platform and other Google products."
+                    ]
+                ]
+
+        ReconcilerName "google:gcp:project" ->
+            div []
+                [ p []
+                    [ text "Maintains "
+                    , a [ href "https://console.cloud.google.com" ] [ text "Google Cloud Platform" ]
+                    , text " projects for teams."
+                    ]
+                , p []
+                    [ text "Each team gets one project per environment. "
+                    , text "Environments can be set up in "
+                    , a [ href "https://fasit.nais.io" ] [ text "Fasit" ]
+                    , text "."
+                    ]
+                , p []
+                    [ text "The project will have its corresponding Google Account team assigned as owner."
+                    ]
+                ]
+
+        _ ->
+            p [] [ text rd.description ]
+
+
+configDescription : ReconcilerConfigData -> Html msg
+configDescription rcd =
+    -- Use this function to override config descriptions
+    case rcd.key of
+        _ ->
+            p [] [ text rcd.description ]
+
+
 configElement : (ReconcilerConfigKey -> String -> Msg) -> ReconcilerConfigData -> Html Msg
 configElement msg rcd =
     let
@@ -273,8 +320,7 @@ configElement msg rcd =
          , element
          ]
             ++ secretHelpText rcd
-            ++ [ p [] [ text rcd.description ]
-               ]
+            ++ [ configDescription rcd ]
         )
 
 
@@ -293,7 +339,7 @@ viewReconcilerConfig rd =
             ]
         ]
         [ h3 [] [ text rd.displayname ]
-        , p [] [ text rd.description ]
+        , reconcilerDescription rd
         , ul []
             (toggleReconcilerElement rd
                 :: List.map (configElement (OnInput rd.name)) rd.config
@@ -305,7 +351,7 @@ viewReconcilerConfig rd =
 viewForm : List ReconcilerData -> Html Msg
 viewForm lrd =
     div []
-        (h2 [] [ text "Set up reconcilers" ]
+        (h2 [] [ text "Configure synchronizers" ]
             :: List.map viewReconcilerConfig lrd
         )
 
