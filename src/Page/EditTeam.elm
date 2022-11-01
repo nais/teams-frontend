@@ -19,6 +19,7 @@ type alias Model =
     , error : Maybe String
     , team : TeamData
     , userList : List UserData
+    , addMemberSearch : String
     }
 
 
@@ -41,6 +42,7 @@ init session id =
     ( { session = session
       , error = Nothing
       , userList = []
+      , addMemberSearch = ""
       , team =
             { id = id
             , slug = Slug ""
@@ -124,10 +126,10 @@ update msg model =
         AddMemberSearchChanged query ->
             case List.head (List.filter (matchExactUser query) model.userList) of
                 Just u ->
-                    ( model, addTeamMember model.team u )
+                    ( { model | addMemberSearch = "" }, addTeamMember model.team u )
 
                 Nothing ->
-                    ( model, Cmd.none )
+                    ( { model | addMemberSearch = query }, Cmd.none )
 
 
 matchExactUser : String -> UserData -> Bool
@@ -244,7 +246,7 @@ memberView model =
             , tbody []
                 [ tr []
                     [ td []
-                        [ input [ list "teams", type_ "text", onInput AddMemberSearchChanged ] []
+                        [ input [ list "teams", type_ "text", value model.addMemberSearch, onInput AddMemberSearchChanged ] []
                         , datalist [ id "teams" ] (List.map addUserCandidateRow model.userList)
                         ]
                     , td [ colspan 2 ] [ text "(new member)" ]
