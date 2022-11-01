@@ -102,10 +102,6 @@ nav li {
     margin: 0;
 }
 
-nav ul li:last-child{
-    margin-left: auto;
-}
-
 nav a {
     background: var(--white);
     color: var(--link);
