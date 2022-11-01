@@ -170,8 +170,12 @@ form label {
 
 input[type="text"] {
     padding: 0.5rem;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     border: 1px solid var(--gray);
+}
+
+input[type="text"]:focus {
+    border-color: var(--blue);
 }
 
 .checkbox {
@@ -227,6 +231,20 @@ div.error {
     margin: 1rem 0;
 }
 
+select {
+    padding: 1em;
+    background: var(--link);
+    border: 0;
+    border-radius: 2px;
+    color: var(--white);
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none !important;
+    display: inline-block;
+    line-height: 1em;
+    font-size: 1rem;
+}
+
 button, .button {
     padding: 1em;
     background: var(--link);
@@ -267,6 +285,10 @@ button:hover, .button:hover {
 }
  */
 
+h2, h3, h4, h5, h6 {
+    margin: 0.75em 0 0.5em;
+}
+
 h2 {
     font-size: 1.5rem;
     font-weight: bold;
@@ -274,19 +296,18 @@ h2 {
 }
 
 h3 {
+    background: var(--blue);
+    color: white;
+    padding: 0.25em 0;
     font-size: 1.33rem;
     font-weight: bold;
-    margin: 2em 0 1em;
+    margin: 2.5em 0 0.75em;
 }
 
 h4 {
     font-size: 1.25rem;
     font-weight: bold;
     margin: 2em 0 1em;
-}
-
-h2, h3, h4, h5, h6 {
-    margin: 0.75em 0 0.5em;
 }
 
 p {
@@ -335,6 +356,5 @@ p.secret-help-text {
 }
 
 .team-owner {
-    color: var(--red);
     font-weight: bold;
 }

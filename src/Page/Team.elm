@@ -172,6 +172,7 @@ view model =
                             , tbody []
                                 (List.map metadataRow team.metadata)
                             ]
+                       , viewProblems team.syncErrors
                        , h3 [] [ text "Members" ]
                        , table []
                             [ thead []
@@ -182,7 +183,6 @@ view model =
                                 ]
                             , tbody [] (List.map memberRow team.members)
                             ]
-                       , viewProblems team.syncErrors
                        , h3 [] [ text "Change and synchronization logs" ]
                        , table []
                             [ thead []

@@ -4,7 +4,7 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (Slug(..), Uuid)
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, button, datalist, div, form, h2, input, label, li, option, select, table, tbody, td, text, th, thead, tr, ul)
+import Html exposing (Html, button, datalist, div, form, h2, input, label, li, option, p, select, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, colspan, disabled, for, id, list, placeholder, readonly, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Queries.Do
@@ -163,7 +163,7 @@ formView model =
             (ul []
                 [ li []
                     [ label [ for "slug" ] [ text "Identifier" ]
-                    , input [ type_ "text", readonly True, disabled True, value (slugstr model.team.slug) ] []
+                    , p [] [ text <| slugstr model.team.slug ]
                     ]
                 , textbox PurposeChanged model.team.purpose "purpose" "Purpose of the team" "Making sure customers have a good user experience"
                 ]
