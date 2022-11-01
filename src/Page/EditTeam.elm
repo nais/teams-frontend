@@ -1,6 +1,6 @@
 module Page.EditTeam exposing (..)
 
-import Backend.Enum.TeamRole exposing (TeamRole)
+import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (Slug(..), Uuid)
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
@@ -276,11 +276,21 @@ roleOption member role =
 
 roleSelector : User -> TeamMemberData -> Html Msg
 roleSelector currentUser member =
-    select [ disabled (isActiveUser currentUser member) ] (Backend.Enum.TeamRole.list |> List.map (roleOption member))
+    let
+        isMember =
+            userIsMember currentUser member
+
+        isAdmin =
+            member.role == Owner
+
+        isGlobalAdmin =
+            Session.isGlobalAdmin currentUser
+    in
+    select [ disabled (isMember && isAdmin && not isGlobalAdmin) ] (Backend.Enum.TeamRole.list |> List.map (roleOption member))
 
 
-isActiveUser : User -> TeamMemberData -> Bool
-isActiveUser currentUser member =
+userIsMember : User -> TeamMemberData -> Bool
+userIsMember currentUser member =
     case currentUser of
         LoggedIn u ->
             u.id == member.user.id
