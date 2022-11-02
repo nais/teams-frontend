@@ -3,12 +3,12 @@ module Main exposing (..)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Graphql.Http
-import Html exposing (Html, div, h1, header, li, main_, nav, p, text, ul)
-import Html.Attributes exposing (class, classList, id)
+import Html exposing (Html, a, button, div, h1, header, li, main_, nav, p, text, ul)
+import Html.Attributes exposing (class, classList, href, id)
 import Page.CreateTeam as CreateTeam
 import Page.EditTeam as EditTeam
 import Page.Error as Error
-import Page.Home as Home
+import Page.Home as Home exposing (maybeRouteToString)
 import Page.ReconcilerAdmin as ReconcilerAdmin
 import Page.Team as Team
 import Page.Teams as Teams
@@ -18,6 +18,7 @@ import RemoteData exposing (RemoteData(..))
 import Route exposing (Route(..), link)
 import Session exposing (Session, User(..))
 import Url
+import Url.Builder
 
 
 
@@ -109,7 +110,12 @@ update msg model =
         ( LinkClicked urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
-                    ( model, Nav.pushUrl (toSession model |> Session.navKey) (Url.toString url) )
+                    case Route.fromUrl url of
+                        Just _ ->
+                            ( model, Nav.pushUrl (toSession model |> Session.navKey) (Url.toString url) )
+
+                        Nothing ->
+                            ( model, Nav.load <| Url.toString url )
 
                 Browser.External href ->
                     ( model, Nav.load href )
@@ -180,6 +186,26 @@ view model =
 
                 Error subModel ->
                     Error.view subModel |> Html.map (\_ -> NoOp)
+
+        user =
+            Session.user (toSession model)
+
+        logoutURL =
+            Url.Builder.absolute [ "oauth2", "logout" ] []
+
+        loginURL =
+            Url.Builder.absolute [ "oauth2", "login" ] []
+
+        auth =
+            case user of
+                LoggedIn loggedInUser ->
+                    div [ class "user-info" ]
+                        [ p [] [ text loggedInUser.name ]
+                        , a [ href logoutURL, class "button small" ] [ text "Logout" ]
+                        ]
+
+                _ ->
+                    a [ href loginURL, class "button small" ] [ text "Login" ]
     in
     { title = "NAIS console"
     , body =
@@ -191,7 +217,7 @@ view model =
                         [ link Route.Home [] [ text "Console" ]
                         ]
                     ]
-                , p [] [ text (Session.username (Session.user (toSession model))) ]
+                , auth
                 ]
             ]
         , viewNav model

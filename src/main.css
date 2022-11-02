@@ -51,6 +51,11 @@ header {
     color: var(--white);
 }
 
+header button, header .button {
+    background: var(--blue) !important;
+    border: 1px solid var(--white) !important;
+}
+
 header .content {
     display: flex;
     flex-direction: row;
@@ -69,6 +74,10 @@ header .content > div {
     flex-direction: row;
     align-items: center;
     gap: 10px;
+}
+
+header .content .user-info {
+    gap: 24px;
 }
 
 #logo {
@@ -269,6 +278,11 @@ button, .button {
     display: inline-block;
     line-height: 1em;
     font-size: 1rem;
+}
+
+button.small, .button.small {
+    font-size: 0.88rem;
+    padding: 0.5em 1em;
 }
 
 button.red, .button.red {
