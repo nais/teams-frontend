@@ -14,21 +14,24 @@
     --blue: #00374f;
     --white: white;
     --red: darkred;
-    --light-gray: #f1f1f1;
+    --light-gray: #f5f5f5;
     --gray: #d1d1d1;
     --green: darkgreen;
     --link: #0067c5;
     --gutter: 2rem;
-    --content-width: 45rem;
+    --content-width: 60vw;
+    --gutter-width: 14vw;
+    --layout-gap: 4vw;
 }
 
 body {
     margin: 0;
+    width: 100%;
     font-family: "Source Sans Pro", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     color: var(--black);
-    background: var(--white);
+    background: var(--light-gray);
 }
 
 code {
@@ -40,20 +43,18 @@ a {
     color: var(--link);
 }
 
-main {
-    max-width: var(--content-width);
-    margin: 2em auto;
-    padding: 0 var(--gutter);
-}
-
 header {
     background: var(--blue);
     color: var(--white);
+    margin-bottom: 3em;
+    display: flex;
+    justify-content: center;
 }
 
 header button, header .button {
     background: var(--blue) !important;
     border: 1px solid var(--white) !important;
+    color: var(--white) !important;
 }
 
 header .content {
@@ -63,9 +64,8 @@ header .content {
     align-items: center;
     height: 48px;
     gap: 1rem;
+    flex-grow: 10;
     max-width: var(--content-width);
-    margin: 0 auto;
-    padding: 0 var(--gutter);
 }
 
 /* Logo and header container */
@@ -105,43 +105,81 @@ h1 a:hover {
     text-decoration: underline;
 }
 
+/*
+ * Layout and navigation.
+ * The main content and navbar falls in here.
+ */
+#layout {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--layout-gap);
+}
+
+#layout > * {
+    width: var(--gutter-width);
+    flex-grow: 0;
+}
+
 nav {
-    border-bottom: 4px solid var(--light-gray);
+    justify-content: flex-end;
+    display: flex;
 }
 
 nav ul {
-    display: flex;
-    justify-content: flex-start;
     list-style: none;
-    margin: 0 auto;
-    padding: 0.75rem var(--gutter);
-    padding-top: 1em;
-    max-width: var(--content-width);
+    margin: 0;
+    padding: 0;
+    display: inline-flex;
+    flex-direction: column;
+    align-content: flex-start;
+    max-width: 10vw;
+    gap: 4px;
 }
 
 nav li {
-    margin: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 nav a {
-    background: var(--white);
     color: var(--link);
-    padding: 0.75rem 1.25rem;
-    text-decoration: none;
-    font-size: 1.1rem;
-    position: relative;
-    border-bottom: 4px solid var(--light-gray);
+    text-decoration: underline;
 }
 
 nav a:hover {
-    background: var(--light-gray);
-    border-color: var(--link);
+    color: var(--blue);
 }
 
 nav li.active a {
     color: var(--black);
     font-weight: bold;
-    border-color: var(--link);
+    text-decoration: none;
+}
+
+nav li.indent {
+    list-style-type: square;
+    list-style-position: inside;
+}
+
+nav .submenu-glyph {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #000000;
+    border-top: 0;
+    border-right: 0;
+    border-radius: 0 0 0 4px;
+}
+
+main {
+    flex-grow: 100 !important;
+    max-width: var(--content-width) !important;
+    /*
+    background: var(--white);
+    display: flex;
+    gap: 24px;
+     */
 }
 
 table {
@@ -191,7 +229,7 @@ form label {
 
 input[type="text"] {
     padding: 0.5rem;
-    border-radius: 0.5rem;
+    border-radius: 2px;
     border: 1px solid var(--gray);
 }
 
@@ -216,7 +254,7 @@ thead {
 }
 
 tbody tr:nth-child(even) {
-    background: var(--light-gray);
+    background: #f7f7f7;
 }
 
 tbody tr:nth-child(odd) {
@@ -283,6 +321,8 @@ button, .button {
 button.small, .button.small {
     font-size: 0.88rem;
     padding: 0.5em 1em;
+    border: 1px solid var(--link);
+    color: var(--link);
 }
 
 button.red, .button.red {
@@ -318,7 +358,7 @@ h2, h3, h4, h5, h6 {
 h2 {
     font-size: 1.5rem;
     font-weight: bold;
-    margin: 2em 0 1em;
+    margin: 0 0 1em;
 }
 
 h3 {
@@ -360,7 +400,7 @@ p.secret-help-text {
 
 .modal > div {
     border-style: solid;
-    border-radius: 3px;
+    border-radius: 2px;
     border-color: white;
     background-color: white;
     height: 30vw;

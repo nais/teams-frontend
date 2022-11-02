@@ -220,9 +220,12 @@ view model =
                 , auth
                 ]
             ]
-        , viewNav model
-        , main_ []
-            [ html ]
+        , div [ id "layout" ]
+            [ viewNav model
+            , main_ []
+                [ html ]
+            , div [] []
+            ]
         ]
     }
 
@@ -234,25 +237,24 @@ viewNav model =
             Session.user (toSession model)
 
         teamsButton =
-            [ menuItem model Route.Teams "Teams" ]
+            [ menuItem model Route.Teams False "Teams" ]
 
         ephemeralButtons =
             case model of
                 Team teamPage ->
                     case teamPage.team of
                         Success team ->
-                            [ menuItem model (Route.Team team.id) (EditTeam.slugstr team.slug) ]
+                            [ menuItem model (Route.Team team.id) True (EditTeam.slugstr team.slug) ]
 
                         _ ->
                             []
 
                 EditTeam edit ->
-                    [ menuItem model (Route.Team edit.team.id) (EditTeam.slugstr edit.team.slug)
-                    , menuItem model (Route.EditTeam edit.team.id) "Edit team"
+                    [ menuItem model (Route.EditTeam edit.team.id) True "Edit team"
                     ]
 
                 CreateTeam _ ->
-                    [ menuItem model Route.CreateTeam "Create team"
+                    [ menuItem model Route.CreateTeam True "Create team"
                     ]
 
                 _ ->
@@ -260,7 +262,7 @@ viewNav model =
 
         adminButton =
             if Session.isGlobalAdmin (Session.user (toSession model)) then
-                [ menuItem model Route.ReconcilerAdmin "Synchronizers" ]
+                [ menuItem model Route.ReconcilerAdmin False "Synchronizers" ]
 
             else
                 []
@@ -270,7 +272,7 @@ viewNav model =
             nav [] [ ul [] (teamsButton ++ ephemeralButtons ++ adminButton) ]
 
         _ ->
-            nav [] [ ul [] [ menuItem model Route.Home "Login" ] ]
+            nav [] []
 
 
 isActiveRoute : Model -> Route -> Bool
@@ -298,14 +300,15 @@ isActiveRoute model target =
             False
 
 
-menuItem : Model -> Route -> String -> Html.Html msg
-menuItem model target title =
+menuItem : Model -> Route -> Bool -> String -> Html.Html msg
+menuItem model target indent title =
     let
         classes =
             [ ( "active", isActiveRoute model target ) -- Remember to update isActiveRoute with model/route combo
+            , ( "indent", indent ) -- Remember to update isActiveRoute with model/route combo
             ]
     in
-    li [ classList classes ] [ link target [] [ text title ] ]
+    li [ classList classes ] [ link target [ Html.Attributes.title title ] [ text title ] ]
 
 
 
