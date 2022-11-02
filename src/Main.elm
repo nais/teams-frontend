@@ -4,7 +4,7 @@ import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Graphql.Http
 import Html exposing (Html, div, h1, header, li, main_, nav, p, text, ul)
-import Html.Attributes exposing (classList)
+import Html.Attributes exposing (class, classList, id)
 import Page.CreateTeam as CreateTeam
 import Page.EditTeam as EditTeam
 import Page.Error as Error
@@ -184,9 +184,12 @@ view model =
     { title = "NAIS console"
     , body =
         [ header []
-            [ div []
-                [ h1 []
-                    [ link Route.Home [] [ text "Console" ]
+            [ div [ class "content" ]
+                [ div []
+                    [ div [ id "logo" ] []
+                    , h1 []
+                        [ link Route.Home [] [ text "Console" ]
+                        ]
                     ]
                 , p [] [ text (Session.username (Session.user (toSession model))) ]
                 ]
