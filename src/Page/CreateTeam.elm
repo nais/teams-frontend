@@ -84,17 +84,18 @@ errorView maybeString =
 
 createTeamForm : Model -> Html Msg
 createTeamForm model =
-    div []
+    div [ class "card" ]
         [ h2 [] [ text "Create a new team" ]
-        , p [] [ text "Use this form to create a new team. You will become the administrator of the team." ]
-        , p [] [ text "The identifier will be propagated to other systems and cannot be changed after creation." ]
+        , p [] [ text "Creating a team in Console will grant access to certain NAIS features, such as Google Cloud projects, Kubernetes namespaces, or your own GitHub team." ]
+        , p [] [ text "After the team is created, you will become the administrator of that team, granting privileges to add and remove team members." ]
+        , p [] [ text "The identifier is the primary key, and will be used across systems so that they are easily recognizable. It is not possible to change the identifier after creation, so choose wisely. Also, the identifier can not start with \"nais\" or \"team\"." ]
         , form [ onSubmit CreateTeamSubmit ]
             (ul []
                 [ textbox SlugChanged "slug" "Identifier" "customer-satisfaction"
                 , textbox PurposeChanged "purpose" "Purpose of the team" "Making sure customers have a good user experience"
                 ]
                 :: errorView model.error
-                ++ [ button [ type_ "submit" ] [ text "Create new team" ]
+                ++ [ button [ type_ "submit" ] [ text "Create team" ]
                    ]
             )
         ]
