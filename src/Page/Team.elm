@@ -3,7 +3,7 @@ module Page.Team exposing (..)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (RoleName(..))
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, div, h2, h3, p, span, strong, table, tbody, td, text, th, thead, tr)
+import Html exposing (Html, div, h2, h3, li, p, span, strong, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, classList, colspan, title)
 import ISO8601
 import Queries.Do exposing (query)
@@ -77,37 +77,40 @@ memberRow member =
         ]
 
 
-errorRow : SyncErrorData -> Html Msg
-errorRow log =
-    tr []
-        [ td [] [ text (timestr log.timestamp) ]
-        , td [] [ text log.reconcilerName ]
-        , td [] [ text log.message ]
+logLine : ISO8601.Time -> String -> String -> Html msg
+logLine ts actor message =
+    li []
+        [ p [] [ text message ]
+        , div [ class "meta" ]
+            [ p [] [ text (timestr ts) ]
+            , p [] [ text actor ]
+            ]
         ]
 
 
-logRow : AuditLogData -> Html Msg
-logRow log =
+errorLine : SyncErrorData -> Html Msg
+errorLine log =
+    logLine log.timestamp log.reconcilerName log.message
+
+
+auditLogLine : AuditLogData -> Html Msg
+auditLogLine log =
     let
         actor =
             case log.actor of
                 Nothing ->
-                    span [ title <| "Performed automatically by the console backend module '" ++ actionstr log.action ++ "'." ] [ text "System" ]
+                    actionstr log.action
 
                 Just s ->
-                    span [ title <| "Triggered by '" ++ s ++ "' and performed by '" ++ actionstr log.action ++ "'." ] [ text s ]
+                    s
     in
-    tr []
-        [ td [] [ text (timestr log.createdAt) ]
-        , td [] [ actor ]
-        , td [] [ text log.message ]
-        ]
+    logLine log.createdAt actor log.message
 
 
 simpleRow : String -> String -> Html msg
 simpleRow header content =
     tr []
-        [ th [] [ text header ]
+        [ td [] [ text header ]
         , td [] [ text content ]
         ]
 
@@ -142,36 +145,38 @@ viewProblems team =
                 [ h2 [] [ text "Synchronization error" ]
                 , p [] [ text "Console failed to synchronize team ", strong [] [ text (slugstr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
                 , p [] [ text "If errors are caused by network outage, they will resolve automatically. If they persist for more than a few hours, please NAIS support." ]
-                , table []
-                    [ thead []
-                        [ tr []
-                            [ th [] [ text "Timestamp" ]
-                            , th [] [ text "Subsystem" ]
-                            , th [] [ text "Error message" ]
-                            ]
-                        ]
-                    , tbody [] (List.map errorRow team.syncErrors)
-                    ]
+                , h3 [] [ text "Error messages" ]
+                , ul [ class "logs" ] (List.map errorLine team.syncErrors)
                 ]
 
 
 viewTeamOverview : Model -> TeamData -> Html Msg
 viewTeamOverview model team =
+    let
+        meta =
+            case team.metadata of
+                [] ->
+                    text ""
+
+                _ ->
+                    table []
+                        [ thead []
+                            [ tr []
+                                [ th [] [ text "Key" ]
+                                , th [] [ text "Value" ]
+                                ]
+                            ]
+                        , tbody []
+                            (List.map metadataRow team.metadata)
+                        ]
+    in
     div [ class "card" ]
         [ div [ class "title" ]
             ([ h2 [] [ text ("Team " ++ slugstr team.slug) ] ]
                 ++ editorButton model team
             )
         , p [] [ text team.purpose ]
-        , table []
-            [ thead []
-                [ tr []
-                    [ th [ colspan 2 ] [ text "Metadata" ]
-                    ]
-                ]
-            , tbody []
-                (List.map metadataRow team.metadata)
-            ]
+        , meta
         ]
 
 
@@ -198,16 +203,7 @@ viewLogs : TeamData -> Html Msg
 viewLogs team =
     div [ class "card" ]
         [ h2 [] [ text "Logs" ]
-        , table []
-            [ thead []
-                [ tr []
-                    [ th [] [ text "Timestamp" ]
-                    , th [] [ text "Changed by" ]
-                    , th [] [ text "Message" ]
-                    ]
-                ]
-            , tbody [] (List.map logRow team.auditLogs)
-            ]
+        , ul [ class "logs" ] (List.map auditLogLine team.auditLogs)
         ]
 
 
@@ -216,20 +212,20 @@ view model =
     case model.team of
         Success team ->
             div [ class "cards" ]
-                [ viewProblems team
-                , viewTeamOverview model team
+                [ viewTeamOverview model team
+                , viewProblems team
                 , viewMembers model team
                 , viewLogs team
                 ]
 
         Failure err ->
-            div [ class "error" ] [ text <| errorToString err ]
+            div [ class "card error" ] [ text <| errorToString err ]
 
         Loading ->
-            div [] [ text "Loading data..." ]
+            div [ class "card" ] [ text "Loading data..." ]
 
         NotAsked ->
-            div [] [ text "No data loaded" ]
+            div [ class "card" ] [ text "No data loaded" ]
 
 
 teamRoleForUser : TeamData -> User -> Maybe TeamRole

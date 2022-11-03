@@ -13,6 +13,7 @@
     --black: #262626;
     --blue: #00374f;
     --white: white;
+    --row-gray: #f7f7f7;
     --red: #A32A17;
     --error-background: #FDE8E6;
     --error-border: #BA3A26;
@@ -218,9 +219,33 @@ main {
 
 .card.error h2 {
     background: var(--error-background);
+    border-bottom: 1px solid var(--error-border);
     font-size: 1.2rem;
     margin: -1rem -1rem 0.5em;
     padding: 0.75rem 1rem;
+}
+
+ul.logs {
+    list-style: none;
+    margin: 0 0 1em;
+    padding: 0;
+    border-top: 2px solid var(--border-color);
+}
+
+ul.logs li {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid var(--border-color);
+    gap: 0;
+    padding: 0.5rem 0;
+}
+
+ul.logs li .meta {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: #78706A;
 }
 
 table {
@@ -299,35 +324,16 @@ thead {
     border-bottom: 2px solid var(--light-gray);
 }
 
-tbody tr:nth-child(even) {
-    background: #f7f7f7;
+tbody tr:nth-child(even), ul.logs li:nth-child(even) {
+    background: var(--row-gray);
 }
 
-tbody tr:nth-child(odd) {
+tbody tr:nth-child(odd),  ul.logs li:nth-child(even) {
     background: var(--white);
 }
 
 tbody.meta tr {
     background: inherit
-}
-
-tbody.errors {
-    background: var(--red);
-    color: var(--white);
-}
-
-tbody.errors tr:nth-child(even) {
-    background: inherit !important;
-}
-
-tbody.errors tr:nth-child(odd) {
-    background: inherit !important;
-}
-
-h3.error {
-    background: var(--red);
-    color: white;
-    padding: 0.25em 0;
 }
 
 select {
@@ -403,16 +409,13 @@ h2 {
 }
 
 h3 {
-    background: var(--blue);
-    color: white;
-    padding: 0.25em 0;
-    font-size: 1.33rem;
+    font-size: 1.15rem;
     font-weight: bold;
-    margin: 2.5em 0 0.75em;
+    margin: 1rem 0 0.5rem;
 }
 
 h4 {
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: bold;
     margin: 2em 0 1em;
 }
