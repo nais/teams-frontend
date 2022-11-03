@@ -3,7 +3,7 @@ module Page.Team exposing (..)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (RoleName(..))
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, div, h2, h3, p, span, table, tbody, td, text, th, thead, tr)
+import Html exposing (Html, div, h2, h3, p, span, strong, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class, classList, colspan, title)
 import ISO8601
 import Queries.Do exposing (query)
@@ -125,22 +125,23 @@ metadataRow kv =
 editorButton : Model -> TeamData -> List (Html msg)
 editorButton model team =
     if editor team (Session.user model.session) then
-        [ p [] [ link (Route.EditTeam team.id) [ class "button" ] [ text "Edit" ] ] ]
+        [ link (Route.EditTeam team.id) [ class "small button" ] [ text "Edit" ] ]
 
     else
         []
 
 
-viewProblems syncErrors =
-    case syncErrors of
+viewProblems : TeamData -> Html Msg
+viewProblems team =
+    case team.syncErrors of
         [] ->
             text ""
 
         _ ->
-            div []
-                [ h3 [ class "error" ] [ text "External systems out of sync" ]
-                , p [] [ text "Team data is stored in our database, but up-to-date information could not be transferred to some external systems. The messages below may indicate what went wrong." ]
-                , p [] [ text "Console will automatically retry any failed synchronization. This will resolve transient errors, but in case one or more systems are misconfigured, these errors will persist. In that case, contact NAIS support." ]
+            div [ class "card error" ]
+                [ h2 [] [ text "Synchronization error" ]
+                , p [] [ text "Console failed to synchronize team ", strong [] [ text (slugstr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
+                , p [] [ text "If errors are caused by network outage, they will resolve automatically. If they persist for more than a few hours, please NAIS support." ]
                 , table []
                     [ thead []
                         [ tr []
@@ -149,53 +150,77 @@ viewProblems syncErrors =
                             , th [] [ text "Error message" ]
                             ]
                         ]
-                    , tbody [] (List.map errorRow syncErrors)
+                    , tbody [] (List.map errorRow team.syncErrors)
                     ]
                 ]
+
+
+viewTeamOverview : Model -> TeamData -> Html Msg
+viewTeamOverview model team =
+    div [ class "card" ]
+        [ div [ class "title" ]
+            ([ h2 [] [ text ("Team " ++ slugstr team.slug) ] ]
+                ++ editorButton model team
+            )
+        , p [] [ text team.purpose ]
+        , table []
+            [ thead []
+                [ tr []
+                    [ th [ colspan 2 ] [ text "Metadata" ]
+                    ]
+                ]
+            , tbody []
+                (List.map metadataRow team.metadata)
+            ]
+        ]
+
+
+viewMembers : Model -> TeamData -> Html Msg
+viewMembers model team =
+    div [ class "card" ]
+        [ div [ class "title" ]
+            ([ h2 [] [ text "Members" ] ]
+                ++ editorButton model team
+            )
+        , table []
+            [ thead []
+                [ tr []
+                    [ th [] [ text "Email" ]
+                    , th [] [ text "Role" ]
+                    ]
+                ]
+            , tbody [] (List.map memberRow team.members)
+            ]
+        ]
+
+
+viewLogs : TeamData -> Html Msg
+viewLogs team =
+    div [ class "card" ]
+        [ h2 [] [ text "Logs" ]
+        , table []
+            [ thead []
+                [ tr []
+                    [ th [] [ text "Timestamp" ]
+                    , th [] [ text "Changed by" ]
+                    , th [] [ text "Message" ]
+                    ]
+                ]
+            , tbody [] (List.map logRow team.auditLogs)
+            ]
+        ]
 
 
 view : Model -> Html Msg
 view model =
     case model.team of
         Success team ->
-            div []
-                ([ h2 [] [ text ("Viewing team \"" ++ slugstr team.slug ++ "\"") ]
-                 , p [] [ text team.purpose ]
-                 ]
-                    ++ editorButton model team
-                    ++ [ table []
-                            [ thead []
-                                [ tr []
-                                    [ th [ colspan 2 ] [ text "Metadata" ]
-                                    ]
-                                ]
-                            , tbody []
-                                (List.map metadataRow team.metadata)
-                            ]
-                       , viewProblems team.syncErrors
-                       , h3 [] [ text "Members" ]
-                       , table []
-                            [ thead []
-                                [ tr []
-                                    [ th [] [ text "Email" ]
-                                    , th [] [ text "Role" ]
-                                    ]
-                                ]
-                            , tbody [] (List.map memberRow team.members)
-                            ]
-                       , h3 [] [ text "Change and synchronization logs" ]
-                       , table []
-                            [ thead []
-                                [ tr []
-                                    [ th [] [ text "Timestamp" ]
-                                    , th [] [ text "Changed by" ]
-                                    , th [] [ text "Message" ]
-                                    ]
-                                ]
-                            , tbody [] (List.map logRow team.auditLogs)
-                            ]
-                       ]
-                )
+            div [ class "cards" ]
+                [ viewProblems team
+                , viewTeamOverview model team
+                , viewMembers model team
+                , viewLogs team
+                ]
 
         Failure err ->
             div [ class "error" ] [ text <| errorToString err ]
