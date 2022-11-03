@@ -15,6 +15,7 @@
     --white: white;
     --red: darkred;
     --light-gray: #f5f5f5;
+    --border-color: #A0A0A0;
     --gray: #d1d1d1;
     --green: darkgreen;
     --link: #0067c5;
@@ -175,11 +176,26 @@ nav .submenu-glyph {
 main {
     flex-grow: 100 !important;
     max-width: var(--content-width) !important;
-    /*
-    background: var(--white);
     display: flex;
     gap: 24px;
-     */
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    background: var(--white);
+    padding: 1em;
+    width: 100%;
+}
+
+.card .title {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.card .title h2 {
+    margin: 0;
 }
 
 table {
@@ -192,6 +208,11 @@ td, th {
     text-align: left;
     padding: 0.75rem 0.25rem;
     margin: 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    border-bottom: 2px solid var(--border-color);
 }
 
 /*td:not(:last-child){
@@ -323,6 +344,7 @@ button.small, .button.small {
     padding: 0.5em 1em;
     border: 1px solid var(--link);
     color: var(--link);
+    background: var(--white);
 }
 
 button.red, .button.red {

@@ -62,7 +62,7 @@ teamTable teams =
     table []
         [ thead []
             [ tr []
-                [ th [] [ text "Slug" ]
+                [ th [] [ text "Identifier" ]
                 , th [] [ text "Purpose" ]
                 ]
             ]
@@ -72,10 +72,11 @@ teamTable teams =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ h2 [] [ text "Operations" ]
-        , p [] [ link Route.CreateTeam [ class "button" ] [ text "Create new" ] ]
-        , h2 [] [ text "List of teams" ]
+    div [ class "card" ]
+        [ div [ class "title" ]
+            [ h2 [] [ text "Teams" ]
+            , link Route.CreateTeam [ class "button small" ] [ text "Create" ]
+            ]
         , div []
             [ case model.teams of
                 Success teams ->
