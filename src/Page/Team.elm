@@ -5,7 +5,7 @@ import Backend.Scalar exposing (RoleName(..), Slug, Uuid)
 import Browser.Navigation as Nav
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, button, div, h2, h3, input, label, li, p, span, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html exposing (Html, button, div, em, h2, h3, input, label, li, p, span, strong, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, classList, colspan, for, title, type_, value)
 import Html.Events exposing (onClick, onInput)
 import ISO8601
@@ -208,6 +208,17 @@ editorButton msg model team =
 
 viewSyncErrors : TeamData -> Html Msg
 viewSyncErrors team =
+    let
+        syncSuccess =
+            case team.lastSuccessfulSync of
+                Nothing ->
+                    Html.text ""
+
+                Just ts ->
+                    p []
+                        [ em [] [ text <| "The last successful synchronization was on " ++ timestr ts ++ "." ]
+                        ]
+    in
     case team.syncErrors of
         [] ->
             text ""
@@ -217,6 +228,7 @@ viewSyncErrors team =
                 [ h2 [] [ text "Synchronization error" ]
                 , p [] [ text "Console failed to synchronize team ", strong [] [ text (slugstr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
                 , p [] [ text "If errors are caused by network outage, they will resolve automatically. If they persist for more than a few hours, please NAIS support." ]
+                , syncSuccess
                 , h3 [] [ text "Error messages" ]
                 , ul [ class "logs" ] (List.map errorLine team.syncErrors)
                 ]

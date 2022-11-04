@@ -55,6 +55,7 @@ type alias TeamData =
     , auditLogs : List AuditLogData
     , metadata : List KeyValueData
     , syncErrors : List SyncErrorData
+    , lastSuccessfulSync : Maybe ISO8601.Time
     }
 
 
@@ -115,6 +116,7 @@ teamDataSelection =
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
+        |> Graphql.SelectionSet.hardcoded Nothing
 
 
 teamDataFullSelection : SelectionSet TeamData Backend.Object.Team
@@ -126,11 +128,13 @@ teamDataFullSelection =
         |> with (Team.auditLogs auditLogSelection)
         |> with (Team.metadata keyValueSelection)
         |> with (Team.syncErrors syncErrorSelection)
+        |> with (Team.lastSuccessfulSync |> mapToMaybeDateTime)
 
 
 teamMemberSelection : SelectionSet TeamMemberData Backend.Object.TeamMember
 teamMemberSelection =
-    Graphql.SelectionSet.map2 TeamMemberData
+    Graphql.SelectionSet.map2
+        TeamMemberData
         (TeamMember.user userDataSelection)
         TeamMember.role
 
@@ -157,6 +161,20 @@ syncErrorSelection =
         |> with (SyncError.createdAt |> mapToDateTime)
         |> with (Graphql.SelectionSet.map (\(ReconcilerName x) -> x) SyncError.reconciler)
         |> with SyncError.error
+
+
+mapToMaybeDateTime : SelectionSet (Maybe Scalar.Time) scope -> SelectionSet (Maybe ISO8601.Time) scope
+mapToMaybeDateTime =
+    Graphql.SelectionSet.map
+        (\x ->
+            case x of
+                Just (Scalar.Time value) ->
+                    ISO8601.fromString value
+                        |> Result.toMaybe
+
+                Nothing ->
+                    Nothing
+        )
 
 
 mapToDateTime : SelectionSet Scalar.Time scope -> SelectionSet ISO8601.Time scope

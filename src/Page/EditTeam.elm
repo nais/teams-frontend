@@ -50,6 +50,7 @@ init session slug =
             , auditLogs = []
             , metadata = []
             , syncErrors = []
+            , lastSuccessfulSync = Nothing
             }
       }
     , Cmd.batch
