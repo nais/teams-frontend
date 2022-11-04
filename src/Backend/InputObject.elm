@@ -4,7 +4,6 @@
 
 module Backend.InputObject exposing (..)
 
-import Backend.Enum.TeamRole
 import Backend.Interface
 import Backend.Object
 import Backend.Scalar
@@ -16,64 +15,6 @@ import Graphql.Internal.Encode as Encode exposing (Value)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
-
-
-buildAddTeamMembersInput :
-    AddTeamMembersInputRequiredFields
-    -> AddTeamMembersInput
-buildAddTeamMembersInput required____ =
-    { teamId = required____.teamId, userIds = required____.userIds }
-
-
-type alias AddTeamMembersInputRequiredFields =
-    { teamId : Backend.ScalarCodecs.Uuid
-    , userIds : List Backend.ScalarCodecs.Uuid
-    }
-
-
-{-| Type for the AddTeamMembersInput input object.
--}
-type alias AddTeamMembersInput =
-    { teamId : Backend.ScalarCodecs.Uuid
-    , userIds : List Backend.ScalarCodecs.Uuid
-    }
-
-
-{-| Encode a AddTeamMembersInput into a value that can be used as an argument.
--}
-encodeAddTeamMembersInput : AddTeamMembersInput -> Value
-encodeAddTeamMembersInput input____ =
-    Encode.maybeObject
-        [ ( "teamId", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.teamId |> Just ), ( "userIds", ((Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) input____.userIds |> Just ) ]
-
-
-buildAddTeamOwnersInput :
-    AddTeamOwnersInputRequiredFields
-    -> AddTeamOwnersInput
-buildAddTeamOwnersInput required____ =
-    { teamId = required____.teamId, userIds = required____.userIds }
-
-
-type alias AddTeamOwnersInputRequiredFields =
-    { teamId : Backend.ScalarCodecs.Uuid
-    , userIds : List Backend.ScalarCodecs.Uuid
-    }
-
-
-{-| Type for the AddTeamOwnersInput input object.
--}
-type alias AddTeamOwnersInput =
-    { teamId : Backend.ScalarCodecs.Uuid
-    , userIds : List Backend.ScalarCodecs.Uuid
-    }
-
-
-{-| Encode a AddTeamOwnersInput into a value that can be used as an argument.
--}
-encodeAddTeamOwnersInput : AddTeamOwnersInput -> Value
-encodeAddTeamOwnersInput input____ =
-    Encode.maybeObject
-        [ ( "teamId", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.teamId |> Just ), ( "userIds", ((Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) input____.userIds |> Just ) ]
 
 
 buildCreateTeamInput :
@@ -132,66 +73,6 @@ encodeReconcilerConfigInput : ReconcilerConfigInput -> Value
 encodeReconcilerConfigInput input____ =
     Encode.maybeObject
         [ ( "key", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerConfigKey) input____.key |> Just ), ( "value", Encode.string input____.value |> Just ) ]
-
-
-buildRemoveUsersFromTeamInput :
-    RemoveUsersFromTeamInputRequiredFields
-    -> RemoveUsersFromTeamInput
-buildRemoveUsersFromTeamInput required____ =
-    { userIds = required____.userIds, teamId = required____.teamId }
-
-
-type alias RemoveUsersFromTeamInputRequiredFields =
-    { userIds : List Backend.ScalarCodecs.Uuid
-    , teamId : Backend.ScalarCodecs.Uuid
-    }
-
-
-{-| Type for the RemoveUsersFromTeamInput input object.
--}
-type alias RemoveUsersFromTeamInput =
-    { userIds : List Backend.ScalarCodecs.Uuid
-    , teamId : Backend.ScalarCodecs.Uuid
-    }
-
-
-{-| Encode a RemoveUsersFromTeamInput into a value that can be used as an argument.
--}
-encodeRemoveUsersFromTeamInput : RemoveUsersFromTeamInput -> Value
-encodeRemoveUsersFromTeamInput input____ =
-    Encode.maybeObject
-        [ ( "userIds", ((Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) input____.userIds |> Just ), ( "teamId", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.teamId |> Just ) ]
-
-
-buildSetTeamMemberRoleInput :
-    SetTeamMemberRoleInputRequiredFields
-    -> SetTeamMemberRoleInput
-buildSetTeamMemberRoleInput required____ =
-    { teamId = required____.teamId, userId = required____.userId, role = required____.role }
-
-
-type alias SetTeamMemberRoleInputRequiredFields =
-    { teamId : Backend.ScalarCodecs.Uuid
-    , userId : Backend.ScalarCodecs.Uuid
-    , role : Backend.Enum.TeamRole.TeamRole
-    }
-
-
-{-| Type for the SetTeamMemberRoleInput input object.
--}
-type alias SetTeamMemberRoleInput =
-    { teamId : Backend.ScalarCodecs.Uuid
-    , userId : Backend.ScalarCodecs.Uuid
-    , role : Backend.Enum.TeamRole.TeamRole
-    }
-
-
-{-| Encode a SetTeamMemberRoleInput into a value that can be used as an argument.
--}
-encodeSetTeamMemberRoleInput : SetTeamMemberRoleInput -> Value
-encodeSetTeamMemberRoleInput input____ =
-    Encode.maybeObject
-        [ ( "teamId", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.teamId |> Just ), ( "userId", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.userId |> Just ), ( "role", Encode.enum Backend.Enum.TeamRole.toString input____.role |> Just ) ]
 
 
 buildUpdateTeamInput :

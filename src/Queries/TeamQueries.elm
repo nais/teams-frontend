@@ -49,8 +49,7 @@ type alias SyncErrorData =
 
 
 type alias TeamData =
-    { id : Uuid
-    , slug : Slug
+    { slug : Slug
     , purpose : String
     , members : List TeamMemberData
     , auditLogs : List AuditLogData
@@ -64,9 +63,9 @@ getTeamsQuery =
     Query.teams teamDataSelection
 
 
-getTeamQuery : Scalar.Uuid -> SelectionSet TeamData RootQuery
-getTeamQuery id =
-    Query.team { id = id } teamDataFullSelection
+getTeamQuery : Scalar.Slug -> SelectionSet TeamData RootQuery
+getTeamQuery slug =
+    Query.team { slug = slug } teamDataFullSelection
 
 
 createTeamMutation : CreateTeamInput -> SelectionSet TeamData RootMutation
@@ -74,18 +73,16 @@ createTeamMutation team =
     Mutation.createTeam { input = team } teamDataFullSelection
 
 
-updateTeamMutation : Uuid -> UpdateTeamInput -> SelectionSet TeamData RootMutation
-updateTeamMutation id team =
-    Mutation.updateTeam { teamId = id, input = team } teamDataFullSelection
+updateTeamMutation : Slug -> UpdateTeamInput -> SelectionSet TeamData RootMutation
+updateTeamMutation slug team =
+    Mutation.updateTeam { slug = slug, input = team } teamDataFullSelection
 
 
 addMemberToTeamMutation : TeamData -> UserData -> SelectionSet TeamData RootMutation
 addMemberToTeamMutation team user =
     Mutation.addTeamMembers
-        { input =
-            { teamId = team.id
-            , userIds = [ user.id ]
-            }
+        { slug = team.slug
+        , userIds = [ user.id ]
         }
         teamDataFullSelection
 
@@ -93,10 +90,8 @@ addMemberToTeamMutation team user =
 removeMemberFromTeamMutation : TeamData -> UserData -> SelectionSet TeamData RootMutation
 removeMemberFromTeamMutation team user =
     Mutation.removeUsersFromTeam
-        { input =
-            { userIds = [ user.id ]
-            , teamId = team.id
-            }
+        { userIds = [ user.id ]
+        , slug = team.slug
         }
         teamDataFullSelection
 
@@ -104,11 +99,9 @@ removeMemberFromTeamMutation team user =
 setTeamMemberRoleMutation : TeamData -> TeamMemberData -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
 setTeamMemberRoleMutation team member role =
     Mutation.setTeamMemberRole
-        { input =
-            { teamId = team.id
-            , userId = member.user.id
-            , role = role
-            }
+        { slug = team.slug
+        , userId = member.user.id
+        , role = role
         }
         teamDataFullSelection
 
@@ -116,7 +109,6 @@ setTeamMemberRoleMutation team member role =
 teamDataSelection : SelectionSet TeamData Backend.Object.Team
 teamDataSelection =
     Graphql.SelectionSet.succeed TeamData
-        |> with Team.id
         |> with Team.slug
         |> with Team.purpose
         |> with (Team.members teamMemberSelection)
@@ -128,7 +120,6 @@ teamDataSelection =
 teamDataFullSelection : SelectionSet TeamData Backend.Object.Team
 teamDataFullSelection =
     Graphql.SelectionSet.succeed TeamData
-        |> with Team.id
         |> with Team.slug
         |> with Team.purpose
         |> with (Team.members teamMemberSelection)

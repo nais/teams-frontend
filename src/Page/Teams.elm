@@ -51,7 +51,7 @@ row : TeamData -> Html Msg
 row team =
     tr []
         [ td []
-            [ link (Route.Team team.id) [] [ text (slugstr team.slug) ]
+            [ link (Route.Team team.slug) [] [ text (slugstr team.slug) ]
             ]
         , td [] [ text team.purpose ]
         ]

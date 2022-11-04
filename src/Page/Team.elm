@@ -42,15 +42,15 @@ type Msg
     | PurposeChanged String
 
 
-init : Session -> Backend.Scalar.Uuid -> ( Model, Cmd Msg )
-init session id =
+init : Session -> Backend.Scalar.Slug -> ( Model, Cmd Msg )
+init session slug =
     ( { team = NotAsked
       , session = session
       , edit = View
       , membersToAdd = []
       , membersToRemove = []
       }
-    , fetchTeam id
+    , fetchTeam slug
     )
 
 
@@ -76,7 +76,7 @@ update msg model =
 
         ClickedEditMembers team ->
             ( { model | edit = EditMembers Nothing }
-            , Nav.pushUrl (Session.navKey model.session) (Route.routeToString (Route.EditTeam team.id))
+            , Nav.pushUrl (Session.navKey model.session) (Route.routeToString (Route.EditTeam team.slug))
             )
 
         PurposeChanged s ->
@@ -86,10 +86,11 @@ update msg model =
             ( model, saveOverview team )
 
 
+saveOverview : TeamData -> Cmd Msg
 saveOverview team =
     Queries.Do.mutate
         (updateTeamMutation
-            team.id
+            team.slug
             { purpose = Graphql.OptionalArgument.Present team.purpose
             }
         )
@@ -106,9 +107,9 @@ mapTeam fn model =
             model
 
 
-fetchTeam : Uuid -> Cmd Msg
-fetchTeam id =
-    query (getTeamQuery id) (RemoteData.fromResult >> GotTeamResponse)
+fetchTeam : Slug -> Cmd Msg
+fetchTeam slug =
+    query (getTeamQuery slug) (RemoteData.fromResult >> GotTeamResponse)
 
 
 slugstr : Backend.Scalar.Slug -> String

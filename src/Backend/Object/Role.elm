@@ -33,8 +33,15 @@ isGlobal =
     Object.selectionForField "Bool" "isGlobal" [] Decode.bool
 
 
-{-| Optional target of the role binding.
+{-| Optional service account ID if the role binding targets a service account.
 -}
-targetId : SelectionSet (Maybe Backend.ScalarCodecs.Uuid) Backend.Object.Role
-targetId =
-    Object.selectionForField "(Maybe ScalarCodecs.Uuid)" "targetId" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder |> Decode.nullable)
+targetServiceAccountID : SelectionSet (Maybe Backend.ScalarCodecs.Uuid) Backend.Object.Role
+targetServiceAccountID =
+    Object.selectionForField "(Maybe ScalarCodecs.Uuid)" "targetServiceAccountID" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder |> Decode.nullable)
+
+
+{-| Optional team slug if the role binding targets a team.
+-}
+targetTeamSlug : SelectionSet (Maybe Backend.ScalarCodecs.Slug) Backend.Object.Role
+targetTeamSlug =
+    Object.selectionForField "(Maybe ScalarCodecs.Slug)" "targetTeamSlug" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSlug |> .decoder |> Decode.nullable)

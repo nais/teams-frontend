@@ -4,6 +4,7 @@
 
 module Backend.Mutation exposing (..)
 
+import Backend.Enum.TeamRole
 import Backend.InputObject
 import Backend.Interface
 import Backend.Object
@@ -94,54 +95,6 @@ resetReconciler requiredArgs____ object____ =
     Object.selectionForCompositeField "resetReconciler" [ Argument.required "name" requiredArgs____.name (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
 
 
-type alias AssignGlobalRoleToUserRequiredArguments =
-    { role : Backend.ScalarCodecs.RoleName
-    , userID : Backend.ScalarCodecs.Uuid
-    }
-
-
-{-| Assign a global role to a user
-
-Only users with the admin role are allowed to assign global roles.
-
-The updated user is returned on success.
-
-  - role - The role to assign the user.
-  - userID - The user that will be assiged the role.
-
--}
-assignGlobalRoleToUser :
-    AssignGlobalRoleToUserRequiredArguments
-    -> SelectionSet decodesTo Backend.Object.User
-    -> SelectionSet decodesTo RootMutation
-assignGlobalRoleToUser requiredArgs____ object____ =
-    Object.selectionForCompositeField "assignGlobalRoleToUser" [ Argument.required "role" requiredArgs____.role (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecRoleName), Argument.required "userID" requiredArgs____.userID (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
-
-
-type alias RevokeGlobalRoleFromUserRequiredArguments =
-    { role : Backend.ScalarCodecs.RoleName
-    , userID : Backend.ScalarCodecs.Uuid
-    }
-
-
-{-| Revoke a global role from a user
-
-Only users with the admin role are allowed to revoke global roles.
-
-The updated user is returned on success.
-
-  - role - The role to revoke from the user.
-  - userID - The user to revoke the role from.
-
--}
-revokeGlobalRoleFromUser :
-    RevokeGlobalRoleFromUserRequiredArguments
-    -> SelectionSet decodesTo Backend.Object.User
-    -> SelectionSet decodesTo RootMutation
-revokeGlobalRoleFromUser requiredArgs____ object____ =
-    Object.selectionForCompositeField "revokeGlobalRoleFromUser" [ Argument.required "role" requiredArgs____.role (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecRoleName), Argument.required "userID" requiredArgs____.userID (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
-
-
 type alias CreateTeamRequiredArguments =
     { input : Backend.InputObject.CreateTeamInput }
 
@@ -164,7 +117,7 @@ createTeam requiredArgs____ object____ =
 
 
 type alias UpdateTeamRequiredArguments =
-    { teamId : Backend.ScalarCodecs.Uuid
+    { slug : Backend.ScalarCodecs.Slug
     , input : Backend.InputObject.UpdateTeamInput
     }
 
@@ -175,7 +128,7 @@ This mutation can be used to update the team purpose. It is not possible to upda
 
 The updated team will be returned on success.
 
-  - teamId - ID of the team to update.
+  - slug - Slug of the team to update.
   - input - Input for updating the team.
 
 -}
@@ -184,18 +137,21 @@ updateTeam :
     -> SelectionSet decodesTo Backend.Object.Team
     -> SelectionSet decodesTo RootMutation
 updateTeam requiredArgs____ object____ =
-    Object.selectionForCompositeField "updateTeam" [ Argument.required "teamId" requiredArgs____.teamId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid), Argument.required "input" requiredArgs____.input Backend.InputObject.encodeUpdateTeamInput ] object____ Basics.identity
+    Object.selectionForCompositeField "updateTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "input" requiredArgs____.input Backend.InputObject.encodeUpdateTeamInput ] object____ Basics.identity
 
 
 type alias RemoveUsersFromTeamRequiredArguments =
-    { input : Backend.InputObject.RemoveUsersFromTeamInput }
+    { slug : Backend.ScalarCodecs.Slug
+    , userIds : List Backend.ScalarCodecs.Uuid
+    }
 
 
 {-| Remove one or more users from a team
 
 The updated team will be returned on success.
 
-  - input - Input for removing users from a team.
+  - slug - Team slug that users should be removed from.
+  - userIds - List of user IDs that should be removed from the team.
 
 -}
 removeUsersFromTeam :
@@ -203,11 +159,11 @@ removeUsersFromTeam :
     -> SelectionSet decodesTo Backend.Object.Team
     -> SelectionSet decodesTo RootMutation
 removeUsersFromTeam requiredArgs____ object____ =
-    Object.selectionForCompositeField "removeUsersFromTeam" [ Argument.required "input" requiredArgs____.input Backend.InputObject.encodeRemoveUsersFromTeamInput ] object____ Basics.identity
+    Object.selectionForCompositeField "removeUsersFromTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "userIds" requiredArgs____.userIds ((Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) ] object____ Basics.identity
 
 
 type alias SynchronizeTeamRequiredArguments =
-    { teamId : Backend.ScalarCodecs.Uuid }
+    { slug : Backend.ScalarCodecs.Slug }
 
 
 {-| Manually synchronize a team
@@ -217,7 +173,7 @@ is asynchronous.
 
 The team will be returned.
 
-  - teamId - The ID of the team to synchronize.
+  - slug - The slug of the team to synchronize.
 
 -}
 synchronizeTeam :
@@ -225,11 +181,13 @@ synchronizeTeam :
     -> SelectionSet decodesTo Backend.Object.TeamSync
     -> SelectionSet decodesTo RootMutation
 synchronizeTeam requiredArgs____ object____ =
-    Object.selectionForCompositeField "synchronizeTeam" [ Argument.required "teamId" requiredArgs____.teamId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+    Object.selectionForCompositeField "synchronizeTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
 
 
 type alias AddTeamMembersRequiredArguments =
-    { input : Backend.InputObject.AddTeamMembersInput }
+    { slug : Backend.ScalarCodecs.Slug
+    , userIds : List Backend.ScalarCodecs.Uuid
+    }
 
 
 {-| Add users to a team as regular team members
@@ -239,7 +197,8 @@ team the user will not lose ownership. Regular team members will get read-only a
 
 The updated team will be returned on success.
 
-  - input - Input for adding users to a team as members.
+  - slug - Slug of the team that should receive new members.
+  - userIds - List of user IDs that should be added to the team as members.
 
 -}
 addTeamMembers :
@@ -247,11 +206,13 @@ addTeamMembers :
     -> SelectionSet decodesTo Backend.Object.Team
     -> SelectionSet decodesTo RootMutation
 addTeamMembers requiredArgs____ object____ =
-    Object.selectionForCompositeField "addTeamMembers" [ Argument.required "input" requiredArgs____.input Backend.InputObject.encodeAddTeamMembersInput ] object____ Basics.identity
+    Object.selectionForCompositeField "addTeamMembers" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "userIds" requiredArgs____.userIds ((Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) ] object____ Basics.identity
 
 
 type alias AddTeamOwnersRequiredArguments =
-    { input : Backend.InputObject.AddTeamOwnersInput }
+    { slug : Backend.ScalarCodecs.Slug
+    , userIds : List Backend.ScalarCodecs.Uuid
+    }
 
 
 {-| Add users to a team as team owners
@@ -261,7 +222,8 @@ are already owners of the team, they will not be updated. Team owners will get r
 
 The updated team will be returned on success.
 
-  - input - Input for adding users to a team as owners.
+  - slug - Slug of the team that should receive new owners.
+  - userIds - List of user IDs that should be added to the team as owners.
 
 -}
 addTeamOwners :
@@ -269,11 +231,14 @@ addTeamOwners :
     -> SelectionSet decodesTo Backend.Object.Team
     -> SelectionSet decodesTo RootMutation
 addTeamOwners requiredArgs____ object____ =
-    Object.selectionForCompositeField "addTeamOwners" [ Argument.required "input" requiredArgs____.input Backend.InputObject.encodeAddTeamOwnersInput ] object____ Basics.identity
+    Object.selectionForCompositeField "addTeamOwners" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "userIds" requiredArgs____.userIds ((Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) ] object____ Basics.identity
 
 
 type alias SetTeamMemberRoleRequiredArguments =
-    { input : Backend.InputObject.SetTeamMemberRoleInput }
+    { slug : Backend.ScalarCodecs.Slug
+    , userId : Backend.ScalarCodecs.Uuid
+    , role : Backend.Enum.TeamRole.TeamRole
+    }
 
 
 {-| Set the member role of a user in a team
@@ -282,7 +247,9 @@ The user must already exist in the team for this mutation to succeed.
 
 The team will be returned on success.
 
-  - input - Input for setting the team member role.
+  - slug - The slug of the team.
+  - userId - The ID of the user.
+  - role - The team role to set.
 
 -}
 setTeamMemberRole :
@@ -290,11 +257,11 @@ setTeamMemberRole :
     -> SelectionSet decodesTo Backend.Object.Team
     -> SelectionSet decodesTo RootMutation
 setTeamMemberRole requiredArgs____ object____ =
-    Object.selectionForCompositeField "setTeamMemberRole" [ Argument.required "input" requiredArgs____.input Backend.InputObject.encodeSetTeamMemberRoleInput ] object____ Basics.identity
+    Object.selectionForCompositeField "setTeamMemberRole" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "userId" requiredArgs____.userId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid), Argument.required "role" requiredArgs____.role (Encode.enum Backend.Enum.TeamRole.toString) ] object____ Basics.identity
 
 
 type alias DisableTeamRequiredArguments =
-    { teamId : Backend.ScalarCodecs.Uuid }
+    { slug : Backend.ScalarCodecs.Slug }
 
 
 {-| Disable a team
@@ -303,7 +270,7 @@ When a team is disabled it will no longer be included during team reconciliation
 
 The team will be returned on success.
 
-  - teamId - The ID of the team to disable.
+  - slug - The slug of the team to disable.
 
 -}
 disableTeam :
@@ -311,18 +278,18 @@ disableTeam :
     -> SelectionSet decodesTo Backend.Object.Team
     -> SelectionSet decodesTo RootMutation
 disableTeam requiredArgs____ object____ =
-    Object.selectionForCompositeField "disableTeam" [ Argument.required "teamId" requiredArgs____.teamId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+    Object.selectionForCompositeField "disableTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
 
 
 type alias EnableTeamRequiredArguments =
-    { teamId : Backend.ScalarCodecs.Uuid }
+    { slug : Backend.ScalarCodecs.Slug }
 
 
 {-| Enable a previously disabled team
 
 The team will be returned on success.
 
-  - teamId - The ID of the team to enable.
+  - slug - The slug of the team to enable.
 
 -}
 enableTeam :
@@ -330,4 +297,4 @@ enableTeam :
     -> SelectionSet decodesTo Backend.Object.Team
     -> SelectionSet decodesTo RootMutation
 enableTeam requiredArgs____ object____ =
-    Object.selectionForCompositeField "enableTeam" [ Argument.required "teamId" requiredArgs____.teamId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+    Object.selectionForCompositeField "enableTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity

@@ -37,15 +37,14 @@ type Msg
     | AddMemberSearchChanged String
 
 
-init : Session -> Uuid -> ( Model, Cmd Msg )
-init session id =
+init : Session -> Slug -> ( Model, Cmd Msg )
+init session slug =
     ( { session = session
       , error = Nothing
       , userList = []
       , addMemberSearch = ""
       , team =
-            { id = id
-            , slug = Slug ""
+            { slug = Slug ""
             , purpose = ""
             , members = []
             , auditLogs = []
@@ -54,7 +53,7 @@ init session id =
             }
       }
     , Cmd.batch
-        [ getTeam id
+        [ getTeam slug
         , getUserList
         ]
     )
@@ -67,7 +66,7 @@ update msg model =
             ( model
             , Queries.Do.mutate
                 (updateTeamMutation
-                    model.team.id
+                    model.team.slug
                     { purpose = Graphql.OptionalArgument.Present model.team.purpose
                     }
                 )
@@ -184,10 +183,10 @@ mapTeamPurpose purpose team =
     { team | purpose = purpose }
 
 
-getTeam : Uuid -> Cmd Msg
-getTeam uuid =
+getTeam : Slug -> Cmd Msg
+getTeam slug =
     Queries.Do.query
-        (Queries.TeamQueries.getTeamQuery uuid)
+        (Queries.TeamQueries.getTeamQuery slug)
         GotTeamResponse
 
 

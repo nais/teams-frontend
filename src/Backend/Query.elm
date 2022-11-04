@@ -54,12 +54,12 @@ teams object____ =
 
 
 type alias TeamRequiredArguments =
-    { id : Backend.ScalarCodecs.Uuid }
+    { slug : Backend.ScalarCodecs.Slug }
 
 
 {-| Get a specific team.
 
-  - id - ID of the team.
+  - slug - Slug of the team.
 
 -}
 team :
@@ -67,7 +67,7 @@ team :
     -> SelectionSet decodesTo Backend.Object.Team
     -> SelectionSet decodesTo RootQuery
 team requiredArgs____ object____ =
-    Object.selectionForCompositeField "team" [ Argument.required "id" requiredArgs____.id (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+    Object.selectionForCompositeField "team" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
 
 
 {-| Get a collection of users, sorted by name.

@@ -133,7 +133,7 @@ update msg model =
             Team.update subMsg subModel |> updateWith Team GotTeamMsg
 
         ( GotEditTeamMsg (EditTeam.GotUpdateTeamResponse (Ok team)), EditTeam subModel ) ->
-            ( model, Nav.pushUrl (Session.navKey subModel.session) (Route.routeToString (Route.Team team.id)) )
+            ( model, Nav.pushUrl (Session.navKey subModel.session) (Route.routeToString (Route.Team team.slug)) )
 
         ( GotEditTeamMsg subMsg, EditTeam subModel ) ->
             EditTeam.update subMsg subModel |> updateWith EditTeam GotEditTeamMsg
@@ -142,7 +142,7 @@ update msg model =
             Teams.update subMsg subModel |> updateWith Teams GotTeamsMsg
 
         ( GotCreateTeamMsg (CreateTeam.GotTeamCreatedResponse (Ok team)), CreateTeam subModel ) ->
-            ( model, Nav.pushUrl (Session.navKey subModel.session) (Route.routeToString (Route.Team team.id)) )
+            ( model, Nav.pushUrl (Session.navKey subModel.session) (Route.routeToString (Route.Team team.slug)) )
 
         ( GotCreateTeamMsg subMsg, CreateTeam subModel ) ->
             CreateTeam.update subMsg subModel |> updateWith CreateTeam GotCreateTeamMsg
@@ -244,13 +244,13 @@ viewNav model =
                 Team teamPage ->
                     case teamPage.team of
                         Success team ->
-                            [ menuItem model (Route.Team team.id) True (EditTeam.slugstr team.slug) ]
+                            [ menuItem model (Route.Team team.slug) True (EditTeam.slugstr team.slug) ]
 
                         _ ->
                             []
 
                 EditTeam edit ->
-                    [ menuItem model (Route.EditTeam edit.team.id) True "Edit team"
+                    [ menuItem model (Route.EditTeam edit.team.slug) True "Edit team"
                     ]
 
                 CreateTeam _ ->

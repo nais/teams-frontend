@@ -19,13 +19,6 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
-{-| ID of the team.
--}
-id : SelectionSet Backend.ScalarCodecs.Uuid Backend.Object.Team
-id =
-    Object.selectionForField "ScalarCodecs.Uuid" "id" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
-
-
 {-| Unique slug of the team.
 -}
 slug : SelectionSet Backend.ScalarCodecs.Slug Backend.Object.Team
@@ -81,3 +74,10 @@ syncErrors object____ =
 enabled : SelectionSet Bool Backend.Object.Team
 enabled =
     Object.selectionForField "Bool" "enabled" [] Decode.bool
+
+
+{-| Timestamp of the last successful synchronization of the team.
+-}
+lastSuccessfulSync : SelectionSet (Maybe Backend.ScalarCodecs.Time) Backend.Object.Team
+lastSuccessfulSync =
+    Object.selectionForField "(Maybe ScalarCodecs.Time)" "lastSuccessfulSync" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecTime |> .decoder |> Decode.nullable)

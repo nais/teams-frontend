@@ -1,6 +1,6 @@
 module Route exposing (..)
 
-import Backend.Scalar exposing (Uuid(..))
+import Backend.Scalar exposing (Slug(..), Uuid(..))
 import Browser.Navigation as Nav
 import Html exposing (Html, a)
 import Html.Attributes exposing (href)
@@ -14,8 +14,8 @@ type Route
     | ReconcilerAdmin
     | Teams
     | CreateTeam
-    | Team Backend.Scalar.Uuid
-    | EditTeam Backend.Scalar.Uuid
+    | Team Backend.Scalar.Slug
+    | EditTeam Backend.Scalar.Slug
 
 
 parser : Parser (Route -> a) a
@@ -25,8 +25,8 @@ parser =
         , Parser.map ReconcilerAdmin (s "admin" </> s "synchronization")
         , Parser.map Teams (s "teams")
         , Parser.map CreateTeam (s "teams" </> s "create")
-        , Parser.map (\s -> EditTeam (Uuid s)) (s "teams" </> string </> s "edit")
-        , Parser.map (\s -> Team (Uuid s)) (s "teams" </> string)
+        , Parser.map (\s -> EditTeam (Slug s)) (s "teams" </> string </> s "edit")
+        , Parser.map (\s -> Team (Slug s)) (s "teams" </> string)
         ]
 
 
@@ -70,10 +70,10 @@ routeToString page =
                 CreateTeam ->
                     [ "teams", "create" ]
 
-                EditTeam (Uuid id) ->
+                EditTeam (Slug id) ->
                     [ "teams", id, "edit" ]
 
-                Team (Uuid id) ->
+                Team (Slug id) ->
                     [ "teams", id ]
     in
     "/" ++ String.join "/" pieces

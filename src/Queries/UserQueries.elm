@@ -4,7 +4,7 @@ import Backend.Object
 import Backend.Object.Role as Role
 import Backend.Object.User as User
 import Backend.Query as Query
-import Backend.Scalar exposing (RoleName, Uuid)
+import Backend.Scalar exposing (RoleName, Slug, Uuid)
 import Backend.Union
 import Backend.Union.AuthenticatedUser as AuthenticatedUser
 import Graphql.Operation exposing (RootQuery)
@@ -18,7 +18,7 @@ import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 type alias RoleData =
     { name : RoleName
     , isGlobal : Bool
-    , targetId : Maybe Uuid
+    , targetTeamSlug : Maybe Slug
     }
 
 
@@ -63,7 +63,7 @@ roleDataSelection =
     SelectionSet.map3 RoleData
         Role.name
         Role.isGlobal
-        Role.targetId
+        Role.targetTeamSlug
 
 
 meSelection : SelectionSet (Maybe UserData) Backend.Union.AuthenticatedUser
