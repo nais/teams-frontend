@@ -1,35 +1,56 @@
 module Page.Team exposing (..)
 
 import Backend.Enum.TeamRole exposing (TeamRole(..))
-import Backend.Scalar exposing (RoleName(..))
+import Backend.Scalar exposing (RoleName(..), Slug, Uuid)
+import Browser.Navigation as Nav
 import Graphql.Http exposing (RawError(..))
-import Html exposing (Html, div, h2, h3, li, p, span, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, classList, colspan, title)
+import Graphql.OptionalArgument
+import Html exposing (Html, button, div, h2, h3, input, label, li, p, span, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, classList, colspan, for, title, type_, value)
+import Html.Events exposing (onClick, onInput)
 import ISO8601
 import Queries.Do exposing (query)
 import Queries.Error exposing (errorToString)
-import Queries.TeamQueries exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, getTeamQuery, roleString)
+import Queries.TeamQueries exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, getTeamQuery, roleString, updateTeamMutation)
+import Queries.UserQueries exposing (UserData)
 import RemoteData exposing (RemoteData(..))
-import Route exposing (link)
+import Route
 import Session exposing (Session, User(..))
+
+
+type EditMode
+    = View
+    | EditMain (Maybe (Graphql.Http.Error TeamData))
+    | EditMembers (Maybe (Graphql.Http.Error TeamData))
 
 
 type alias Model =
     { team : RemoteData (Graphql.Http.Error TeamData) TeamData
+    , edit : EditMode
+    , membersToAdd : List TeamMemberData
+    , membersToRemove : List UserData
     , session : Session
     }
 
 
 type Msg
     = GotTeamResponse (RemoteData (Graphql.Http.Error TeamData) TeamData)
+    | GotSaveOverviewResponse (RemoteData (Graphql.Http.Error TeamData) TeamData)
+    | ClickedEditMain
+    | ClickedEditMembers TeamData
+    | ClickedSaveOverview TeamData
+    | PurposeChanged String
 
 
 init : Session -> Backend.Scalar.Uuid -> ( Model, Cmd Msg )
 init session id =
     ( { team = NotAsked
       , session = session
+      , edit = View
+      , membersToAdd = []
+      , membersToRemove = []
       }
-    , query (getTeamQuery id) (RemoteData.fromResult >> GotTeamResponse)
+    , fetchTeam id
     )
 
 
@@ -38,6 +59,56 @@ update msg model =
     case msg of
         GotTeamResponse r ->
             ( { model | team = r }, Cmd.none )
+
+        GotSaveOverviewResponse r ->
+            case r of
+                Success _ ->
+                    ( { model | team = r, edit = View }, Cmd.none )
+
+                Failure error ->
+                    ( { model | edit = EditMain (Just error) }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        ClickedEditMain ->
+            ( { model | edit = EditMain Nothing }, Cmd.none )
+
+        ClickedEditMembers team ->
+            ( { model | edit = EditMembers Nothing }
+            , Nav.pushUrl (Session.navKey model.session) (Route.routeToString (Route.EditTeam team.id))
+            )
+
+        PurposeChanged s ->
+            ( mapTeam (\team -> { team | purpose = s }) model, Cmd.none )
+
+        ClickedSaveOverview team ->
+            ( model, saveOverview team )
+
+
+saveOverview team =
+    Queries.Do.mutate
+        (updateTeamMutation
+            team.id
+            { purpose = Graphql.OptionalArgument.Present team.purpose
+            }
+        )
+        (GotSaveOverviewResponse << RemoteData.fromResult)
+
+
+mapTeam : (TeamData -> TeamData) -> Model -> Model
+mapTeam fn model =
+    case model.team of
+        Success team ->
+            { model | team = Success <| fn team }
+
+        _ ->
+            model
+
+
+fetchTeam : Uuid -> Cmd Msg
+fetchTeam id =
+    query (getTeamQuery id) (RemoteData.fromResult >> GotTeamResponse)
 
 
 slugstr : Backend.Scalar.Slug -> String
@@ -125,17 +196,17 @@ metadataRow kv =
             simpleRow kv.key ""
 
 
-editorButton : Model -> TeamData -> List (Html msg)
-editorButton model team =
+editorButton : Msg -> Model -> TeamData -> List (Html Msg)
+editorButton msg model team =
     if editor team (Session.user model.session) then
-        [ link (Route.EditTeam team.id) [ class "small button" ] [ text "Edit" ] ]
+        [ div [ class "small button", onClick msg ] [ text "Edit" ] ]
 
     else
         []
 
 
-viewProblems : TeamData -> Html Msg
-viewProblems team =
+viewSyncErrors : TeamData -> Html Msg
+viewSyncErrors team =
     case team.syncErrors of
         [] ->
             text ""
@@ -150,33 +221,54 @@ viewProblems team =
                 ]
 
 
+viewTeamMetaTable : List KeyValueData -> Html msg
+viewTeamMetaTable metadata =
+    case metadata of
+        [] ->
+            text ""
+
+        _ ->
+            table []
+                [ thead []
+                    [ tr []
+                        [ th [] [ text "Key" ]
+                        , th [] [ text "Value" ]
+                        ]
+                    ]
+                , tbody []
+                    (List.map metadataRow metadata)
+                ]
+
+
 viewTeamOverview : Model -> TeamData -> Html Msg
 viewTeamOverview model team =
-    let
-        meta =
-            case team.metadata of
-                [] ->
-                    text ""
-
-                _ ->
-                    table []
-                        [ thead []
-                            [ tr []
-                                [ th [] [ text "Key" ]
-                                , th [] [ text "Value" ]
-                                ]
-                            ]
-                        , tbody []
-                            (List.map metadataRow team.metadata)
-                        ]
-    in
     div [ class "card" ]
         [ div [ class "title" ]
             ([ h2 [] [ text ("Team " ++ slugstr team.slug) ] ]
-                ++ editorButton model team
+                ++ editorButton ClickedEditMain model team
             )
         , p [] [ text team.purpose ]
-        , meta
+        , viewTeamMetaTable team.metadata
+        ]
+
+
+viewEditTeamOverview : TeamData -> Maybe (Graphql.Http.Error TeamData) -> Html Msg
+viewEditTeamOverview team error =
+    let
+        errorMessage =
+            case error of
+                Nothing ->
+                    text ""
+
+                Just err ->
+                    div [ class "error" ] [ text <| Queries.Error.errorToString err ]
+    in
+    div [ class "card" ]
+        [ h2 [] [ text ("Team " ++ slugstr team.slug) ]
+        , input [ type_ "text", Html.Attributes.placeholder "Describe team's purpose", onInput PurposeChanged, value team.purpose ] []
+        , errorMessage
+        , button [ onClick (ClickedSaveOverview team) ] [ text "Save changes" ]
+        , viewTeamMetaTable team.metadata
         ]
 
 
@@ -185,7 +277,7 @@ viewMembers model team =
     div [ class "card" ]
         [ div [ class "title" ]
             ([ h2 [] [ text "Members" ] ]
-                ++ editorButton model team
+                ++ editorButton (ClickedEditMembers team) model team
             )
         , table []
             [ thead []
@@ -199,6 +291,10 @@ viewMembers model team =
         ]
 
 
+viewEditMembers =
+    viewMembers
+
+
 viewLogs : TeamData -> Html Msg
 viewLogs team =
     div [ class "card" ]
@@ -207,16 +303,38 @@ viewLogs team =
         ]
 
 
+viewCards : Model -> TeamData -> Html Msg
+viewCards model team =
+    div [ class "cards" ]
+        (case model.edit of
+            View ->
+                [ viewTeamOverview model team
+                , viewSyncErrors team
+                , viewMembers model team
+                , viewLogs team
+                ]
+
+            EditMain err ->
+                [ viewEditTeamOverview team err
+                , viewSyncErrors team
+                , viewMembers model team
+                , viewLogs team
+                ]
+
+            EditMembers err ->
+                [ viewTeamOverview model team
+                , viewSyncErrors team
+                , viewEditMembers model team
+                , viewLogs team
+                ]
+        )
+
+
 view : Model -> Html Msg
 view model =
     case model.team of
         Success team ->
-            div [ class "cards" ]
-                [ viewTeamOverview model team
-                , viewProblems team
-                , viewMembers model team
-                , viewLogs team
-                ]
+            viewCards model team
 
         Failure err ->
             div [ class "card error" ] [ text <| errorToString err ]

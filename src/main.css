@@ -188,6 +188,17 @@ main {
     gap: 24px;
 }
 
+/**
+ * Content styles
+ */
+
+.error {
+    border: 1px solid var(--error-border);
+    background: var(--error-background);
+    padding: 1rem;
+    margin: 0.5rem 0;
+}
+
 .cards {
     display: flex;
     flex-direction: column;
@@ -199,7 +210,7 @@ main {
     flex-direction: column;
     background: var(--white);
     padding: 1rem;
-    width: 100%;
+    width: calc(100% - 2rem);
 }
 
 .card .title {
@@ -208,11 +219,12 @@ main {
     justify-content: space-between;
 }
 
-.card .title h2 {
+.card h2 {
     margin: 0;
 }
 
 .card.error {
+    background: var(--white);
     border: 1px solid var(--error-border);
     border-radius: 2px;
 }
@@ -265,14 +277,6 @@ th {
     border-bottom: 2px solid var(--border-color);
 }
 
-/*td:not(:last-child){
-    white-space: nowrap;
-}
-
-td:last-child{
-    width: 100%;
-}*/
-
 form {
     margin: 1rem 0 3rem;
     padding: 0;
@@ -299,6 +303,7 @@ form label {
 }
 
 input[type="text"] {
+    margin: 0.5rem 0;
     padding: 0.5rem;
     border-radius: 2px;
     border: 1px solid var(--gray);
@@ -351,6 +356,7 @@ select {
 }
 
 button, .button {
+    flex-grow: 0;
     padding: 1em;
     background: var(--link);
     border: 0;
@@ -360,6 +366,7 @@ button, .button {
     cursor: pointer;
     text-decoration: none !important;
     display: inline-block;
+    width: auto;
     line-height: 1em;
     font-size: 1rem;
 }
