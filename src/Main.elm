@@ -354,7 +354,7 @@ toSession model =
 
 getMe : Url.Url -> Cmd Msg
 getMe url =
-    query Api.User.getMeQuery (GotMeResponse url)
+    query Api.User.getMe (GotMeResponse url)
 
 
 handleMeResponse : Session -> Url.Url -> Result (Graphql.Http.Error (Maybe UserData)) (Maybe UserData) -> ( Model, Cmd Msg )

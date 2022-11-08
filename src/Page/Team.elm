@@ -2,7 +2,7 @@ module Page.Team exposing (..)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, getTeamQuery, roleString, updateTeamMutation)
+import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, getTeam, roleString, updateTeam)
 import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (RoleName(..), Slug, Uuid)
@@ -89,7 +89,7 @@ update msg model =
 saveOverview : TeamData -> Cmd Msg
 saveOverview team =
     Api.Do.mutate
-        (updateTeamMutation
+        (updateTeam
             team.slug
             { purpose = Graphql.OptionalArgument.Present team.purpose
             }
@@ -109,7 +109,7 @@ mapTeam fn model =
 
 fetchTeam : Slug -> Cmd Msg
 fetchTeam slug =
-    query (getTeamQuery slug) (RemoteData.fromResult >> GotTeamResponse)
+    query (getTeam slug) (RemoteData.fromResult >> GotTeamResponse)
 
 
 slugstr : Backend.Scalar.Slug -> String

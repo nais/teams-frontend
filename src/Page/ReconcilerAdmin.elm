@@ -2,7 +2,7 @@ module Page.ReconcilerAdmin exposing (..)
 
 import Api.Do exposing (mutate, query)
 import Api.Error
-import Api.Reconciler exposing (ReconcilerConfigData, ReconcilerData, disableReconcilerMutation, enableReconcilerMutation, getReconcilersQuery, updateReconcilerConfigMutation)
+import Api.Reconciler exposing (ReconcilerConfigData, ReconcilerData, disableReconciler, enableReconciler, getReconcilers, updateReconcilerConfig)
 import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, a, button, div, form, h2, h3, input, label, li, p, text, textarea, ul)
@@ -43,7 +43,7 @@ init session =
 
 
 loadData =
-    query getReconcilersQuery (RemoteData.fromResult >> GotReconcilersResponse)
+    query getReconcilers (RemoteData.fromResult >> GotReconcilersResponse)
 
 
 mapReconcilers : (a -> b) -> RemoteData error (List a) -> RemoteData error (List b)
@@ -140,7 +140,7 @@ saveReconcilerConfig name model =
                 Nothing ->
                     []
     in
-    ( model, mutate (updateReconcilerConfigMutation name inputs) GotUpdateReconcilerResponse )
+    ( model, mutate (updateReconcilerConfig name inputs) GotUpdateReconcilerResponse )
 
 
 enableDisableReconciler : ReconcilerData -> Cmd Msg
@@ -148,10 +148,10 @@ enableDisableReconciler reconciler =
     let
         func =
             if reconciler.enabled then
-                enableReconcilerMutation
+                enableReconciler
 
             else
-                disableReconcilerMutation
+                disableReconciler
     in
     mutate (func reconciler.name) GotEnableReconcilerResponse
 

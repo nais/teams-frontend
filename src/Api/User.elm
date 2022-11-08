@@ -30,8 +30,8 @@ type alias UserData =
     }
 
 
-getMeQuery : SelectionSet (Maybe UserData) RootQuery
-getMeQuery =
+getMe : SelectionSet (Maybe UserData) RootQuery
+getMe =
     Query.me meSelection
 
 

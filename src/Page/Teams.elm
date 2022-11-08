@@ -2,7 +2,7 @@ module Page.Teams exposing (..)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (TeamData, getTeamsQuery)
+import Api.Team exposing (TeamData, getTeams)
 import Backend.Scalar
 import Graphql.Http
 import Html exposing (Html, div, h2, p, table, tbody, td, text, th, thead, tr)
@@ -28,7 +28,7 @@ init session =
     ( { teams = Loading
       , session = session
       }
-    , query getTeamsQuery (RemoteData.fromResult >> GotTeamsResponse)
+    , query getTeams (RemoteData.fromResult >> GotTeamsResponse)
     )
 
 

@@ -2,7 +2,7 @@ module Page.EditTeam exposing (..)
 
 import Api.Do
 import Api.Error exposing (errorToString)
-import Api.Team exposing (TeamData, TeamMemberData, roleString, updateTeamMutation)
+import Api.Team exposing (TeamData, TeamMemberData, roleString, updateTeam)
 import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (Slug(..), Uuid)
@@ -66,7 +66,7 @@ update msg model =
         SubmitForm ->
             ( model
             , Api.Do.mutate
-                (updateTeamMutation
+                (updateTeam
                     model.team.slug
                     { purpose = Graphql.OptionalArgument.Present model.team.purpose
                     }
@@ -187,7 +187,7 @@ mapTeamPurpose purpose team =
 getTeam : Slug -> Cmd Msg
 getTeam slug =
     Api.Do.query
-        (Api.Team.getTeamQuery slug)
+        (Api.Team.getTeam slug)
         GotTeamResponse
 
 
@@ -201,21 +201,21 @@ getUserList =
 setTeamMemberRole : TeamData -> TeamMemberData -> TeamRole -> Cmd Msg
 setTeamMemberRole team member role =
     Api.Do.mutate
-        (Api.Team.setTeamMemberRoleMutation team member role)
+        (Api.Team.setTeamMemberRole team member role)
         GotSetTeamMemberRoleResponse
 
 
 removeTeamMember : TeamData -> UserData -> Cmd Msg
 removeTeamMember team user =
     Api.Do.mutate
-        (Api.Team.removeMemberFromTeamMutation team user)
+        (Api.Team.removeMemberFromTeam team user)
         GotRemoveTeamMemberResponse
 
 
 addTeamMember : TeamData -> UserData -> Cmd Msg
 addTeamMember team user =
     Api.Do.mutate
-        (Api.Team.addMemberToTeamMutation team user)
+        (Api.Team.addMemberToTeam team user)
         GotAddTeamMemberResponse
 
 

@@ -32,23 +32,23 @@ type alias ReconcilerData =
     }
 
 
-getReconcilersQuery : SelectionSet (List ReconcilerData) RootQuery
-getReconcilersQuery =
+getReconcilers : SelectionSet (List ReconcilerData) RootQuery
+getReconcilers =
     Query.reconcilers reconcilerDataSelection
 
 
-updateReconcilerConfigMutation : ReconcilerName -> List ReconcilerConfigInput -> SelectionSet ReconcilerData Graphql.Operation.RootMutation
-updateReconcilerConfigMutation name config =
+updateReconcilerConfig : ReconcilerName -> List ReconcilerConfigInput -> SelectionSet ReconcilerData Graphql.Operation.RootMutation
+updateReconcilerConfig name config =
     Mutation.configureReconciler { name = name, config = config } reconcilerDataSelection
 
 
-enableReconcilerMutation : ReconcilerName -> SelectionSet ReconcilerData Graphql.Operation.RootMutation
-enableReconcilerMutation name =
+enableReconciler : ReconcilerName -> SelectionSet ReconcilerData Graphql.Operation.RootMutation
+enableReconciler name =
     Mutation.enableReconciler { name = name } reconcilerDataSelection
 
 
-disableReconcilerMutation : ReconcilerName -> SelectionSet ReconcilerData Graphql.Operation.RootMutation
-disableReconcilerMutation name =
+disableReconciler : ReconcilerName -> SelectionSet ReconcilerData Graphql.Operation.RootMutation
+disableReconciler name =
     Mutation.disableReconciler { name = name } reconcilerDataSelection
 
 

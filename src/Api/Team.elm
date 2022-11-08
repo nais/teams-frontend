@@ -59,28 +59,28 @@ type alias TeamData =
     }
 
 
-getTeamsQuery : SelectionSet (List TeamData) RootQuery
-getTeamsQuery =
+getTeams : SelectionSet (List TeamData) RootQuery
+getTeams =
     Query.teams teamDataSelection
 
 
-getTeamQuery : Scalar.Slug -> SelectionSet TeamData RootQuery
-getTeamQuery slug =
+getTeam : Scalar.Slug -> SelectionSet TeamData RootQuery
+getTeam slug =
     Query.team { slug = slug } teamDataFullSelection
 
 
-createTeamMutation : CreateTeamInput -> SelectionSet TeamData RootMutation
-createTeamMutation team =
+createTeam : CreateTeamInput -> SelectionSet TeamData RootMutation
+createTeam team =
     Mutation.createTeam { input = team } teamDataFullSelection
 
 
-updateTeamMutation : Slug -> UpdateTeamInput -> SelectionSet TeamData RootMutation
-updateTeamMutation slug team =
+updateTeam : Slug -> UpdateTeamInput -> SelectionSet TeamData RootMutation
+updateTeam slug team =
     Mutation.updateTeam { slug = slug, input = team } teamDataFullSelection
 
 
-addMemberToTeamMutation : TeamData -> UserData -> SelectionSet TeamData RootMutation
-addMemberToTeamMutation team user =
+addMemberToTeam : TeamData -> UserData -> SelectionSet TeamData RootMutation
+addMemberToTeam team user =
     Mutation.addTeamMembers
         { slug = team.slug
         , userIds = [ user.id ]
@@ -88,8 +88,8 @@ addMemberToTeamMutation team user =
         teamDataFullSelection
 
 
-removeMemberFromTeamMutation : TeamData -> UserData -> SelectionSet TeamData RootMutation
-removeMemberFromTeamMutation team user =
+removeMemberFromTeam : TeamData -> UserData -> SelectionSet TeamData RootMutation
+removeMemberFromTeam team user =
     Mutation.removeUsersFromTeam
         { userIds = [ user.id ]
         , slug = team.slug
@@ -97,8 +97,8 @@ removeMemberFromTeamMutation team user =
         teamDataFullSelection
 
 
-setTeamMemberRoleMutation : TeamData -> TeamMemberData -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
-setTeamMemberRoleMutation team member role =
+setTeamMemberRole : TeamData -> TeamMemberData -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
+setTeamMemberRole team member role =
     Mutation.setTeamMemberRole
         { slug = team.slug
         , userId = member.user.id
