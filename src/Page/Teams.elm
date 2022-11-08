@@ -1,12 +1,12 @@
 module Page.Teams exposing (..)
 
+import Api.Do exposing (query)
+import Api.Error exposing (errorToString)
+import Api.Team exposing (TeamData, getTeamsQuery)
 import Backend.Scalar
 import Graphql.Http
 import Html exposing (Html, div, h2, p, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class)
-import Queries.Do exposing (query)
-import Queries.Error exposing (errorToString)
-import Queries.TeamQueries exposing (TeamData, getTeamsQuery)
 import RemoteData exposing (RemoteData(..))
 import Route exposing (link)
 import Session exposing (Session)

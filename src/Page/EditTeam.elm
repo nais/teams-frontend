@@ -1,5 +1,9 @@
 module Page.EditTeam exposing (..)
 
+import Api.Do
+import Api.Error exposing (errorToString)
+import Api.Team exposing (TeamData, TeamMemberData, roleString, updateTeamMutation)
+import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (Slug(..), Uuid)
 import Graphql.Http exposing (RawError(..))
@@ -7,10 +11,6 @@ import Graphql.OptionalArgument
 import Html exposing (Html, button, datalist, div, form, h2, input, label, li, option, p, select, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, colspan, disabled, for, id, list, placeholder, readonly, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
-import Queries.Do
-import Queries.Error exposing (errorToString)
-import Queries.TeamQueries exposing (TeamData, TeamMemberData, roleString, updateTeamMutation)
-import Queries.UserQueries exposing (UserData)
 import Session exposing (Session, User(..))
 
 
@@ -65,7 +65,7 @@ update msg model =
     case msg of
         SubmitForm ->
             ( model
-            , Queries.Do.mutate
+            , Api.Do.mutate
                 (updateTeamMutation
                     model.team.slug
                     { purpose = Graphql.OptionalArgument.Present model.team.purpose
@@ -186,36 +186,36 @@ mapTeamPurpose purpose team =
 
 getTeam : Slug -> Cmd Msg
 getTeam slug =
-    Queries.Do.query
-        (Queries.TeamQueries.getTeamQuery slug)
+    Api.Do.query
+        (Api.Team.getTeamQuery slug)
         GotTeamResponse
 
 
 getUserList : Cmd Msg
 getUserList =
-    Queries.Do.query
-        Queries.UserQueries.getAllUsers
+    Api.Do.query
+        Api.User.getAllUsers
         GotUserListResponse
 
 
 setTeamMemberRole : TeamData -> TeamMemberData -> TeamRole -> Cmd Msg
 setTeamMemberRole team member role =
-    Queries.Do.mutate
-        (Queries.TeamQueries.setTeamMemberRoleMutation team member role)
+    Api.Do.mutate
+        (Api.Team.setTeamMemberRoleMutation team member role)
         GotSetTeamMemberRoleResponse
 
 
 removeTeamMember : TeamData -> UserData -> Cmd Msg
 removeTeamMember team user =
-    Queries.Do.mutate
-        (Queries.TeamQueries.removeMemberFromTeamMutation team user)
+    Api.Do.mutate
+        (Api.Team.removeMemberFromTeamMutation team user)
         GotRemoveTeamMemberResponse
 
 
 addTeamMember : TeamData -> UserData -> Cmd Msg
 addTeamMember team user =
-    Queries.Do.mutate
-        (Queries.TeamQueries.addMemberToTeamMutation team user)
+    Api.Do.mutate
+        (Api.Team.addMemberToTeamMutation team user)
         GotAddTeamMemberResponse
 
 

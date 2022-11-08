@@ -1,5 +1,6 @@
-module Queries.TeamQueries exposing (..)
+module Api.Team exposing (..)
 
+import Api.User exposing (UserData, userDataSelection)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.InputObject exposing (CreateTeamInput, UpdateTeamInput)
 import Backend.Mutation as Mutation
@@ -14,7 +15,6 @@ import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug, Uuid)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet, with)
 import ISO8601
-import Queries.UserQueries exposing (UserData, userDataSelection)
 
 
 

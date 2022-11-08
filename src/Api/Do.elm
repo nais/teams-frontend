@@ -1,4 +1,4 @@
-module Queries.Do exposing (mutate, query)
+module Api.Do exposing (mutate, query)
 
 import Graphql.Http
 import Graphql.Operation exposing (RootMutation, RootQuery)

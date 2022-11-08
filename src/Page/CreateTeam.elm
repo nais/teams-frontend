@@ -1,13 +1,13 @@
 module Page.CreateTeam exposing (..)
 
+import Api.Do
+import Api.Error exposing (errorToString)
+import Api.Team exposing (TeamData, createTeamMutation)
 import Backend.Scalar
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, button, div, form, h2, input, label, li, p, text, ul)
 import Html.Attributes exposing (class, for, placeholder, type_)
 import Html.Events exposing (onInput, onSubmit)
-import Queries.Do
-import Queries.Error exposing (errorToString)
-import Queries.TeamQueries exposing (TeamData, createTeamMutation)
 import Session exposing (Session)
 
 
@@ -42,7 +42,7 @@ update msg model =
     case msg of
         CreateTeamSubmit ->
             ( model
-            , Queries.Do.mutate
+            , Api.Do.mutate
                 (createTeamMutation
                     { purpose = model.purpose
                     , slug = Backend.Scalar.Slug model.slug

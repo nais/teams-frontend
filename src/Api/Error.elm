@@ -1,4 +1,4 @@
-module Queries.Error exposing (..)
+module Api.Error exposing (..)
 
 import Graphql.Http exposing (HttpError(..), RawError(..))
 import Http exposing (Error(..))

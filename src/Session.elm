@@ -1,8 +1,8 @@
 module Session exposing (Session, User(..), init, isGlobalAdmin, mapUser, navKey, user, username)
 
+import Api.User exposing (UserData)
 import Backend.Scalar exposing (RoleName(..))
 import Browser.Navigation as Nav
-import Queries.UserQueries exposing (UserData)
 
 
 type User

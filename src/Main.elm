@@ -1,5 +1,7 @@
 module Main exposing (..)
 
+import Api.Do exposing (query)
+import Api.User exposing (UserData)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Graphql.Http
@@ -12,8 +14,6 @@ import Page.Home as Home exposing (maybeRouteToString)
 import Page.ReconcilerAdmin as ReconcilerAdmin
 import Page.Team as Team
 import Page.Teams as Teams
-import Queries.Do exposing (query)
-import Queries.UserQueries as UserQueries exposing (UserData)
 import RemoteData exposing (RemoteData(..))
 import Route exposing (Route(..), link)
 import Session exposing (Session, User(..))
@@ -354,7 +354,7 @@ toSession model =
 
 getMe : Url.Url -> Cmd Msg
 getMe url =
-    query UserQueries.getMeQuery (GotMeResponse url)
+    query Api.User.getMeQuery (GotMeResponse url)
 
 
 handleMeResponse : Session -> Url.Url -> Result (Graphql.Http.Error (Maybe UserData)) (Maybe UserData) -> ( Model, Cmd Msg )

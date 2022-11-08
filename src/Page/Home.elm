@@ -1,10 +1,10 @@
 module Page.Home exposing (..)
 
+import Api.User exposing (UserData)
 import Browser.Navigation
 import Graphql.Http
 import Html exposing (Html, button, div, p, text)
 import Html.Events exposing (onClick)
-import Queries.UserQueries exposing (UserData)
 import Route exposing (Route)
 import Session exposing (Session, User(..))
 import Url.Builder

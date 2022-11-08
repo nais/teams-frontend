@@ -1,4 +1,4 @@
-module Queries.ReconcilerQueries exposing (..)
+module Api.Reconciler exposing (..)
 
 import Backend.InputObject exposing (ReconcilerConfigInput)
 import Backend.Mutation as Mutation

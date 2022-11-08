@@ -1,5 +1,9 @@
 module Page.Team exposing (..)
 
+import Api.Do exposing (query)
+import Api.Error exposing (errorToString)
+import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, getTeamQuery, roleString, updateTeamMutation)
+import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (RoleName(..), Slug, Uuid)
 import Browser.Navigation as Nav
@@ -9,10 +13,6 @@ import Html exposing (Html, button, div, em, h2, h3, input, label, li, p, span, 
 import Html.Attributes exposing (class, classList, colspan, for, title, type_, value)
 import Html.Events exposing (onClick, onInput)
 import ISO8601
-import Queries.Do exposing (query)
-import Queries.Error exposing (errorToString)
-import Queries.TeamQueries exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, getTeamQuery, roleString, updateTeamMutation)
-import Queries.UserQueries exposing (UserData)
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session, User(..))
@@ -88,7 +88,7 @@ update msg model =
 
 saveOverview : TeamData -> Cmd Msg
 saveOverview team =
-    Queries.Do.mutate
+    Api.Do.mutate
         (updateTeamMutation
             team.slug
             { purpose = Graphql.OptionalArgument.Present team.purpose
@@ -274,7 +274,7 @@ viewEditTeamOverview team error =
                     text ""
 
                 Just err ->
-                    div [ class "error" ] [ text <| Queries.Error.errorToString err ]
+                    div [ class "error" ] [ text <| Api.Error.errorToString err ]
     in
     div [ class "card" ]
         [ h2 [] [ text ("Team " ++ slugstr team.slug) ]

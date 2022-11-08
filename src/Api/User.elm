@@ -1,4 +1,4 @@
-module Queries.UserQueries exposing (..)
+module Api.User exposing (..)
 
 import Backend.Object
 import Backend.Object.Role as Role

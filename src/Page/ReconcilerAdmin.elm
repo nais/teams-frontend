@@ -1,14 +1,14 @@
 module Page.ReconcilerAdmin exposing (..)
 
+import Api.Do exposing (mutate, query)
+import Api.Error
+import Api.Reconciler exposing (ReconcilerConfigData, ReconcilerData, disableReconcilerMutation, enableReconcilerMutation, getReconcilersQuery, updateReconcilerConfigMutation)
 import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, a, button, div, form, h2, h3, input, label, li, p, text, textarea, ul)
 import Html.Attributes exposing (checked, class, classList, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput, onSubmit)
 import Json.Decode as Decode
-import Queries.Do exposing (mutate, query)
-import Queries.Error
-import Queries.ReconcilerQueries exposing (ReconcilerConfigData, ReconcilerData, disableReconcilerMutation, enableReconcilerMutation, getReconcilersQuery, updateReconcilerConfigMutation)
 import RemoteData exposing (RemoteData(..))
 import Session exposing (Session)
 
@@ -95,7 +95,7 @@ update msg model =
                             ( updatedModel, Cmd.none )
 
                 Err e ->
-                    ( { model | error = Just (Queries.Error.errorToString e) }, Cmd.none )
+                    ( { model | error = Just (Api.Error.errorToString e) }, Cmd.none )
 
         GotEnableReconcilerResponse r ->
             case r of
@@ -103,7 +103,7 @@ update msg model =
                     ( { model | error = Nothing, reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }, Cmd.none )
 
                 Err e ->
-                    ( { model | error = Just (Queries.Error.errorToString e) }, Cmd.none )
+                    ( { model | error = Just (Api.Error.errorToString e) }, Cmd.none )
 
         GotReconcilersResponse r ->
             ( { model | reconcilers = r }, Cmd.none )
@@ -398,4 +398,4 @@ view model =
             h3 [] [ text "Loading reconcilers..." ]
 
         Failure e ->
-            viewLoadFailure (Queries.Error.errorToString e)
+            viewLoadFailure (Api.Error.errorToString e)
