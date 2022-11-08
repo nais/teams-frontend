@@ -5,12 +5,12 @@ import Api.Error exposing (errorToString)
 import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, getTeam, roleString, updateTeam)
 import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
-import Backend.Scalar exposing (RoleName(..), Slug, Uuid)
+import Backend.Scalar exposing (RoleName(..), Slug)
 import Browser.Navigation as Nav
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, button, div, em, h2, h3, input, label, li, p, span, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, classList, colspan, for, title, type_, value)
+import Html exposing (Html, button, div, em, h2, h3, input, li, p, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, classList, type_, value)
 import Html.Events exposing (onClick, onInput)
 import ISO8601
 import RemoteData exposing (RemoteData(..))
@@ -257,8 +257,8 @@ viewTeamOverview : Model -> TeamData -> Html Msg
 viewTeamOverview model team =
     div [ class "card" ]
         [ div [ class "title" ]
-            ([ h2 [] [ text ("Team " ++ slugstr team.slug) ] ]
-                ++ editorButton ClickedEditMain model team
+            (h2 [] [ text ("Team " ++ slugstr team.slug) ]
+                :: editorButton ClickedEditMain model team
             )
         , p [] [ text team.purpose ]
         , viewTeamMetaTable team.metadata
@@ -289,8 +289,8 @@ viewMembers : Model -> TeamData -> Html Msg
 viewMembers model team =
     div [ class "card" ]
         [ div [ class "title" ]
-            ([ h2 [] [ text "Members" ] ]
-                ++ editorButton (ClickedEditMembers team) model team
+            (h2 [] [ text "Members" ]
+                :: editorButton (ClickedEditMembers team) model team
             )
         , table []
             [ thead []
@@ -334,7 +334,7 @@ viewCards model team =
                 , viewLogs team
                 ]
 
-            EditMembers err ->
+            EditMembers _ ->
                 [ viewTeamOverview model team
                 , viewSyncErrors team
                 , viewEditMembers model team
