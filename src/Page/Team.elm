@@ -2,7 +2,7 @@ module Page.Team exposing (..)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, addMemberToTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, updateTeam)
+import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, addMemberToTeam, addOwnerToTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, updateTeam)
 import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (RoleName(..), Slug)
@@ -17,10 +17,15 @@ import RemoteData exposing (RemoteData(..))
 import Session exposing (Session, User(..))
 
 
+type EditError
+    = ErrString String
+    | ErrGraphql (Graphql.Http.Error TeamData)
+
+
 type EditMode
     = View
     | EditMain (Maybe (Graphql.Http.Error TeamData))
-    | EditMembers (Maybe (Graphql.Http.Error TeamData))
+    | EditMembers (Maybe EditError)
 
 
 type MemberChange
@@ -37,7 +42,7 @@ type alias Model =
     , memberChanges : List MemberChange
     , session : Session
     , addMemberQuery : String
-    , addMemberError : String
+    , addMemberRole : TeamRole
     }
 
 
@@ -53,7 +58,8 @@ type Msg
     | AddMemberQueryChanged String
     | RemoveMember MemberChange
     | Undo MemberChange
-    | RoleDropDownClicked TeamRole MemberChange
+    | RoleDropDownClicked MemberChange TeamRole
+    | AddMemberRoleDropDownClicked TeamRole
     | GotUserListResponse (RemoteData (Graphql.Http.Error (List UserData)) (List UserData))
     | OnSubmitAddMember
 
@@ -66,7 +72,7 @@ init session slug =
       , userList = NotAsked
       , memberChanges = []
       , addMemberQuery = ""
-      , addMemberError = ""
+      , addMemberRole = Backend.Enum.TeamRole.Member
       }
     , Cmd.batch [ fetchTeam slug, getUserList ]
     )
@@ -120,7 +126,7 @@ update msg model =
             , Cmd.none
             )
 
-        RoleDropDownClicked role member ->
+        RoleDropDownClicked member role ->
             let
                 op =
                     case member of
@@ -146,13 +152,13 @@ update msg model =
                 Success userList ->
                     case List.head (List.filter (\u -> nameAndEmail u == model.addMemberQuery) userList) of
                         Just u ->
-                            ( { model | addMemberQuery = "", memberChanges = addMember u model.memberChanges }, Cmd.none )
+                            ( { model | addMemberQuery = "", memberChanges = addUserToTeam u model.addMemberRole model.memberChanges, addMemberRole = Member }, Cmd.none )
 
                         Nothing ->
-                            ( { model | addMemberError = "no user found in userlist" }, Cmd.none )
+                            ( { model | edit = EditMembers (Just (ErrString "no user found in userlist")) }, Cmd.none )
 
                 _ ->
-                    ( { model | addMemberError = "failed to fetch userlist" }, Cmd.none )
+                    ( { model | edit = EditMembers (Just (ErrString "failed to fetch userlist")) }, Cmd.none )
 
         ClickedSaveTeamMembers team changes ->
             ( model, Cmd.batch (List.concatMap (mapMemberChangeToCmds team) changes) )
@@ -160,22 +166,28 @@ update msg model =
         GotSaveTeamMembersResponse r ->
             case r of
                 Success _ ->
-                    ( { model | team = r, edit = View }, Cmd.none )
+                    ( { model | team = r, memberChanges = initMembers r, edit = View }, Cmd.none )
 
                 Failure error ->
-                    ( { model | edit = EditMembers (Just error) }, Cmd.none )
+                    ( { model | edit = EditMembers (Just (ErrGraphql error)) }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
+
+        AddMemberRoleDropDownClicked r ->
+            ( { model | addMemberRole = r }, Cmd.none )
 
 
 mapMemberChangeToCmds : TeamData -> MemberChange -> List (Cmd Msg)
 mapMemberChangeToCmds team change =
     case change of
         Add r m ->
-            [ Api.Do.mutate (addMemberToTeam team m.user) (RemoteData.fromResult >> GotSaveTeamMembersResponse)
-            , Api.Do.mutate (setTeamMemberRole team m r) (RemoteData.fromResult >> GotSaveTeamMembersResponse)
-            ]
+            case r of
+                Backend.Enum.TeamRole.Member ->
+                    [ Api.Do.mutate (addMemberToTeam team m.user) (RemoteData.fromResult >> GotSaveTeamMembersResponse) ]
+
+                Backend.Enum.TeamRole.Owner ->
+                    [ Api.Do.mutate (addOwnerToTeam team m.user) (RemoteData.fromResult >> GotSaveTeamMembersResponse) ]
 
         Remove m ->
             [ Api.Do.mutate (removeMemberFromTeam team m.user) (RemoteData.fromResult >> GotSaveTeamMembersResponse) ]
@@ -225,12 +237,9 @@ isMember members member =
         |> not
 
 
-addMember : UserData -> List MemberChange -> List MemberChange
-addMember user members =
+addUserToTeam : UserData -> TeamRole -> List MemberChange -> List MemberChange
+addUserToTeam user role members =
     let
-        role =
-            Backend.Enum.TeamRole.Member
-
         member =
             { user = user, role = role }
     in
@@ -478,35 +487,39 @@ addUserCandidateOption user =
     option [] [ text (nameAndEmail user) ]
 
 
-editMemberRow : User -> MemberChange -> Html Msg
-editMemberRow currentUser member =
+editMemberRow : MemberChange -> Html Msg
+editMemberRow member =
+    let
+        roleSelector =
+            viewRoleSelector (memberData member).role (RoleDropDownClicked member)
+    in
     case member of
         Unchanged m ->
             tr []
-                [ td [] [ text (m.user.email ++ " unchanged") ]
-                , td [] [ roleSelector currentUser member False ]
-                , td [] [ button [ class "red", onClick (RemoveMember member) ] [ text "Remove" ] ]
+                [ td [] [ text m.user.email ]
+                , td [] [ roleSelector False ]
+                , td [] [ button [ class "button small", onClick (RemoveMember member) ] [ text "Remove" ] ]
                 ]
 
         Remove m ->
             tr []
-                [ td [ class "strikethrough" ] [ text (m.user.email ++ " remove") ]
-                , td [] [ roleSelector currentUser member True ]
-                , td [] [ button [ class "red", onClick (Undo member) ] [ text "Undo" ] ]
+                [ td [ class "strikethrough" ] [ text m.user.email ]
+                , td [] [ roleSelector True ]
+                , td [] [ button [ class "button small", onClick (Undo member) ] [ text "Undo" ] ]
                 ]
 
         Add _ m ->
             tr []
-                [ td [] [ text (m.user.email ++ " add") ]
-                , td [] [ roleSelector currentUser member False ]
-                , td [] [ button [ class "red", onClick (Undo member) ] [ text "Undo" ] ]
+                [ td [] [ text m.user.email ]
+                , td [] [ roleSelector False ]
+                , td [] [ button [ class "button small", onClick (Undo member) ] [ text "Undo" ] ]
                 ]
 
         ChangeRole _ m ->
             tr []
-                [ td [] [ text (m.user.email ++ " rolechange") ]
-                , td [] [ roleSelector currentUser member False, text "*" ]
-                , td [] [ button [ class "red", onClick (Undo member) ] [ text "Undo" ] ]
+                [ td [] [ text m.user.email ]
+                , td [] [ roleSelector False, text " *" ]
+                , td [] [ button [ class "button small", onClick (Undo member) ] [ text "Undo" ] ]
                 ]
 
 
@@ -520,47 +533,26 @@ userIsMember currentUser member =
             False
 
 
-roleSelector : User -> MemberChange -> Bool -> Html Msg
-roleSelector currentUser member disable =
+viewRoleSelector : TeamRole -> (TeamRole -> Msg) -> Bool -> Html Msg
+viewRoleSelector currentRole action disable =
+    select [ disabled disable ] (Backend.Enum.TeamRole.list |> List.map (roleOption currentRole action))
+
+
+roleOption : TeamRole -> (TeamRole -> Msg) -> TeamRole -> Html Msg
+roleOption currentRole action role =
     let
-        currentUserIsMember =
-            userIsMember currentUser (memberData member)
-
-        isAdmin =
-            (memberData member).role == Owner
-
-        isGlobalAdmin =
-            Session.isGlobalAdmin currentUser
-    in
-    select [ disabled (currentUserIsMember && isAdmin && not isGlobalAdmin || disable) ] (Backend.Enum.TeamRole.list |> List.map (roleOption member))
-
-
-roleOption : MemberChange -> TeamRole -> Html Msg
-roleOption member role =
-    let
-        roleID =
-            Backend.Enum.TeamRole.toString role
-
         roleStr =
-            roleString role
-
-        newRole =
-            case member of
-                ChangeRole r _ ->
-                    r
-
-                _ ->
-                    (memberData member).role
+            Backend.Enum.TeamRole.toString role
     in
     option
-        [ onClick (RoleDropDownClicked role member)
-        , selected (role == newRole)
-        , value roleID
+        [ onClick (action role)
+        , selected (role == currentRole)
+        , value roleStr
         ]
         [ text roleStr ]
 
 
-viewEditMembers : Model -> TeamData -> Maybe (Graphql.Http.Error TeamData) -> Html Msg
+viewEditMembers : Model -> TeamData -> Maybe EditError -> Html Msg
 viewEditMembers model team _ =
     div [ class "card" ]
         (case model.userList of
@@ -592,11 +584,13 @@ viewEditMembers model team _ =
                             [ td []
                                 [ input [ list "userCandidates", Html.Attributes.form "addMemberForm", type_ "text", value model.addMemberQuery, onInput AddMemberQueryChanged ] []
                                 , datalist [ id "userCandidates" ] (List.map addUserCandidateOption userList)
-                                , p [] [ text model.addMemberError ]
                                 ]
-                            , td [ colspan 2 ] [ button [ type_ "submit", Html.Attributes.form "addMemberForm" ] [ text "add" ] ]
+
+                            --
+                            , td [] [ viewRoleSelector Backend.Enum.TeamRole.Member AddMemberRoleDropDownClicked False ]
+                            , td [ colspan 2 ] [ button [ type_ "submit", class "small button", Html.Attributes.form "addMemberForm" ] [ text "Add" ] ]
                             ]
-                            :: List.map (editMemberRow (Session.user model.session)) model.memberChanges
+                            :: List.map editMemberRow model.memberChanges
                         )
                     ]
                 , button [ onClick (ClickedSaveTeamMembers team model.memberChanges) ] [ text "Save changes" ]
