@@ -11,7 +11,7 @@ import Backend.Object.Team as Team
 import Backend.Object.TeamMember as TeamMember
 import Backend.Object.TeamMetadata as TeamMetadata
 import Backend.Query as Query
-import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug, Uuid)
+import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet, with)
 import ISO8601

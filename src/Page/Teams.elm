@@ -5,7 +5,7 @@ import Api.Error exposing (errorToString)
 import Api.Team exposing (TeamData, getTeams)
 import Backend.Scalar
 import Graphql.Http
-import Html exposing (Html, div, h2, p, table, tbody, td, text, th, thead, tr)
+import Html exposing (Html, div, h2, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class)
 import RemoteData exposing (RemoteData(..))
 import Route exposing (link)

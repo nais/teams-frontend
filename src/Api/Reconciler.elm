@@ -8,7 +8,7 @@ import Backend.Object.ReconcilerConfig as ReconcilerConfig
 import Backend.Query as Query
 import Backend.Scalar exposing (ReconcilerName)
 import Graphql.Operation exposing (RootQuery)
-import Graphql.SelectionSet exposing (SelectionSet, mapOrFail)
+import Graphql.SelectionSet exposing (SelectionSet)
 
 
 type alias ReconcilerConfigData =
