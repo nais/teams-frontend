@@ -15,7 +15,6 @@ type Route
     | Teams
     | CreateTeam
     | Team Backend.Scalar.Slug
-    | EditTeam Backend.Scalar.Slug
 
 
 parser : Parser (Route -> a) a
@@ -25,7 +24,6 @@ parser =
         , Parser.map ReconcilerAdmin (s "admin" </> s "synchronization")
         , Parser.map Teams (s "teams")
         , Parser.map CreateTeam (s "teams" </> s "create")
-        , Parser.map (\s -> EditTeam (Slug s)) (s "teams" </> string </> s "edit")
         , Parser.map (\s -> Team (Slug s)) (s "teams" </> string)
         ]
 
@@ -69,9 +67,6 @@ routeToString page =
 
                 CreateTeam ->
                     [ "teams", "create" ]
-
-                EditTeam (Slug id) ->
-                    [ "teams", id, "edit" ]
 
                 Team (Slug id) ->
                     [ "teams", id ]

@@ -5,14 +5,13 @@ import Api.User exposing (UserData)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Graphql.Http
-import Html exposing (Html, a, button, div, h1, header, li, main_, nav, p, text, ul)
+import Html exposing (Html, a, div, h1, header, li, main_, nav, p, text, ul)
 import Html.Attributes exposing (class, classList, href, id)
 import Page.CreateTeam as CreateTeam
-import Page.EditTeam as EditTeam
 import Page.Error as Error
-import Page.Home as Home exposing (maybeRouteToString)
+import Page.Home as Home
 import Page.ReconcilerAdmin as ReconcilerAdmin
-import Page.Team as Team
+import Page.Team as Team exposing (slugstr)
 import Page.Teams as Teams
 import RemoteData exposing (RemoteData(..))
 import Route exposing (Route(..), link)
@@ -29,7 +28,6 @@ type Model
     = Home Home.Model
     | Admin ReconcilerAdmin.Model
     | Team Team.Model
-    | EditTeam EditTeam.Model
     | Teams Teams.Model
     | CreateTeam CreateTeam.Model
     | Error Error.Model
@@ -45,7 +43,6 @@ type Msg
     | GotHomeMsg Home.Msg
     | GotAdminMsg ReconcilerAdmin.Msg
     | GotTeamMsg Team.Msg
-    | GotEditTeamMsg EditTeam.Msg
     | GotTeamsMsg Teams.Msg
     | GotCreateTeamMsg CreateTeam.Msg
     | LinkClicked Browser.UrlRequest
@@ -96,9 +93,6 @@ changeRouteTo maybeRoute session =
                 Just (Route.Team id) ->
                     Team.init session id |> updateWith Team GotTeamMsg
 
-                Just (Route.EditTeam id) ->
-                    EditTeam.init session id |> updateWith EditTeam GotEditTeamMsg
-
                 Nothing ->
                     Error.init session "404" |> updateWith Error (\_ -> NoOp)
 
@@ -131,12 +125,6 @@ update msg model =
 
         ( GotTeamMsg subMsg, Team subModel ) ->
             Team.update subMsg subModel |> updateWith Team GotTeamMsg
-
-        ( GotEditTeamMsg (EditTeam.GotUpdateTeamResponse (Ok team)), EditTeam subModel ) ->
-            ( model, Nav.pushUrl (Session.navKey subModel.session) (Route.routeToString (Route.Team team.slug)) )
-
-        ( GotEditTeamMsg subMsg, EditTeam subModel ) ->
-            EditTeam.update subMsg subModel |> updateWith EditTeam GotEditTeamMsg
 
         ( GotTeamsMsg subMsg, Teams subModel ) ->
             Teams.update subMsg subModel |> updateWith Teams GotTeamsMsg
@@ -177,9 +165,6 @@ view model =
 
                 Teams subModel ->
                     Teams.view subModel |> Html.map GotTeamsMsg
-
-                EditTeam subModel ->
-                    EditTeam.view subModel |> Html.map GotEditTeamMsg
 
                 CreateTeam subModel ->
                     CreateTeam.view subModel |> Html.map GotCreateTeamMsg
@@ -244,14 +229,10 @@ viewNav model =
                 Team teamPage ->
                     case teamPage.team of
                         Success team ->
-                            [ menuItem model (Route.Team team.slug) True (EditTeam.slugstr team.slug) ]
+                            [ menuItem model (Route.Team team.slug) True (slugstr team.slug) ]
 
                         _ ->
                             []
-
-                EditTeam edit ->
-                    [ menuItem model (Route.EditTeam edit.team.slug) True "Edit team"
-                    ]
 
                 CreateTeam _ ->
                     [ menuItem model Route.CreateTeam True "Create team"
@@ -288,9 +269,6 @@ isActiveRoute model target =
             True
 
         ( Team _, Route.Team _ ) ->
-            True
-
-        ( EditTeam _, Route.EditTeam _ ) ->
             True
 
         ( Admin _, Route.ReconcilerAdmin ) ->
@@ -340,9 +318,6 @@ toSession model =
             m.session
 
         Team m ->
-            m.session
-
-        EditTeam m ->
             m.session
 
         Teams m ->
