@@ -561,13 +561,13 @@ roleOption member role =
 
 
 viewEditMembers : Model -> TeamData -> Maybe (Graphql.Http.Error TeamData) -> Html Msg
-viewEditMembers model team err =
+viewEditMembers model team _ =
     div [ class "card" ]
         (case model.userList of
             NotAsked ->
                 [ text "userlist not asked for" ]
 
-            Failure f ->
+            Failure _ ->
                 [ text "failed" ]
 
             Loading ->
