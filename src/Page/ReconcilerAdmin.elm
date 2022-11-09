@@ -364,7 +364,7 @@ onClickStopPropagation msg =
 modal : String -> Msg -> List (Html Msg) -> Html Msg
 modal title hide content =
     div [ class "modal", onClick hide ]
-        [ div [ onClickStopPropagation NoOp ] ([ h3 [] [ text title ] ] ++ content) ]
+        [ div [ onClickStopPropagation NoOp ] (h3 [] [ text title ] :: content) ]
 
 
 viewLoadFailure : String -> Html Msg
