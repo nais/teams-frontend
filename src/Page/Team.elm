@@ -2,7 +2,7 @@ module Page.Team exposing (..)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, getTeam, roleString, updateTeam)
+import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, addMemberToTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, updateTeam)
 import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (RoleName(..), Slug)
@@ -44,9 +44,11 @@ type alias Model =
 type Msg
     = GotTeamResponse (RemoteData (Graphql.Http.Error TeamData) TeamData)
     | GotSaveOverviewResponse (RemoteData (Graphql.Http.Error TeamData) TeamData)
+    | GotSaveTeamMembersResponse (RemoteData (Graphql.Http.Error TeamData) TeamData)
     | ClickedEditMain
     | ClickedEditMembers
     | ClickedSaveOverview TeamData
+    | ClickedSaveTeamMembers TeamData (List MemberChange)
     | PurposeChanged String
     | AddMemberQueryChanged String
     | RemoveMember MemberChange
@@ -151,6 +153,38 @@ update msg model =
 
                 _ ->
                     ( { model | addMemberError = "failed to fetch userlist" }, Cmd.none )
+
+        ClickedSaveTeamMembers team changes ->
+            ( model, Cmd.batch (List.concatMap (mapMemberChangeToCmds team) changes) )
+
+        GotSaveTeamMembersResponse r ->
+            case r of
+                Success _ ->
+                    ( { model | team = r, edit = View }, Cmd.none )
+
+                Failure error ->
+                    ( { model | edit = EditMembers (Just error) }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+
+mapMemberChangeToCmds : TeamData -> MemberChange -> List (Cmd Msg)
+mapMemberChangeToCmds team change =
+    case change of
+        Add r m ->
+            [ Api.Do.mutate (addMemberToTeam team m.user) (RemoteData.fromResult >> GotSaveTeamMembersResponse)
+            , Api.Do.mutate (setTeamMemberRole team m r) (RemoteData.fromResult >> GotSaveTeamMembersResponse)
+            ]
+
+        Remove m ->
+            [ Api.Do.mutate (removeMemberFromTeam team m.user) (RemoteData.fromResult >> GotSaveTeamMembersResponse) ]
+
+        ChangeRole r m ->
+            [ Api.Do.mutate (setTeamMemberRole team m r) (RemoteData.fromResult >> GotSaveTeamMembersResponse) ]
+
+        Unchanged _ ->
+            []
 
 
 initMembers : RemoteData (Graphql.Http.Error TeamData) TeamData -> List MemberChange
@@ -327,9 +361,9 @@ metadataRow kv =
             simpleRow kv.key ""
 
 
-editorButton : Msg -> Model -> TeamData -> List (Html Msg)
-editorButton msg model team =
-    if editor team (Session.user model.session) then
+editorButton : Msg -> User -> TeamData -> List (Html Msg)
+editorButton msg user team =
+    if editor team user then
         [ div [ class "small button", onClick msg ] [ text "Edit" ] ]
 
     else
@@ -383,12 +417,12 @@ viewTeamMetaTable metadata =
                 ]
 
 
-viewTeamOverview : Model -> TeamData -> Html Msg
-viewTeamOverview model team =
+viewTeamOverview : User -> TeamData -> Html Msg
+viewTeamOverview user team =
     div [ class "card" ]
         [ div [ class "title" ]
             (h2 [] [ text ("Team " ++ slugstr team.slug) ]
-                :: editorButton ClickedEditMain model team
+                :: editorButton ClickedEditMain user team
             )
         , p [] [ text team.purpose ]
         , viewTeamMetaTable team.metadata
@@ -415,12 +449,12 @@ viewEditTeamOverview team error =
         ]
 
 
-viewMembers : Model -> TeamData -> Html Msg
-viewMembers model team =
+viewMembers : User -> TeamData -> Html Msg
+viewMembers user team =
     div [ class "card" ]
         [ div [ class "title" ]
             (h2 [] [ text "Members" ]
-                :: editorButton ClickedEditMembers model team
+                :: editorButton ClickedEditMembers user team
             )
         , table []
             [ thead []
@@ -542,9 +576,9 @@ viewEditMembers model team err =
             Success userList ->
                 [ div [ class "title" ]
                     (h2 [] [ text "Members" ]
-                        :: editorButton ClickedEditMembers model team
+                        :: editorButton ClickedEditMembers (Session.user model.session) team
                     )
-                , form [ id "newMember", onSubmit OnSubmitAddMember ] []
+                , form [ id "addMemberForm", onSubmit OnSubmitAddMember ] []
                 , table []
                     [ thead []
                         [ tr []
@@ -556,15 +590,16 @@ viewEditMembers model team err =
                     , tbody []
                         (tr []
                             [ td []
-                                [ input [ list "userCandidates", Html.Attributes.form "newMember", type_ "text", value model.addMemberQuery, onInput AddMemberQueryChanged ] []
+                                [ input [ list "userCandidates", Html.Attributes.form "addMemberForm", type_ "text", value model.addMemberQuery, onInput AddMemberQueryChanged ] []
                                 , datalist [ id "userCandidates" ] (List.map addUserCandidateOption userList)
                                 , p [] [ text model.addMemberError ]
                                 ]
-                            , td [ colspan 2 ] [ button [ type_ "submit", Html.Attributes.form "newMember" ] [ text "add" ] ]
+                            , td [ colspan 2 ] [ button [ type_ "submit", Html.Attributes.form "addMemberForm" ] [ text "add" ] ]
                             ]
                             :: List.map (editMemberRow (Session.user model.session)) model.memberChanges
                         )
                     ]
+                , button [ onClick (ClickedSaveTeamMembers team model.memberChanges) ] [ text "Save changes" ]
                 ]
         )
 
@@ -579,24 +614,28 @@ viewLogs team =
 
 viewCards : Model -> TeamData -> Html Msg
 viewCards model team =
+    let
+        user =
+            Session.user model.session
+    in
     div [ class "cards" ]
         (case model.edit of
             View ->
-                [ viewTeamOverview model team
+                [ viewTeamOverview user team
                 , viewSyncErrors team
-                , viewMembers model team
+                , viewMembers user team
                 , viewLogs team
                 ]
 
             EditMain err ->
                 [ viewEditTeamOverview team err
                 , viewSyncErrors team
-                , viewMembers model team
+                , viewMembers user team
                 , viewLogs team
                 ]
 
             EditMembers err ->
-                [ viewTeamOverview model team
+                [ viewTeamOverview user team
                 , viewSyncErrors team
                 , viewEditMembers model team err
                 , viewLogs team
