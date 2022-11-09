@@ -166,15 +166,7 @@ syncErrorSelection =
 mapToMaybeDateTime : SelectionSet (Maybe Scalar.Time) scope -> SelectionSet (Maybe ISO8601.Time) scope
 mapToMaybeDateTime =
     Graphql.SelectionSet.map
-        (\x ->
-            case x of
-                Just (Scalar.Time value) ->
-                    ISO8601.fromString value
-                        |> Result.toMaybe
-
-                Nothing ->
-                    Nothing
-        )
+        (Maybe.map (\(Scalar.Time value) -> ISO8601.fromString value) >> Maybe.andThen Result.toMaybe)
 
 
 mapToDateTime : SelectionSet Scalar.Time scope -> SelectionSet ISO8601.Time scope
