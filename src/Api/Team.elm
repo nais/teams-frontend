@@ -88,6 +88,15 @@ addMemberToTeam team user =
         teamDataFullSelection
 
 
+addOwnerToTeam : TeamData -> UserData -> SelectionSet TeamData RootMutation
+addOwnerToTeam team user =
+    Mutation.addTeamOwners
+        { slug = team.slug
+        , userIds = [ user.id ]
+        }
+        teamDataFullSelection
+
+
 removeMemberFromTeam : TeamData -> UserData -> SelectionSet TeamData RootMutation
 removeMemberFromTeam team user =
     Mutation.removeUsersFromTeam
