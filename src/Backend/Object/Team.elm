@@ -81,3 +81,12 @@ enabled =
 lastSuccessfulSync : SelectionSet (Maybe Backend.ScalarCodecs.Time) Backend.Object.Team
 lastSuccessfulSync =
     Object.selectionForField "(Maybe ScalarCodecs.Time)" "lastSuccessfulSync" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecTime |> .decoder |> Decode.nullable)
+
+
+{-| Current reconciler state for the team.
+-}
+reconcilerState :
+    SelectionSet decodesTo Backend.Object.ReconcilerState
+    -> SelectionSet decodesTo Backend.Object.Team
+reconcilerState object____ =
+    Object.selectionForCompositeField "reconcilerState" [] object____ Basics.identity

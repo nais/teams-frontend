@@ -9,12 +9,24 @@ type AuditLog
     = AuditLog
 
 
+type GcpProject
+    = GcpProject
+
+
+type NaisNamespace
+    = NaisNamespace
+
+
 type Reconciler
     = Reconciler
 
 
 type ReconcilerConfig
     = ReconcilerConfig
+
+
+type ReconcilerState
+    = ReconcilerState
 
 
 type Role

@@ -20,6 +20,90 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode exposing (Decoder)
 
 
+type alias SetGitHubTeamSlugRequiredArguments =
+    { teamSlug : Backend.ScalarCodecs.Slug
+    , gitHubTeamSlug : Backend.ScalarCodecs.Slug
+    }
+
+
+{-| Set the GitHub team slug for a Console team.
+
+  - teamSlug - The slug for the Console team.
+  - gitHubTeamSlug - The slug for the connected GitHub team.
+
+-}
+setGitHubTeamSlug :
+    SetGitHubTeamSlugRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Team
+    -> SelectionSet decodesTo RootMutation
+setGitHubTeamSlug requiredArgs____ object____ =
+    Object.selectionForCompositeField "setGitHubTeamSlug" [ Argument.required "teamSlug" requiredArgs____.teamSlug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "gitHubTeamSlug" requiredArgs____.gitHubTeamSlug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
+
+
+type alias SetGoogleWorkspaceGroupEmailRequiredArguments =
+    { teamSlug : Backend.ScalarCodecs.Slug
+    , googleWorkspaceGroupEmail : String
+    }
+
+
+{-| Set the Google Workspace group email for a Console team.
+
+  - teamSlug - The slug for the Console team.
+  - googleWorkspaceGroupEmail - The email for the connected Google workspace group.
+
+-}
+setGoogleWorkspaceGroupEmail :
+    SetGoogleWorkspaceGroupEmailRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Team
+    -> SelectionSet decodesTo RootMutation
+setGoogleWorkspaceGroupEmail requiredArgs____ object____ =
+    Object.selectionForCompositeField "setGoogleWorkspaceGroupEmail" [ Argument.required "teamSlug" requiredArgs____.teamSlug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "googleWorkspaceGroupEmail" requiredArgs____.googleWorkspaceGroupEmail Encode.string ] object____ Basics.identity
+
+
+type alias SetGcpProjectIdRequiredArguments =
+    { teamSlug : Backend.ScalarCodecs.Slug
+    , gcpEnvironment : String
+    , gcpProjectId : String
+    }
+
+
+{-| Set the GCP project ID for a Console team in a specific environment.
+
+  - teamSlug - The slug for the Console team.
+  - gcpEnvironment - The environment for the GCP project.
+  - gcpProjectId - The project ID for the connected GCP project.
+
+-}
+setGcpProjectId :
+    SetGcpProjectIdRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Team
+    -> SelectionSet decodesTo RootMutation
+setGcpProjectId requiredArgs____ object____ =
+    Object.selectionForCompositeField "setGcpProjectId" [ Argument.required "teamSlug" requiredArgs____.teamSlug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "gcpEnvironment" requiredArgs____.gcpEnvironment Encode.string, Argument.required "gcpProjectId" requiredArgs____.gcpProjectId Encode.string ] object____ Basics.identity
+
+
+type alias SetNaisNamespaceRequiredArguments =
+    { teamSlug : Backend.ScalarCodecs.Slug
+    , gcpEnvironment : String
+    , naisNamespace : Backend.ScalarCodecs.Slug
+    }
+
+
+{-| Set the NAIS namespace for a Console team in a specific environment.
+
+  - teamSlug - The slug for the Console team.
+  - gcpEnvironment - The environment for the namespace.
+  - naisNamespace - The namespace.
+
+-}
+setNaisNamespace :
+    SetNaisNamespaceRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Team
+    -> SelectionSet decodesTo RootMutation
+setNaisNamespace requiredArgs____ object____ =
+    Object.selectionForCompositeField "setNaisNamespace" [ Argument.required "teamSlug" requiredArgs____.teamSlug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "gcpEnvironment" requiredArgs____.gcpEnvironment Encode.string, Argument.required "naisNamespace" requiredArgs____.naisNamespace (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
+
+
 type alias EnableReconcilerRequiredArguments =
     { name : Backend.ScalarCodecs.ReconcilerName }
 

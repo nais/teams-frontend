@@ -6,6 +6,9 @@ import Backend.InputObject exposing (CreateTeamInput, UpdateTeamInput)
 import Backend.Mutation as Mutation
 import Backend.Object
 import Backend.Object.AuditLog as AuditLog
+import Backend.Object.GcpProject as GcpProject
+import Backend.Object.NaisNamespace as NaisNamespace
+import Backend.Object.ReconcilerState as ReconcilerState
 import Backend.Object.SyncError as SyncError
 import Backend.Object.Team as Team
 import Backend.Object.TeamMember as TeamMember
@@ -48,6 +51,26 @@ type alias SyncErrorData =
     }
 
 
+type alias GCPProject =
+    { environment : String
+    , projectID : String
+    }
+
+
+type alias NaisNamespace =
+    { environment : String
+    , namespace : Slug
+    }
+
+
+type alias TeamSyncState =
+    { githubTeamSlug : Maybe Slug
+    , googleWorkspaceGroupEmail : Maybe String
+    , gcpProjects : List GCPProject
+    , naisNamespaces : List NaisNamespace
+    }
+
+
 type alias TeamData =
     { slug : Slug
     , purpose : String
@@ -56,6 +79,7 @@ type alias TeamData =
     , metadata : List KeyValueData
     , syncErrors : List SyncErrorData
     , lastSuccessfulSync : Maybe ISO8601.Time
+    , syncState : Maybe TeamSyncState
     }
 
 
@@ -126,6 +150,7 @@ teamDataSelection =
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded Nothing
+        |> Graphql.SelectionSet.hardcoded Nothing
 
 
 teamDataFullSelection : SelectionSet TeamData Backend.Object.Team
@@ -138,6 +163,7 @@ teamDataFullSelection =
         |> with (Team.metadata keyValueSelection)
         |> with (Team.syncErrors syncErrorSelection)
         |> with (Team.lastSuccessfulSync |> mapToMaybeDateTime)
+        |> with (Graphql.SelectionSet.map Just (Team.reconcilerState syncStateSelection))
 
 
 teamMemberSelection : SelectionSet TeamMemberData Backend.Object.TeamMember
@@ -162,6 +188,29 @@ keyValueSelection =
     Graphql.SelectionSet.map2 KeyValueData
         TeamMetadata.key
         TeamMetadata.value
+
+
+syncStateSelection : SelectionSet TeamSyncState Backend.Object.ReconcilerState
+syncStateSelection =
+    Graphql.SelectionSet.succeed TeamSyncState
+        |> with ReconcilerState.gitHubTeamSlug
+        |> with ReconcilerState.googleWorkspaceGroupEmail
+        |> with (ReconcilerState.gcpProjects gcpProjectSelection)
+        |> with (ReconcilerState.naisNamespaces naisNamespaceSelection)
+
+
+gcpProjectSelection : SelectionSet GCPProject Backend.Object.GcpProject
+gcpProjectSelection =
+    Graphql.SelectionSet.map2 GCPProject
+        GcpProject.environment
+        GcpProject.projectId
+
+
+naisNamespaceSelection : SelectionSet NaisNamespace Backend.Object.NaisNamespace
+naisNamespaceSelection =
+    Graphql.SelectionSet.map2 NaisNamespace
+        NaisNamespace.environment
+        NaisNamespace.namespace
 
 
 syncErrorSelection : SelectionSet SyncErrorData Backend.Object.SyncError
