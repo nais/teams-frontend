@@ -2,7 +2,7 @@ module Page.Team exposing (..)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, addMemberToTeam, addOwnerToTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, updateTeam)
+import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, TeamSyncState, addMemberToTeam, addOwnerToTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, updateTeam)
 import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (RoleName(..), Slug)
@@ -407,23 +407,94 @@ viewSyncErrors team =
                 ]
 
 
-viewTeamMetaTable : List KeyValueData -> Html msg
-viewTeamMetaTable metadata =
-    case metadata of
-        [] ->
-            text ""
+syncStateRows : TeamSyncState -> List (Html msg)
+syncStateRows state =
+    let
+        gitHub =
+            case state.githubTeamSlug of
+                Nothing ->
+                    []
 
-        _ ->
-            table []
-                [ thead []
+                Just slug ->
                     [ tr []
-                        [ th [] [ text "Key" ]
-                        , th [] [ text "Value" ]
+                        [ td [] [ text "GitHub team slug" ]
+                        , td [] [ text <| slugstr slug ]
                         ]
                     ]
-                , tbody []
-                    (List.map metadataRow metadata)
+
+        googleWorkspaceGroupEmail =
+            case state.googleWorkspaceGroupEmail of
+                Nothing ->
+                    []
+
+                Just email ->
+                    [ tr []
+                        [ td [] [ text "Google Workspace group email" ]
+                        , td [] [ text email ]
+                        ]
+                    ]
+
+        gcpProjects =
+            List.map
+                (\project ->
+                    tr []
+                        [ td [] [ text <| "GCP project for '" ++ project.environment ++ "'" ]
+                        , td [] [ text project.projectID ]
+                        ]
+                )
+                state.gcpProjects
+
+        naisNamespaces =
+            List.map
+                (\namespace ->
+                    tr []
+                        [ td [] [ text <| "GCP project for '" ++ namespace.environment ++ "'" ]
+                        , td [] [ text <| slugstr namespace.namespace ]
+                        ]
+                )
+                state.naisNamespaces
+    in
+    gitHub ++ googleWorkspaceGroupEmail ++ gcpProjects ++ naisNamespaces
+
+
+
+--{ githubTeamSlug : Maybe Slug
+--, googleWorkspaceGroupEmail : Maybe String
+--, gcpProjects : List GCPProject
+--, naisNamespaces : List NaisNamespace
+
+
+viewStateTable : TeamData -> Html msg
+viewStateTable team =
+    let
+        metaRows =
+            List.map metadataRow team.metadata
+
+        stateRows =
+            case team.syncState of
+                Nothing ->
+                    []
+
+                Just syncState ->
+                    syncStateRows syncState
+    in
+    table []
+        [ thead []
+            [ tr []
+                [ th [] [ text "Description" ]
+                , th [] [ text "Value" ]
                 ]
+            ]
+        , tbody [] (metaRows ++ stateRows)
+        ]
+
+
+viewTeamState : TeamData -> Html Msg
+viewTeamState team =
+    div [ class "card" ]
+        [ h2 [] [ text "Managed resources" ]
+        , viewStateTable team
+        ]
 
 
 viewTeamOverview : User -> TeamData -> Html Msg
@@ -434,7 +505,6 @@ viewTeamOverview user team =
                 :: editorButton ClickedEditMain user team
             )
         , p [] [ text team.purpose ]
-        , viewTeamMetaTable team.metadata
         ]
 
 
@@ -454,7 +524,6 @@ viewEditTeamOverview team error =
         , input [ type_ "text", Html.Attributes.placeholder "Describe team's purpose", onInput PurposeChanged, value team.purpose ] []
         , errorMessage
         , button [ onClick (ClickedSaveOverview team) ] [ text "Save changes" ]
-        , viewTeamMetaTable team.metadata
         ]
 
 
@@ -617,6 +686,7 @@ viewCards model team =
             View ->
                 [ viewTeamOverview user team
                 , viewSyncErrors team
+                , viewTeamState team
                 , viewMembers user team
                 , viewLogs team
                 ]
@@ -624,6 +694,7 @@ viewCards model team =
             EditMain err ->
                 [ viewEditTeamOverview team err
                 , viewSyncErrors team
+                , viewTeamState team
                 , viewMembers user team
                 , viewLogs team
                 ]
@@ -631,6 +702,7 @@ viewCards model team =
             EditMembers err ->
                 [ viewTeamOverview user team
                 , viewSyncErrors team
+                , viewTeamState team
                 , viewEditMembers model team err
                 , viewLogs team
                 ]
