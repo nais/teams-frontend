@@ -216,7 +216,7 @@ reconcilerName (ReconcilerName s) =
 toggleReconcilerElement : ReconcilerData -> Html Msg
 toggleReconcilerElement rd =
     li [ class "checkbox" ]
-        [ label [ for (reconcilerEnabledId rd) ] [ text "Enabled" ]
+        [ label [ for (reconcilerEnabledId rd) ] [ text "Enable synchronization" ]
         , input
             [ type_ "checkbox"
             , checked rd.enabled
@@ -258,7 +258,7 @@ reconcilerDescription rd =
             div []
                 [ p []
                     [ text "Maintains "
-                    , a [ href "https://accounts.google.com" ] [ text "Google Accounts" ]
+                    , a [ href "https://accounts.google.com" ] [ text "Google Account" ]
                     , text " groups and memberships."
                     ]
                 , p []
@@ -332,29 +332,28 @@ reconcilerEnabledId rd =
 
 viewReconcilerConfig : ReconcilerData -> Html Msg
 viewReconcilerConfig rd =
-    form
-        [ onSubmit (Submit rd.name)
-        , classList
-            [ ( "reconcilerConfigured", rd.configured )
-            , ( "reconcilerNotConfigured", not rd.configured )
+    div [ class "card" ]
+        [ form
+            [ onSubmit (Submit rd.name)
+            , classList
+                [ ( "reconcilerConfigured", rd.configured )
+                , ( "reconcilerNotConfigured", not rd.configured )
+                ]
             ]
-        ]
-        [ h3 [] [ text rd.displayname ]
-        , reconcilerDescription rd
-        , ul []
-            (toggleReconcilerElement rd
-                :: List.map (configElement (OnInput rd.name)) rd.config
-            )
-        , button [ type_ "submit" ] [ text "Save" ]
+            [ h2 [] [ text rd.displayname ]
+            , reconcilerDescription rd
+            , ul []
+                (toggleReconcilerElement rd
+                    :: List.map (configElement (OnInput rd.name)) rd.config
+                )
+            , button [ type_ "submit" ] [ text "Save" ]
+            ]
         ]
 
 
 viewForm : List ReconcilerData -> Html Msg
 viewForm lrd =
-    div []
-        (h2 [] [ text "Configure synchronizers" ]
-            :: List.map viewReconcilerConfig lrd
-        )
+    div [ class "cards" ] (List.map viewReconcilerConfig lrd)
 
 
 onClickStopPropagation : msg -> Html.Attribute msg
@@ -365,13 +364,13 @@ onClickStopPropagation msg =
 modal : String -> Msg -> List (Html Msg) -> Html Msg
 modal title hide content =
     div [ class "modal", onClick hide ]
-        [ div [ onClickStopPropagation NoOp ] (h3 [] [ text title ] :: content) ]
+        [ div [ onClickStopPropagation NoOp ] (h2 [] [ text title ] :: content) ]
 
 
 viewLoadFailure : String -> Html Msg
 viewLoadFailure e =
     div []
-        [ h3 [] [ text "Failed to load data from server" ]
+        [ h2 [] [ text "Failed to load data from server" ]
         , p [ class "server-error-message" ] [ text e ]
         , button [ onClick Reload ] [ text "Try again" ]
         ]
@@ -393,10 +392,10 @@ view model =
                         ]
 
         NotAsked ->
-            h3 [] [ text "No data loaded yet" ]
+            h2 [] [ text "No data loaded yet" ]
 
         Loading ->
-            h3 [] [ text "Loading reconcilers..." ]
+            h2 [] [ text "Loading reconcilers..." ]
 
         Failure e ->
             viewLoadFailure (Api.Error.errorToString e)
