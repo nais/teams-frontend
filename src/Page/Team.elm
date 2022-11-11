@@ -400,7 +400,7 @@ viewSyncErrors team =
             div [ class "card error" ]
                 [ h2 [] [ text "Synchronization error" ]
                 , p [] [ text "Console failed to synchronize team ", strong [] [ text (slugstr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
-                , p [] [ text "If errors are caused by network outage, they will resolve automatically. If they persist for more than a few hours, please NAIS support." ]
+                , p [] [ text "If errors are caused by network outage, they will resolve automatically. If they persist for more than a few hours, please contact NAIS support." ]
                 , syncSuccess
                 , h3 [] [ text "Error messages" ]
                 , ul [ class "logs" ] (List.map errorLine team.syncErrors)
