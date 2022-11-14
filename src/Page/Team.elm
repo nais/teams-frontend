@@ -8,8 +8,8 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (RoleName(..), Slug)
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, button, datalist, div, em, form, h2, h3, input, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, classList, colspan, disabled, id, list, selected, type_, value)
+import Html exposing (Html, button, datalist, div, em, form, h2, h3, img, input, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, classList, colspan, disabled, id, list, selected, src, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List exposing (member)
@@ -565,34 +565,40 @@ editMemberRow member =
     let
         roleSelector =
             viewRoleSelector (memberData member).role (RoleDropDownClicked member)
+
+        viewButton cls svg txt msg =
+            button [ class <| "button small " ++ cls, onClick msg ]
+                [ img [ src <| "../public/icons/" ++ svg ++ ".svg" ] []
+                , text txt
+                ]
     in
     case member of
         Unchanged m ->
             tr []
                 [ td [] [ text m.user.email ]
                 , td [] [ roleSelector False ]
-                , td [] [ button [ class "button small", onClick (RemoveMember member) ] [ text "Remove" ] ]
+                , td [] [ viewButton "" "delete" "Remove" (RemoveMember member) ]
                 ]
 
         Remove m ->
             tr []
                 [ td [ class "strikethrough" ] [ text m.user.email ]
                 , td [] [ roleSelector True ]
-                , td [] [ button [ class "button small transparent", onClick (Undo member) ] [ text "Undo" ] ]
+                , td [] [ viewButton "transparent" "cancel" "Undo" (Undo member) ]
                 ]
 
         Add _ m ->
             tr []
                 [ td [] [ text m.user.email ]
                 , td [] [ roleSelector False ]
-                , td [] [ button [ class "button small transparent", onClick (Undo member) ] [ text "Undo" ] ]
+                , td [] [ viewButton "transparent" "cancel" "Undo" (Undo member) ]
                 ]
 
         ChangeRole _ m ->
             tr []
                 [ td [] [ text m.user.email ]
                 , td [] [ roleSelector False, text " *" ]
-                , td [] [ button [ class "button small transparent", onClick (Undo member) ] [ text "Undo" ] ]
+                , td [] [ viewButton "transparent" "cancel" "Undo" (Undo member) ]
                 ]
 
 
@@ -663,7 +669,12 @@ viewEditMembers model team _ =
 
                             --
                             , td [] [ viewRoleSelector Backend.Enum.TeamRole.Member AddMemberRoleDropDownClicked False ]
-                            , td [ colspan 2 ] [ button [ type_ "submit", class "small button", Html.Attributes.form "addMemberForm" ] [ text "Add" ] ]
+                            , td [ colspan 2 ]
+                                [ button [ type_ "submit", class "small button", Html.Attributes.form "addMemberForm" ]
+                                    [ img [ src <| "../public/icons/add.svg" ] []
+                                    , text "Add"
+                                    ]
+                                ]
                             ]
                             :: List.map editMemberRow model.memberChanges
                         )

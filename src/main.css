@@ -382,16 +382,23 @@ button,
     font-weight: bold;
     cursor: pointer;
     text-decoration: none !important;
-    display: inline-block;
+    display: flex;
+    align-content: space-evenly;
+    align-items: center;
+    gap: 0.25rem;
     width: auto;
     line-height: 1em;
     font-size: 1rem;
 }
 
+button svg {
+    color: green;
+}
+
 button.small,
 .button.small {
     font-size: 0.88rem;
-    padding: 0.5em 1em;
+    padding: 0.5em 0.75em;
     border: 1px solid var(--link);
     color: var(--link);
     background: var(--white);
