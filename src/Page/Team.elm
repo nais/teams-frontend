@@ -611,7 +611,12 @@ roleOption : TeamRole -> (TeamRole -> Msg) -> TeamRole -> Html Msg
 roleOption currentRole action role =
     let
         roleStr =
-            Backend.Enum.TeamRole.toString role
+            case role of
+                Member ->
+                    "Member"
+
+                Owner ->
+                    "Owner"
     in
     option
         [ onClick (action role)
