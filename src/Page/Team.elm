@@ -54,6 +54,7 @@ type Msg
     | ClickedEditMembers
     | ClickedSaveOverview TeamData
     | ClickedSaveTeamMembers TeamData (List MemberChange)
+    | ClickedCancelEditMembers
     | PurposeChanged String
     | AddMemberQueryChanged String
     | RemoveMember MemberChange
@@ -82,7 +83,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotTeamResponse r ->
-            ( { model | team = r, memberChanges = initMembers r }, Cmd.none )
+            ( { model | team = r }, Cmd.none )
 
         GotSaveOverviewResponse r ->
             case r of
@@ -99,7 +100,7 @@ update msg model =
             ( { model | edit = EditMain Nothing }, Cmd.none )
 
         ClickedEditMembers ->
-            ( { model | edit = EditMembers Nothing }, Cmd.none )
+            ( { model | edit = EditMembers Nothing, memberChanges = initMembers model.team }, Cmd.none )
 
         PurposeChanged s ->
             ( mapTeam (\team -> { team | purpose = s }) model, Cmd.none )
@@ -160,13 +161,16 @@ update msg model =
                 _ ->
                     ( { model | edit = EditMembers (Just (ErrString "failed to fetch userlist")) }, Cmd.none )
 
+        ClickedCancelEditMembers ->
+            ( { model | edit = View }, Cmd.none )
+
         ClickedSaveTeamMembers team changes ->
             ( model, Cmd.batch (List.concatMap (mapMemberChangeToCmds team) changes) )
 
         GotSaveTeamMembersResponse r ->
             case r of
                 Success _ ->
-                    ( { model | team = r, memberChanges = initMembers r, edit = View }, Cmd.none )
+                    ( { model | team = r, edit = View }, Cmd.none )
 
                 Failure error ->
                     ( { model | edit = EditMembers (Just (ErrGraphql error)) }, Cmd.none )
@@ -574,21 +578,21 @@ editMemberRow member =
             tr []
                 [ td [ class "strikethrough" ] [ text m.user.email ]
                 , td [] [ roleSelector True ]
-                , td [] [ button [ class "button small", onClick (Undo member) ] [ text "Undo" ] ]
+                , td [] [ button [ class "button small transparent", onClick (Undo member) ] [ text "Undo" ] ]
                 ]
 
         Add _ m ->
             tr []
                 [ td [] [ text m.user.email ]
                 , td [] [ roleSelector False ]
-                , td [] [ button [ class "button small", onClick (Undo member) ] [ text "Undo" ] ]
+                , td [] [ button [ class "button small transparent", onClick (Undo member) ] [ text "Undo" ] ]
                 ]
 
         ChangeRole _ m ->
             tr []
                 [ td [] [ text m.user.email ]
                 , td [] [ roleSelector False, text " *" ]
-                , td [] [ button [ class "button small", onClick (Undo member) ] [ text "Undo" ] ]
+                , td [] [ button [ class "button small transparent", onClick (Undo member) ] [ text "Undo" ] ]
                 ]
 
 
@@ -640,10 +644,7 @@ viewEditMembers model team _ =
                 [ text "loading" ]
 
             Success userList ->
-                [ div [ class "title" ]
-                    (h2 [] [ text "Members" ]
-                        :: editorButton ClickedEditMembers (Session.user model.session) team
-                    )
+                [ h2 [] [ text "Members" ]
                 , form [ id "addMemberForm", onSubmit OnSubmitAddMember ] []
                 , table []
                     [ thead []
@@ -667,7 +668,10 @@ viewEditMembers model team _ =
                             :: List.map editMemberRow model.memberChanges
                         )
                     ]
-                , button [ onClick (ClickedSaveTeamMembers team model.memberChanges) ] [ text "Save changes" ]
+                , div [ class "button-row" ]
+                    [ button [ onClick (ClickedSaveTeamMembers team model.memberChanges) ] [ text "Save members" ]
+                    , button [ class "transparent", onClick ClickedCancelEditMembers ] [ text "Cancel changes" ]
+                    ]
                 ]
         )
 

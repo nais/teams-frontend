@@ -365,6 +365,12 @@ select {
     background: var(--white);
 }
 
+.button-row {
+    display: flex;
+    justify-content: flex-start;
+    gap: 1rem;
+}
+
 button,
 .button {
     flex-grow: 0;
@@ -389,6 +395,15 @@ button.small,
     border: 1px solid var(--link);
     color: var(--link);
     background: var(--white);
+}
+
+button.transparent,
+.button.transparent {
+    background: transparent;
+    color: var(--link);
+    font-weight: normal;
+    text-decoration: underline !important;
+    border: 0;
 }
 
 button.red,
