@@ -55,6 +55,7 @@ type Msg
     | ClickedSaveOverview TeamData
     | ClickedSaveTeamMembers TeamData (List MemberChange)
     | ClickedCancelEditMembers
+    | ClickedCancelEditOverview
     | PurposeChanged String
     | AddMemberQueryChanged String
     | RemoveMember MemberChange
@@ -163,6 +164,14 @@ update msg model =
 
         ClickedCancelEditMembers ->
             ( { model | edit = View }, Cmd.none )
+
+        ClickedCancelEditOverview ->
+            case model.team of
+                Success team ->
+                    ( { model | edit = View }, fetchTeam team.slug )
+
+                _ ->
+                    ( { model | edit = View }, Cmd.none )
 
         ClickedSaveTeamMembers team changes ->
             ( model, Cmd.batch (List.concatMap (mapMemberChangeToCmds team) changes) )
@@ -377,7 +386,11 @@ metadataRow kv =
 editorButton : Msg -> User -> TeamData -> List (Html Msg)
 editorButton msg user team =
     if editor team user then
-        [ div [ class "small button", onClick msg ] [ text "Edit" ] ]
+        [ div [ class "small button", onClick msg ]
+            [ div [ class "icon edit" ] []
+            , text "Edit"
+            ]
+        ]
 
     else
         []
@@ -461,13 +474,6 @@ syncStateRows state =
     gitHub ++ googleWorkspaceGroupEmail ++ gcpProjects ++ naisNamespaces
 
 
-
---{ githubTeamSlug : Maybe Slug
---, googleWorkspaceGroupEmail : Maybe String
---, gcpProjects : List GCPProject
---, naisNamespaces : List NaisNamespace
-
-
 viewStateTable : TeamData -> Html msg
 viewStateTable team =
     let
@@ -527,7 +533,10 @@ viewEditTeamOverview team error =
         [ h2 [] [ text ("Team " ++ slugstr team.slug) ]
         , input [ type_ "text", Html.Attributes.placeholder "Describe team's purpose", onInput PurposeChanged, value team.purpose ] []
         , errorMessage
-        , button [ onClick (ClickedSaveOverview team) ] [ text "Save changes" ]
+        , div [ class "button-row" ]
+            [ button [ onClick (ClickedSaveOverview team) ] [ text "Save changes" ]
+            , button [ class "transparent", onClick ClickedCancelEditOverview ] [ text "Cancel changes" ]
+            ]
         ]
 
 
@@ -568,7 +577,7 @@ editMemberRow member =
 
         viewButton cls svg txt msg =
             button [ class <| "button small " ++ cls, onClick msg ]
-                [ img [ src <| "../public/icons/" ++ svg ++ ".svg" ] []
+                [ div [ class <| "icon " ++ svg ] []
                 , text txt
                 ]
     in
@@ -671,7 +680,7 @@ viewEditMembers model team _ =
                             , td [] [ viewRoleSelector Backend.Enum.TeamRole.Member AddMemberRoleDropDownClicked False ]
                             , td [ colspan 2 ]
                                 [ button [ type_ "submit", class "small button", Html.Attributes.form "addMemberForm" ]
-                                    [ img [ src <| "../public/icons/add.svg" ] []
+                                    [ div [ class "icon add" ] []
                                     , text "Add"
                                     ]
                                 ]

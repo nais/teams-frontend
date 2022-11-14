@@ -270,7 +270,7 @@ ul.logs li .meta {
 table {
     width: 100%;
     border-collapse: collapse;
-    margin: 0.5rem 0 2rem;
+    margin: 0.5rem 0 1rem;
 }
 
 td,
@@ -369,6 +369,7 @@ select {
     display: flex;
     justify-content: flex-start;
     gap: 1rem;
+    margin: 0.5rem 0;
 }
 
 button,
@@ -391,9 +392,18 @@ button,
     font-size: 1rem;
 }
 
-button svg {
-    color: green;
+button .icon,
+.button .icon {
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+    background-position: top left;
 }
+
+.icon.add { background-image: url('../public/icons/add.svg'); }
+.icon.cancel { background-image: url('../public/icons/cancel.svg'); }
+.icon.edit { background-image: url('../public/icons/edit.svg'); }
+.icon.delete { background-image: url('../public/icons/delete.svg'); }
 
 button.small,
 .button.small {
