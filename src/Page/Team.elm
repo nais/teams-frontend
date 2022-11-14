@@ -572,8 +572,22 @@ addUserCandidateOption user =
 editMemberRow : MemberChange -> Html Msg
 editMemberRow member =
     let
+        role =
+            case member of
+                Unchanged m ->
+                    m.role
+
+                Add r _ ->
+                    r
+
+                ChangeRole r _ ->
+                    r
+
+                Remove m ->
+                    m.role
+
         roleSelector =
-            viewRoleSelector (memberData member).role (RoleDropDownClicked member)
+            viewRoleSelector role (RoleDropDownClicked member)
 
         viewButton cls svg txt msg =
             button [ class <| "button small " ++ cls, onClick msg ]
@@ -623,26 +637,17 @@ userIsMember currentUser member =
 
 viewRoleSelector : TeamRole -> (TeamRole -> Msg) -> Bool -> Html Msg
 viewRoleSelector currentRole action disable =
-    select [ disabled disable ] (Backend.Enum.TeamRole.list |> List.map (roleOption currentRole action))
+    select [ value (roleString currentRole), disabled disable ] (Backend.Enum.TeamRole.list |> List.map (roleOption currentRole action))
 
 
 roleOption : TeamRole -> (TeamRole -> Msg) -> TeamRole -> Html Msg
 roleOption currentRole action role =
-    let
-        roleStr =
-            case role of
-                Member ->
-                    "Member"
-
-                Owner ->
-                    "Owner"
-    in
     option
         [ onClick (action role)
         , selected (role == currentRole)
-        , value roleStr
+        , value (roleString role)
         ]
-        [ text roleStr ]
+        [ text (roleString role) ]
 
 
 viewEditMembers : Model -> TeamData -> Maybe EditError -> Html Msg
@@ -677,7 +682,7 @@ viewEditMembers model team _ =
                                 ]
 
                             --
-                            , td [] [ viewRoleSelector Backend.Enum.TeamRole.Member AddMemberRoleDropDownClicked False ]
+                            , td [] [ viewRoleSelector model.addMemberRole AddMemberRoleDropDownClicked False ]
                             , td [ colspan 2 ]
                                 [ button [ type_ "submit", class "small button", Html.Attributes.form "addMemberForm" ]
                                     [ div [ class "icon add" ] []
