@@ -1,6 +1,6 @@
-import { resolve } from 'path'
-import { defineConfig } from 'vite'
-import { plugin } from 'vite-plugin-elm'
+import { resolve } from "path";
+import { defineConfig } from "vite";
+import { plugin } from "vite-plugin-elm";
 
 export default defineConfig({
   plugins: [plugin()],
@@ -18,8 +18,8 @@ export default defineConfig({
     outDir: "dist",
     rollupOptions: {
       input: {
-        index: resolve(__dirname, 'index.html'),
+        index: resolve(__dirname, "index.html"),
       },
     },
   },
-})
+});
