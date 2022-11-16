@@ -3,7 +3,8 @@ module Page.Home exposing (..)
 import Api.User exposing (UserData)
 import Browser.Navigation
 import Graphql.Http
-import Html exposing (Html, button, div, p, text)
+import Html exposing (Html, button, div, h2, p, text)
+import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Route exposing (Route)
 import Session exposing (Session, User(..))
@@ -63,22 +64,17 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        (p [] [ text "Welcome to NAIS console." ]
-            :: (case Session.user model.session of
-                    LoggedIn _ ->
-                        [ p [] [ text "Please continue as you wish." ]
-                        , button [ onClick LogoutClicked ] [ text "Log out" ]
-                        ]
-
-                    Unknown ->
-                        [ text "Loading..." ]
-
-                    Anonymous ->
-                        [ p [] [ text "Please log in to continue." ]
-                        , button [ onClick LoginClicked ] [ text "Log in" ]
-                        ]
-               )
-        )
+        [ div [ class "card" ]
+            [ h2 [] [ text "Welcome to NAIS console" ]
+            , p [] [ text "This site enables self-service management of teams. Any user in the organization may create a team and assign team members to teams they own." ]
+            , p [] [ text "Each team will get a Google group, a GCP project for each environment, a GitHub team, and an Azure AD security group." ]
+            , p [] [ text "Console will automatically keep these resources up to date with current team members." ]
+            , p [] [ text "Please log in to continue." ]
+            , div [ class "button-row" ]
+                [ button [ onClick LoginClicked ] [ text "Login" ]
+                ]
+            ]
+        ]
 
 
 mapUser : User -> Model -> Model

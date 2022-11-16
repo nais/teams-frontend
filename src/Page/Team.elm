@@ -367,8 +367,20 @@ auditLogLine log =
 
 simpleRow : String -> String -> Html msg
 simpleRow header content =
+    let
+        headerText =
+            case header of
+                "slack-channel-generic" ->
+                    "Generic Slack channel"
+
+                "slack-channel-platform-alerts" ->
+                    "Alerting Slack channel"
+
+                _ ->
+                    header
+    in
     tr []
-        [ td [] [ text header ]
+        [ td [] [ text headerText ]
         , td [] [ text content ]
         ]
 
@@ -465,7 +477,7 @@ syncStateRows state =
             List.map
                 (\namespace ->
                     tr []
-                        [ td [] [ text <| "GCP project for '" ++ namespace.environment ++ "'" ]
+                        [ td [] [ text <| "NAIS namespace in '" ++ namespace.environment ++ "' cluster" ]
                         , td [] [ text <| slugstr namespace.namespace ]
                         ]
                 )
