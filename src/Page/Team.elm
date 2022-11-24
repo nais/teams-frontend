@@ -8,8 +8,8 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (RoleName(..), Slug)
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, button, datalist, div, em, form, h2, h3, img, input, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, classList, colspan, disabled, id, list, selected, src, type_, value)
+import Html exposing (Html, button, datalist, div, em, form, h2, h3, input, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, classList, colspan, disabled, id, list, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List exposing (member)
@@ -563,14 +563,6 @@ viewEditTeamOverview team error =
 
 viewMembers : User -> TeamData -> Html Msg
 viewMembers user team =
-    let
-        memberRows =
-            if List.length team.members == 0 then
-                [ tr [] [ td [ colspan 2 ] [ text "This team has no members" ] ] ]
-
-            else
-                List.map memberRow team.members
-    in
     div [ class "card" ]
         [ div [ class "title" ]
             (h2 [] [ text "Members" ]
@@ -583,7 +575,13 @@ viewMembers user team =
                     , th [] [ text "Role" ]
                     ]
                 ]
-            , tbody [] memberRows
+            , tbody []
+                (if List.length team.members == 0 then
+                    [ tr [] [ td [ colspan 2 ] [ text "This team has no members" ] ] ]
+
+                 else
+                    List.map memberRow team.members
+                )
             ]
         ]
 
