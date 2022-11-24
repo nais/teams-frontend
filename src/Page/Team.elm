@@ -499,6 +499,9 @@ viewStateTable team =
 
                 Just syncState ->
                     syncStateRows syncState
+
+        rows =
+            metaRows ++ stateRows
     in
     table []
         [ thead []
@@ -507,7 +510,13 @@ viewStateTable team =
                 , th [] [ text "Value" ]
                 ]
             ]
-        , tbody [] (metaRows ++ stateRows)
+        , tbody []
+            (if List.length rows == 0 then
+                [ tr [] [ td [ colspan 2 ] [ text "Console has not created any resources yet" ] ] ]
+
+             else
+                rows
+            )
         ]
 
 
@@ -554,6 +563,14 @@ viewEditTeamOverview team error =
 
 viewMembers : User -> TeamData -> Html Msg
 viewMembers user team =
+    let
+        memberRows =
+            if List.length team.members == 0 then
+                [ tr [] [ td [ colspan 2 ] [ text "This team has no members" ] ] ]
+
+            else
+                List.map memberRow team.members
+    in
     div [ class "card" ]
         [ div [ class "title" ]
             (h2 [] [ text "Members" ]
@@ -566,7 +583,7 @@ viewMembers user team =
                     , th [] [ text "Role" ]
                     ]
                 ]
-            , tbody [] (List.map memberRow team.members)
+            , tbody [] memberRows
             ]
         ]
 
