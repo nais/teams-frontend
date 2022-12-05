@@ -15,6 +15,7 @@ type alias Model =
     { session : Session
     , slug : String
     , purpose : String
+    , slackAlertChannel : String
     , error : Maybe String
     }
 
@@ -24,6 +25,7 @@ type Msg
     | GotTeamCreatedResponse (Result (Graphql.Http.Error TeamData) TeamData)
     | SlugChanged String
     | PurposeChanged String
+    | SlackChannelChanged String
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -31,6 +33,7 @@ init session =
     ( { session = session
       , purpose = ""
       , slug = ""
+      , slackAlertChannel = ""
       , error = Nothing
       }
     , Cmd.none
@@ -63,6 +66,9 @@ update msg model =
         PurposeChanged s ->
             ( { model | purpose = s }, Cmd.none )
 
+        SlackChannelChanged s ->
+            ( { model | slackAlertChannel = s }, Cmd.none )
+
 
 textbox : (String -> Msg) -> String -> String -> String -> Html Msg
 textbox msg id lbl placeholder =
@@ -93,6 +99,7 @@ createTeamForm model =
             (ul []
                 [ textbox SlugChanged "slug" "Identifier" "customer-satisfaction"
                 , textbox PurposeChanged "purpose" "Purpose of the team" "Making sure customers have a good user experience"
+                , textbox SlackChannelChanged "slack-alert-channel" "Slack alert channel" "#my-team-alerts"
                 ]
                 :: errorView model.error
                 ++ [ button [ type_ "submit" ] [ text "Create team" ]

@@ -74,6 +74,7 @@ type alias TeamSyncState =
 type alias TeamData =
     { slug : Slug
     , purpose : String
+    , slackAlertChannel : String
     , members : List TeamMemberData
     , auditLogs : List AuditLogData
     , metadata : List KeyValueData
@@ -145,6 +146,7 @@ teamDataSelection =
     Graphql.SelectionSet.succeed TeamData
         |> with Team.slug
         |> with Team.purpose
+        |> Graphql.SelectionSet.hardcoded "#slack-placeholder"
         |> with (Team.members teamMemberSelection)
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
@@ -158,6 +160,7 @@ teamDataFullSelection =
     Graphql.SelectionSet.succeed TeamData
         |> with Team.slug
         |> with Team.purpose
+        |> Graphql.SelectionSet.hardcoded "#slack-placeholder"
         |> with (Team.members teamMemberSelection)
         |> with (Team.auditLogs auditLogSelection)
         |> with (Team.metadata keyValueSelection)

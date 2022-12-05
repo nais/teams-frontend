@@ -304,7 +304,7 @@ form ul li {
     margin: 0;
 }
 
-form label {
+label {
     text-align: left;
     margin: 0.5rem 0 0;
     font-weight: bold;

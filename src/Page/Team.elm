@@ -8,7 +8,7 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (RoleName(..), Slug)
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, button, datalist, div, em, form, h2, h3, input, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html exposing (Html, button, datalist, div, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, classList, colspan, disabled, id, list, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
@@ -57,6 +57,7 @@ type Msg
     | ClickedCancelEditMembers
     | ClickedCancelEditOverview
     | PurposeChanged String
+    | SlackAlertChannelChanged String
     | AddMemberQueryChanged String
     | RemoveMember MemberChange
     | Undo MemberChange
@@ -105,6 +106,9 @@ update msg model =
 
         PurposeChanged s ->
             ( mapTeam (\team -> { team | purpose = s }) model, Cmd.none )
+
+        SlackAlertChannelChanged s ->
+            ( mapTeam (\team -> { team | slackAlertChannel = s }) model, Cmd.none )
 
         ClickedSaveOverview team ->
             ( model, saveOverview team )
@@ -552,7 +556,10 @@ viewEditTeamOverview team error =
     in
     div [ class "card" ]
         [ h2 [] [ text ("Team " ++ slugstr team.slug) ]
+        , label [] [ text "Purpose" ]
         , input [ type_ "text", Html.Attributes.placeholder "Describe team's purpose", onInput PurposeChanged, value team.purpose ] []
+        , label [] [ text "Slack alert channel" ]
+        , input [ type_ "text", Html.Attributes.placeholder "#slack-alert-channel", onInput SlackAlertChannelChanged, value team.slackAlertChannel ] []
         , errorMessage
         , div [ class "button-row" ]
             [ button [ onClick (ClickedSaveOverview team) ] [ text "Save changes" ]
