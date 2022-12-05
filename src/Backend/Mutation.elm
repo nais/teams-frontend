@@ -60,6 +60,26 @@ setGoogleWorkspaceGroupEmail requiredArgs____ object____ =
     Object.selectionForCompositeField "setGoogleWorkspaceGroupEmail" [ Argument.required "teamSlug" requiredArgs____.teamSlug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "googleWorkspaceGroupEmail" requiredArgs____.googleWorkspaceGroupEmail Encode.string ] object____ Basics.identity
 
 
+type alias SetAzureADGroupIdRequiredArguments =
+    { teamSlug : Backend.ScalarCodecs.Slug
+    , azureADGroupId : Backend.ScalarCodecs.Uuid
+    }
+
+
+{-| Set the Azure AD group ID for a Console team.
+
+  - teamSlug - The slug for the Console team.
+  - azureADGroupId - The UUID for the connected Azure AD group.
+
+-}
+setAzureADGroupId :
+    SetAzureADGroupIdRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Team
+    -> SelectionSet decodesTo RootMutation
+setAzureADGroupId requiredArgs____ object____ =
+    Object.selectionForCompositeField "setAzureADGroupId" [ Argument.required "teamSlug" requiredArgs____.teamSlug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "azureADGroupId" requiredArgs____.azureADGroupId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+
+
 type alias SetGcpProjectIdRequiredArguments =
     { teamSlug : Backend.ScalarCodecs.Slug
     , gcpEnvironment : String

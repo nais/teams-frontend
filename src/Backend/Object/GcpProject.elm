@@ -26,6 +26,13 @@ environment =
     Object.selectionForField "String" "environment" [] Decode.string
 
 
+{-| The display name of the project.
+-}
+projectName : SelectionSet String Backend.Object.GcpProject
+projectName =
+    Object.selectionForField "String" "projectName" [] Decode.string
+
+
 {-| The GCP project ID.
 -}
 projectId : SelectionSet String Backend.Object.GcpProject

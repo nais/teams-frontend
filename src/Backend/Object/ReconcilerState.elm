@@ -33,6 +33,13 @@ googleWorkspaceGroupEmail =
     Object.selectionForField "(Maybe String)" "googleWorkspaceGroupEmail" [] (Decode.string |> Decode.nullable)
 
 
+{-| The Azure AD group ID.
+-}
+azureADGroupId : SelectionSet (Maybe Backend.ScalarCodecs.Uuid) Backend.Object.ReconcilerState
+azureADGroupId =
+    Object.selectionForField "(Maybe ScalarCodecs.Uuid)" "azureADGroupId" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder |> Decode.nullable)
+
+
 {-| A list of GCP projects.
 -}
 gcpProjects :
@@ -49,3 +56,10 @@ naisNamespaces :
     -> SelectionSet (List decodesTo) Backend.Object.ReconcilerState
 naisNamespaces object____ =
     Object.selectionForCompositeField "naisNamespaces" [] object____ (Basics.identity >> Decode.list)
+
+
+{-| Timestamp of when the NAIS deploy key was provisioned.
+-}
+naisDeployKeyProvisioned : SelectionSet (Maybe Backend.ScalarCodecs.Time) Backend.Object.ReconcilerState
+naisDeployKeyProvisioned =
+    Object.selectionForField "(Maybe ScalarCodecs.Time)" "naisDeployKeyProvisioned" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecTime |> .decoder |> Decode.nullable)
