@@ -102,7 +102,9 @@ createTeamForm model =
                 , textbox SlackChannelChanged "slack-alert-channel" "Slack alert channel" "#my-team-alerts"
                 ]
                 :: errorView model.error
-                ++ [ button [ type_ "submit" ] [ text "Create team" ]
+                ++ [ div [ class "button-row" ]
+                        [ button [ type_ "submit" ] [ text "Create team" ]
+                        ]
                    ]
             )
         ]
