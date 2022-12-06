@@ -282,6 +282,7 @@ saveOverview team =
         (updateTeam
             team.slug
             { purpose = Graphql.OptionalArgument.Present team.purpose
+            , slackAlertsChannel = Graphql.OptionalArgument.Present team.slackAlertChannel
             }
         )
         (GotSaveOverviewResponse << RemoteData.fromResult)
@@ -657,16 +658,6 @@ editMemberRow member =
                 , td [] [ roleSelector False, text " *" ]
                 , td [] [ viewButton "transparent" "cancel" "Undo" (Undo member) ]
                 ]
-
-
-userIsMember : User -> TeamMemberData -> Bool
-userIsMember currentUser member =
-    case currentUser of
-        LoggedIn u ->
-            u.id == member.user.id
-
-        _ ->
-            False
 
 
 viewRoleSelector : TeamRole -> (TeamRole -> Msg) -> Bool -> Html Msg

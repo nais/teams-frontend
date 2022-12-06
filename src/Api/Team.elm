@@ -146,7 +146,7 @@ teamDataSelection =
     Graphql.SelectionSet.succeed TeamData
         |> with Team.slug
         |> with Team.purpose
-        |> Graphql.SelectionSet.hardcoded "#slack-placeholder"
+        |> with (Team.slackAlertsChannel |> mapMaybeToString)
         |> with (Team.members teamMemberSelection)
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
@@ -160,7 +160,7 @@ teamDataFullSelection =
     Graphql.SelectionSet.succeed TeamData
         |> with Team.slug
         |> with Team.purpose
-        |> Graphql.SelectionSet.hardcoded "#slack-placeholder"
+        |> with (Team.slackAlertsChannel |> mapMaybeToString)
         |> with (Team.members teamMemberSelection)
         |> with (Team.auditLogs auditLogSelection)
         |> with (Team.metadata keyValueSelection)
@@ -222,6 +222,19 @@ syncErrorSelection =
         |> with (SyncError.createdAt |> mapToDateTime)
         |> with (Graphql.SelectionSet.map (\(ReconcilerName x) -> x) SyncError.reconciler)
         |> with SyncError.error
+
+
+mapMaybeToString : SelectionSet (Maybe String) scope -> SelectionSet String scope
+mapMaybeToString =
+    Graphql.SelectionSet.map
+        (\x ->
+            case x of
+                Just s ->
+                    s
+
+                Nothing ->
+                    ""
+        )
 
 
 mapToMaybeDateTime : SelectionSet (Maybe Scalar.Time) scope -> SelectionSet (Maybe ISO8601.Time) scope

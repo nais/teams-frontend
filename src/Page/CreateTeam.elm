@@ -5,6 +5,7 @@ import Api.Error exposing (errorToString)
 import Api.Team exposing (TeamData, createTeam)
 import Backend.Scalar
 import Graphql.Http exposing (RawError(..))
+import Graphql.OptionalArgument
 import Html exposing (Html, button, div, form, h2, input, label, li, p, text, ul)
 import Html.Attributes exposing (class, for, placeholder, type_)
 import Html.Events exposing (onInput, onSubmit)
@@ -40,6 +41,16 @@ init session =
     )
 
 
+blankStringMaybe : String -> Maybe String
+blankStringMaybe s =
+    case s of
+        "" ->
+            Nothing
+
+        _ ->
+            Just s
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -49,6 +60,7 @@ update msg model =
                 (createTeam
                     { purpose = model.purpose
                     , slug = Backend.Scalar.Slug model.slug
+                    , slackAlertsChannel = model.slackAlertChannel
                     }
                 )
                 GotTeamCreatedResponse
