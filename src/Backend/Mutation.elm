@@ -402,3 +402,16 @@ enableTeam :
     -> SelectionSet decodesTo RootMutation
 enableTeam requiredArgs____ object____ =
     Object.selectionForCompositeField "enableTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
+
+
+{-| Trigger a user synchronization
+
+This mutation will trigger a full user synchronization with the connected Google Workspace. The action is
+asynchronous.
+
+-}
+synchronizeUsers :
+    SelectionSet decodesTo Backend.Object.UserSync
+    -> SelectionSet decodesTo RootMutation
+synchronizeUsers object____ =
+    Object.selectionForCompositeField "synchronizeUsers" [] object____ Basics.identity
