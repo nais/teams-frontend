@@ -148,7 +148,7 @@ teamDataSelection =
         |> with Team.slug
         |> with Team.purpose
         |> with (Team.slackAlertsChannel |> mapMaybeToString)
-        |> with (Team.members teamMemberSelection)
+        |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
