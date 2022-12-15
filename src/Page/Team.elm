@@ -757,24 +757,24 @@ viewCards model team =
             View ->
                 [ viewTeamOverview user team
                 , viewSyncErrors team
-                , viewTeamState team
                 , viewMembers user team
+                , viewTeamState team
                 , viewLogs team
                 ]
 
             EditMain err ->
                 [ viewEditTeamOverview team err
                 , viewSyncErrors team
-                , viewTeamState team
                 , viewMembers user team
+                , viewTeamState team
                 , viewLogs team
                 ]
 
             EditMembers err ->
                 [ viewTeamOverview user team
                 , viewSyncErrors team
-                , viewTeamState team
                 , viewEditMembers model team err
+                , viewTeamState team
                 , viewLogs team
                 ]
         )
