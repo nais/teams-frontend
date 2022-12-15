@@ -5,7 +5,7 @@ import Api.Error exposing (errorToString)
 import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, TeamSyncState, addMemberToTeam, addOwnerToTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, updateTeam)
 import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
-import Backend.Scalar exposing (RoleName(..), Slug)
+import Backend.Scalar exposing (RoleName(..), Slug, Uuid(..))
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
 import Html exposing (Html, button, datalist, div, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
@@ -468,6 +468,18 @@ syncStateRows state =
                         ]
                     ]
 
+        azureADGroupID =
+            case state.azureADGroupID of
+                Nothing ->
+                    []
+
+                Just (Uuid id) ->
+                    [ tr []
+                        [ td [] [ text "Azure AD group ID" ]
+                        , td [] [ text id ]
+                        ]
+                    ]
+
         gcpProjects =
             List.map
                 (\project ->
@@ -488,7 +500,7 @@ syncStateRows state =
                 )
                 state.naisNamespaces
     in
-    gitHub ++ googleWorkspaceGroupEmail ++ gcpProjects ++ naisNamespaces
+    gitHub ++ googleWorkspaceGroupEmail ++ gcpProjects ++ naisNamespaces ++ azureADGroupID
 
 
 viewStateTable : TeamData -> Html msg

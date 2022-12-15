@@ -14,7 +14,7 @@ import Backend.Object.Team as Team
 import Backend.Object.TeamMember as TeamMember
 import Backend.Object.TeamMetadata as TeamMetadata
 import Backend.Query as Query
-import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug)
+import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug, Uuid)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet, with)
 import ISO8601
@@ -68,6 +68,7 @@ type alias TeamSyncState =
     , googleWorkspaceGroupEmail : Maybe String
     , gcpProjects : List GCPProject
     , naisNamespaces : List NaisNamespace
+    , azureADGroupID : Maybe Uuid
     }
 
 
@@ -200,6 +201,7 @@ syncStateSelection =
         |> with ReconcilerState.googleWorkspaceGroupEmail
         |> with (ReconcilerState.gcpProjects gcpProjectSelection)
         |> with (ReconcilerState.naisNamespaces naisNamespaceSelection)
+        |> with ReconcilerState.azureADGroupId
 
 
 gcpProjectSelection : SelectionSet GCPProject Backend.Object.GcpProject
