@@ -437,26 +437,26 @@ smallButton msg iconClass title =
         ]
 
 
-editorButton : Msg -> User -> TeamData -> List (Html Msg)
+editorButton : Msg -> User -> TeamData -> Maybe (Html Msg)
 editorButton msg user team =
     if editor team user then
-        [ smallButton msg "edit" "Edit" ]
+        Just (smallButton msg "edit" "Edit")
 
     else
-        []
+        Nothing
 
 
-syncButton : Msg -> User -> TeamData -> List (Html Msg)
+syncButton : Msg -> User -> TeamData -> Maybe (Html Msg)
 syncButton msg user team =
     if editor team user then
         if team.enabled then
-            [ smallButton msg "refresh" "Synchronize" ]
+            Just (smallButton msg "refresh" "Synchronize")
 
         else
-            []
+            Nothing
 
     else
-        []
+        Nothing
 
 
 viewSyncErrors : TeamData -> Html Msg
@@ -596,8 +596,8 @@ viewTeamOverview user team =
     div [ class "card" ]
         [ div [ class "title" ]
             ([ h2 [] [ text <| "Team " ++ slugstr team.slug ] ]
-                ++ syncButton ClickedSynchronize user team
-                ++ editorButton ClickedEditMain user team
+                |> concatMaybe (syncButton ClickedSynchronize user team)
+                |> concatMaybe (editorButton ClickedEditMain user team)
             )
         , p [] [ text team.purpose ]
         ]
@@ -874,3 +874,13 @@ getUserList =
     Api.Do.query
         Api.User.getAllUsers
         (RemoteData.fromResult >> GotUserListResponse)
+
+
+concatMaybe : Maybe a -> List a -> List a
+concatMaybe maybe list =
+    case maybe of
+        Just toConcat ->
+            list ++ [ toConcat ]
+
+        Nothing ->
+            list
