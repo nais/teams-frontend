@@ -61,8 +61,8 @@ type Msg
     | AddMemberQueryChanged String
     | RemoveMember MemberChange
     | Undo MemberChange
-    | RoleDropDownClicked MemberChange TeamRole
-    | AddMemberRoleDropDownClicked TeamRole
+    | RoleDropDownClicked MemberChange String
+    | AddMemberRoleDropDownClicked String
     | GotUserListResponse (RemoteData (Graphql.Http.Error (List UserData)) (List UserData))
     | OnSubmitAddMember
 
@@ -132,8 +132,11 @@ update msg model =
             , Cmd.none
             )
 
-        RoleDropDownClicked member role ->
+        RoleDropDownClicked member roleString ->
             let
+                role =
+                    teamRoleFromString roleString
+
                 op =
                     case member of
                         Add _ _ ->
@@ -192,7 +195,12 @@ update msg model =
                     ( model, Cmd.none )
 
         AddMemberRoleDropDownClicked r ->
-            ( { model | addMemberRole = r }, Cmd.none )
+            ( { model | addMemberRole = teamRoleFromString r }, Cmd.none )
+
+
+teamRoleFromString : String -> TeamRole
+teamRoleFromString s =
+    Maybe.withDefault Backend.Enum.TeamRole.Member <| Backend.Enum.TeamRole.fromString s
 
 
 mapMemberChangeToCmds : TeamData -> MemberChange -> List (Cmd Msg)
@@ -672,16 +680,20 @@ editMemberRow member =
                 ]
 
 
-viewRoleSelector : TeamRole -> (TeamRole -> Msg) -> Bool -> Html Msg
+viewRoleSelector : TeamRole -> (String -> Msg) -> Bool -> Html Msg
 viewRoleSelector currentRole action disable =
-    select [ value (roleString currentRole), disabled disable ] (Backend.Enum.TeamRole.list |> List.map (roleOption currentRole action))
+    select
+        [ value (roleString currentRole)
+        , onInput action
+        , disabled disable
+        ]
+        (Backend.Enum.TeamRole.list |> List.map (roleOption currentRole))
 
 
-roleOption : TeamRole -> (TeamRole -> Msg) -> TeamRole -> Html Msg
-roleOption currentRole action role =
+roleOption : TeamRole -> TeamRole -> Html Msg
+roleOption currentRole role =
     option
-        [ onClick (action role)
-        , selected (role == currentRole)
+        [ selected (role == currentRole)
         , value (roleString role)
         ]
         [ text (roleString role) ]
