@@ -632,8 +632,8 @@ viewMembers : User -> TeamData -> Html Msg
 viewMembers user team =
     div [ class "card" ]
         [ div [ class "title" ]
-            (h2 [] [ text "Members" ]
-                :: editorButton ClickedEditMembers user team
+            ([ h2 [] [ text "Members" ] ]
+                |> concatMaybe (editorButton ClickedEditMembers user team)
             )
         , table []
             [ thead []
