@@ -224,10 +224,12 @@ main {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    gap: 0.5rem;
 }
 
 .card h2 {
     margin: 0;
+    flex-grow: 4;
 }
 
 .card.error {
@@ -404,6 +406,7 @@ button .icon,
 .icon.cancel { background-image: url('../public/icons/cancel.svg'); }
 .icon.edit { background-image: url('../public/icons/edit.svg'); }
 .icon.delete { background-image: url('../public/icons/delete.svg'); }
+.icon.refresh { background-image: url('../public/icons/refresh.svg'); }
 
 button.small,
 .button.small {

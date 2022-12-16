@@ -2,9 +2,10 @@ module Page.Team exposing (..)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, TeamSyncState, addMemberToTeam, addOwnerToTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, updateTeam)
+import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, TeamSync, TeamSyncState, addMemberToTeam, addOwnerToTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
 import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
+import Backend.Mutation as Mutation
 import Backend.Scalar exposing (RoleName(..), Slug, Uuid(..))
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
@@ -50,12 +51,14 @@ type Msg
     = GotTeamResponse (RemoteData (Graphql.Http.Error TeamData) TeamData)
     | GotSaveOverviewResponse (RemoteData (Graphql.Http.Error TeamData) TeamData)
     | GotSaveTeamMembersResponse (RemoteData (Graphql.Http.Error TeamData) TeamData)
+    | GotSynchronizeResponse (RemoteData (Graphql.Http.Error TeamSync) TeamSync)
     | ClickedEditMain
     | ClickedEditMembers
     | ClickedSaveOverview TeamData
     | ClickedSaveTeamMembers TeamData (List MemberChange)
     | ClickedCancelEditMembers
     | ClickedCancelEditOverview
+    | ClickedSynchronize
     | PurposeChanged String
     | SlackAlertChannelChanged String
     | AddMemberQueryChanged String
@@ -197,6 +200,17 @@ update msg model =
         AddMemberRoleDropDownClicked r ->
             ( { model | addMemberRole = teamRoleFromString r }, Cmd.none )
 
+        ClickedSynchronize ->
+            case model.team of
+                Success t ->
+                    ( model, synchronize t.slug )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        GotSynchronizeResponse _ ->
+            ( model, Cmd.none )
+
 
 teamRoleFromString : String -> TeamRole
 teamRoleFromString s =
@@ -282,6 +296,13 @@ mapMember typ memberToChange m =
 
     else
         m
+
+
+synchronize : Slug -> Cmd Msg
+synchronize slug =
+    Api.Do.mutate
+        (Mutation.synchronizeTeam { slug = slug } teamSyncSelection)
+        (GotSynchronizeResponse << RemoteData.fromResult)
 
 
 saveOverview : TeamData -> Cmd Msg
@@ -408,14 +429,27 @@ metadataRow kv =
             simpleRow kv.key ""
 
 
+smallButton : Msg -> String -> String -> Html Msg
+smallButton msg iconClass title =
+    div [ class "small button", onClick msg ]
+        [ div [ classList [ ( "icon", True ), ( iconClass, True ) ] ] []
+        , text title
+        ]
+
+
 editorButton : Msg -> User -> TeamData -> List (Html Msg)
 editorButton msg user team =
     if editor team user then
-        [ div [ class "small button", onClick msg ]
-            [ div [ class "icon edit" ] []
-            , text "Edit"
-            ]
-        ]
+        [ smallButton msg "edit" "Edit" ]
+
+    else
+        []
+
+
+syncButton : Msg -> User -> TeamData -> List (Html Msg)
+syncButton msg user team =
+    if editor team user then
+        [ smallButton msg "refresh" "Synchronize" ]
 
     else
         []
@@ -557,8 +591,9 @@ viewTeamOverview : User -> TeamData -> Html Msg
 viewTeamOverview user team =
     div [ class "card" ]
         [ div [ class "title" ]
-            (h2 [] [ text ("Team " ++ slugstr team.slug) ]
-                :: editorButton ClickedEditMain user team
+            ([ h2 [] [ text <| "Team " ++ slugstr team.slug ] ]
+                ++ syncButton ClickedSynchronize user team
+                ++ editorButton ClickedEditMain user team
             )
         , p [] [ text team.purpose ]
         ]

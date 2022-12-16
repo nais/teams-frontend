@@ -13,6 +13,7 @@ import Backend.Object.SyncError as SyncError
 import Backend.Object.Team as Team
 import Backend.Object.TeamMember as TeamMember
 import Backend.Object.TeamMetadata as TeamMetadata
+import Backend.Object.TeamSync
 import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug, Uuid)
 import Graphql.Operation exposing (RootMutation, RootQuery)
@@ -27,6 +28,11 @@ import ISO8601
 type alias TeamMemberData =
     { user : UserData
     , role : TeamRole
+    }
+
+
+type alias TeamSync =
+    { correlationID : Uuid
     }
 
 
@@ -185,6 +191,12 @@ auditLogSelection =
         |> with AuditLog.actor
         |> with AuditLog.message
         |> with (AuditLog.createdAt |> mapToDateTime)
+
+
+teamSyncSelection : SelectionSet TeamSync Backend.Object.TeamSync
+teamSyncSelection =
+    Graphql.SelectionSet.succeed TeamSync
+        |> with Backend.Object.TeamSync.correlationID
 
 
 keyValueSelection : SelectionSet KeyValueData Backend.Object.TeamMetadata
