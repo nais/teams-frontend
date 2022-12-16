@@ -200,7 +200,7 @@ update msg model =
 
 teamRoleFromString : String -> TeamRole
 teamRoleFromString s =
-    Maybe.withDefault Backend.Enum.TeamRole.Member <| Backend.Enum.TeamRole.fromString s
+    Maybe.withDefault Backend.Enum.TeamRole.Member <| Backend.Enum.TeamRole.fromString (String.toUpper s)
 
 
 mapMemberChangeToCmds : TeamData -> MemberChange -> List (Cmd Msg)
