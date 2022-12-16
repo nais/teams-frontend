@@ -337,25 +337,6 @@ slugstr (Backend.Scalar.Slug u) =
     u
 
 
-timestr : ISO8601.Time -> String
-timestr u =
-    let
-        pad len int =
-            String.fromInt int |> String.padLeft len '0'
-    in
-    pad 4 u.year
-        ++ "-"
-        ++ pad 2 u.month
-        ++ "-"
-        ++ pad 2 u.day
-        ++ " "
-        ++ pad 2 u.hour
-        ++ ":"
-        ++ pad 2 u.minute
-        ++ ":"
-        ++ pad 2 u.second
-
-
 actionstr : Backend.Scalar.AuditAction -> String
 actionstr (Backend.Scalar.AuditAction u) =
     u
@@ -374,7 +355,7 @@ logLine ts actor message =
     li []
         [ p [] [ text message ]
         , div [ class "meta" ]
-            [ p [] [ text (timestr ts) ]
+            [ p [] [ text (ISO8601.toString ts) ]
             , p [] [ text actor ]
             ]
         ]
@@ -459,19 +440,20 @@ syncButton msg user team =
         Nothing
 
 
+viewSyncSuccess : TeamData -> Html msg
+viewSyncSuccess team =
+    case team.lastSuccessfulSync of
+        Nothing ->
+            Html.text ""
+
+        Just ts ->
+            p []
+                [ em [] [ text <| "Status: last fully synchronized on " ++ ISO8601.toString ts ++ "." ]
+                ]
+
+
 viewSyncErrors : TeamData -> Html Msg
 viewSyncErrors team =
-    let
-        syncSuccess =
-            case team.lastSuccessfulSync of
-                Nothing ->
-                    Html.text ""
-
-                Just ts ->
-                    p []
-                        [ em [] [ text <| "The last successful synchronization was on " ++ timestr ts ++ "." ]
-                        ]
-    in
     case team.syncErrors of
         [] ->
             text ""
@@ -481,7 +463,7 @@ viewSyncErrors team =
                 [ h2 [] [ text "Synchronization error" ]
                 , p [] [ text "Console failed to synchronize team ", strong [] [ text (slugstr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
                 , p [] [ text "If errors are caused by network outage, they will resolve automatically. If they persist for more than a few hours, please contact NAIS support." ]
-                , syncSuccess
+                , viewSyncSuccess team
                 , h3 [] [ text "Error messages" ]
                 , ul [ class "logs" ] (List.map errorLine team.syncErrors)
                 ]
@@ -600,6 +582,7 @@ viewTeamOverview user team =
                 |> concatMaybe (editorButton ClickedEditMain user team)
             )
         , p [] [ text team.purpose ]
+        , viewSyncSuccess team
         ]
 
 
