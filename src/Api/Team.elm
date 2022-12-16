@@ -88,6 +88,7 @@ type alias TeamData =
     , syncErrors : List SyncErrorData
     , lastSuccessfulSync : Maybe ISO8601.Time
     , syncState : Maybe TeamSyncState
+    , enabled : Bool
     }
 
 
@@ -160,6 +161,7 @@ teamDataSelection =
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded Nothing
         |> Graphql.SelectionSet.hardcoded Nothing
+        |> with Team.enabled
 
 
 teamDataFullSelection : SelectionSet TeamData Backend.Object.Team
@@ -174,6 +176,7 @@ teamDataFullSelection =
         |> with (Team.syncErrors syncErrorSelection)
         |> with (Team.lastSuccessfulSync |> mapToMaybeDateTime)
         |> with (Graphql.SelectionSet.map Just (Team.reconcilerState syncStateSelection))
+        |> with Team.enabled
 
 
 teamMemberSelection : SelectionSet TeamMemberData Backend.Object.TeamMember

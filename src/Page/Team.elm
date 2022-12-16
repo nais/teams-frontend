@@ -449,7 +449,11 @@ editorButton msg user team =
 syncButton : Msg -> User -> TeamData -> List (Html Msg)
 syncButton msg user team =
     if editor team user then
-        [ smallButton msg "refresh" "Synchronize" ]
+        if team.enabled then
+            [ smallButton msg "refresh" "Synchronize" ]
+
+        else
+            []
 
     else
         []
