@@ -78,7 +78,7 @@ changeRouteTo maybeRoute session =
             case maybeRoute of
                 Just Route.Home ->
                     ( Home (Home.init session maybeRoute)
-                    , Nav.pushUrl (Session.navKey session) (Route.routeToString Route.Teams)
+                    , Nav.pushUrl (Session.navKey session) (Route.routeToString Route.MyTeams)
                     )
 
                 Just Route.ReconcilerAdmin ->
@@ -87,8 +87,11 @@ changeRouteTo maybeRoute session =
                 Just Route.CreateTeam ->
                     CreateTeam.init session |> updateWith CreateTeam GotCreateTeamMsg
 
-                Just Route.Teams ->
-                    Teams.init session |> updateWith Teams GotTeamsMsg
+                Just Route.AllTeams ->
+                    Teams.init session Teams.AllTeams |> updateWith Teams GotTeamsMsg
+
+                Just Route.MyTeams ->
+                    Teams.init session Teams.MyTeams |> updateWith Teams GotTeamsMsg
 
                 Just (Route.Team id) ->
                     Team.init session id |> updateWith Team GotTeamMsg
@@ -222,7 +225,7 @@ viewNav model =
             Session.user (toSession model)
 
         teamsButton =
-            [ menuItem model Route.Teams False "Teams" ]
+            [ menuItem model Route.MyTeams False "Teams" ]
 
         ephemeralButtons =
             case model of
@@ -262,7 +265,7 @@ isActiveRoute model target =
         ( Home _, Route.Home ) ->
             True
 
-        ( Teams _, Route.Teams ) ->
+        ( Teams _, Route.MyTeams ) ->
             True
 
         ( CreateTeam _, Route.CreateTeam ) ->
