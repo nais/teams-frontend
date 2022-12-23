@@ -2,7 +2,7 @@ module Page.Team exposing (..)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, TeamSync, TeamSyncState, addMemberToTeam, addOwnerToTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
+import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, TeamSync, TeamSyncState, addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
 import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
@@ -59,6 +59,8 @@ type Msg
     | ClickedCancelEditMembers
     | ClickedCancelEditOverview
     | ClickedSynchronize
+    | ClickedEnableTeam TeamData
+    | ClickedDisableTeam TeamData
     | PurposeChanged String
     | SlackAlertChannelChanged String
     | AddMemberQueryChanged String
@@ -210,6 +212,12 @@ update msg model =
 
         GotSynchronizeResponse _ ->
             ( model, Cmd.none )
+
+        ClickedEnableTeam team ->
+            ( model, Api.Do.mutate (enableTeam team) (GotTeamResponse << RemoteData.fromResult) )
+
+        ClickedDisableTeam team ->
+            ( model, Api.Do.mutate (disableTeam team) (GotTeamResponse << RemoteData.fromResult) )
 
 
 teamRoleFromString : String -> TeamRole
@@ -427,6 +435,19 @@ editorButton msg user team =
         Nothing
 
 
+toggleTeamButton : User -> TeamData -> Maybe (Html Msg)
+toggleTeamButton user team =
+    if Session.isGlobalAdmin user then
+        if team.enabled then
+            Just (smallButton (ClickedDisableTeam team) "" "Disable")
+
+        else
+            Just (smallButton (ClickedEnableTeam team) "" "Enable")
+
+    else
+        Nothing
+
+
 syncButton : Msg -> User -> TeamData -> Maybe (Html Msg)
 syncButton msg user team =
     if editor team user then
@@ -578,6 +599,7 @@ viewTeamOverview user team =
     div [ class "card" ]
         [ div [ class "title" ]
             ([ h2 [] [ text <| "Team " ++ slugstr team.slug ] ]
+                |> concatMaybe (toggleTeamButton user team)
                 |> concatMaybe (syncButton ClickedSynchronize user team)
                 |> concatMaybe (editorButton ClickedEditMain user team)
             )

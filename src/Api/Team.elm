@@ -149,6 +149,16 @@ setTeamMemberRole team member role =
         teamDataFullSelection
 
 
+enableTeam : TeamData -> SelectionSet TeamData RootMutation
+enableTeam team =
+    Mutation.enableTeam { slug = team.slug } teamDataSelection
+
+
+disableTeam : TeamData -> SelectionSet TeamData RootMutation
+disableTeam team =
+    Mutation.disableTeam { slug = team.slug } teamDataSelection
+
+
 teamDataSelection : SelectionSet TeamData Backend.Object.Team
 teamDataSelection =
     Graphql.SelectionSet.succeed TeamData
@@ -200,6 +210,10 @@ teamSyncSelection : SelectionSet TeamSync Backend.Object.TeamSync
 teamSyncSelection =
     Graphql.SelectionSet.succeed TeamSync
         |> with Backend.Object.TeamSync.correlationID
+
+
+
+-- teamToggleSelection :
 
 
 keyValueSelection : SelectionSet KeyValueData Backend.Object.TeamMetadata
