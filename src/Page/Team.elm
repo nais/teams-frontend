@@ -439,10 +439,10 @@ toggleTeamButton : User -> TeamData -> Maybe (Html Msg)
 toggleTeamButton user team =
     if Session.isGlobalAdmin user then
         if team.enabled then
-            Just (smallButton (ClickedDisableTeam team) "" "Disable")
+            Just (smallButton (ClickedDisableTeam team) "locked" "Disable")
 
         else
-            Just (smallButton (ClickedEnableTeam team) "" "Enable")
+            Just (smallButton (ClickedEnableTeam team) "locked" "Enable")
 
     else
         Nothing
@@ -452,7 +452,7 @@ syncButton : Msg -> User -> TeamData -> Maybe (Html Msg)
 syncButton msg user team =
     if editor team user then
         if team.enabled then
-            Just (smallButton msg "refresh" "Synchronize")
+            Just (smallButton msg "synchronize" "Synchronize")
 
         else
             Nothing

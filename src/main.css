@@ -407,6 +407,8 @@ button .icon,
 .icon.edit { background-image: url('../public/icons/edit.svg'); }
 .icon.delete { background-image: url('../public/icons/delete.svg'); }
 .icon.refresh { background-image: url('../public/icons/refresh.svg'); }
+.icon.synchronize { background-image: url('../public/icons/synchronize.svg'); }
+.icon.locked { background-image: url('../public/icons/locked.svg'); }
 
 button.small,
 .button.small {
