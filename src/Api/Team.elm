@@ -151,12 +151,12 @@ setTeamMemberRole team member role =
 
 enableTeam : TeamData -> SelectionSet TeamData RootMutation
 enableTeam team =
-    Mutation.enableTeam { slug = team.slug } teamDataSelection
+    Mutation.enableTeam { slug = team.slug } teamDataFullSelection
 
 
 disableTeam : TeamData -> SelectionSet TeamData RootMutation
 disableTeam team =
-    Mutation.disableTeam { slug = team.slug } teamDataSelection
+    Mutation.disableTeam { slug = team.slug } teamDataFullSelection
 
 
 teamDataSelection : SelectionSet TeamData Backend.Object.Team
