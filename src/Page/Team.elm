@@ -319,7 +319,7 @@ saveOverview team =
         (updateTeam
             team.slug
             { purpose = Graphql.OptionalArgument.Present team.purpose
-            , slackAlertsChannel = Graphql.OptionalArgument.Present team.slackAlertChannel
+            , slackChannel = Graphql.OptionalArgument.Present team.slackAlertChannel
             }
         )
         (GotSaveOverviewResponse << RemoteData.fromResult)

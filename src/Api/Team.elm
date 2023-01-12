@@ -164,7 +164,7 @@ teamDataSelection =
     Graphql.SelectionSet.succeed TeamData
         |> with Team.slug
         |> with Team.purpose
-        |> with (Team.slackAlertsChannel |> mapMaybeToString)
+        |> with (Team.slackChannel |> mapMaybeToString)
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
@@ -179,7 +179,7 @@ teamDataFullSelection =
     Graphql.SelectionSet.succeed TeamData
         |> with Team.slug
         |> with Team.purpose
-        |> with (Team.slackAlertsChannel |> mapMaybeToString)
+        |> with (Team.slackChannel |> mapMaybeToString)
         |> with (Team.members teamMemberSelection)
         |> with (Team.auditLogs auditLogSelection)
         |> with (Team.metadata keyValueSelection)

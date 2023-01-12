@@ -92,8 +92,8 @@ reconcilerState object____ =
     Object.selectionForCompositeField "reconcilerState" [] object____ Basics.identity
 
 
-{-| Slack channel for NAIS alerts.
+{-| Slack channel for the team.
 -}
-slackAlertsChannel : SelectionSet (Maybe String) Backend.Object.Team
-slackAlertsChannel =
-    Object.selectionForField "(Maybe String)" "slackAlertsChannel" [] (Decode.string |> Decode.nullable)
+slackChannel : SelectionSet (Maybe String) Backend.Object.Team
+slackChannel =
+    Object.selectionForField "(Maybe String)" "slackChannel" [] (Decode.string |> Decode.nullable)

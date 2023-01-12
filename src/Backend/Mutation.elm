@@ -288,6 +288,19 @@ synchronizeTeam requiredArgs____ object____ =
     Object.selectionForCompositeField "synchronizeTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
 
 
+{-| Manually synchronize all teams
+
+This action will trigger a full synchronization of all teams against the configured third party systems. The action
+is asynchronous. The operation can take a while, depending on the amount of teams currently enabled in Console.
+
+-}
+synchronizeAllTeams :
+    SelectionSet decodesTo Backend.Object.TeamSync
+    -> SelectionSet (List decodesTo) RootMutation
+synchronizeAllTeams object____ =
+    Object.selectionForCompositeField "synchronizeAllTeams" [] object____ (Basics.identity >> Decode.list)
+
+
 type alias AddTeamMembersRequiredArguments =
     { slug : Backend.ScalarCodecs.Slug
     , userIds : List Backend.ScalarCodecs.Uuid

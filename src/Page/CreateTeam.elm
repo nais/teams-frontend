@@ -5,7 +5,6 @@ import Api.Error exposing (errorToString)
 import Api.Team exposing (TeamData, createTeam)
 import Backend.Scalar
 import Graphql.Http exposing (RawError(..))
-import Graphql.OptionalArgument
 import Html exposing (Html, button, div, form, h2, input, label, li, p, text, ul)
 import Html.Attributes exposing (class, for, placeholder, type_)
 import Html.Events exposing (onInput, onSubmit)
@@ -60,7 +59,7 @@ update msg model =
                 (createTeam
                     { purpose = model.purpose
                     , slug = Backend.Scalar.Slug model.slug
-                    , slackAlertsChannel = model.slackAlertChannel
+                    , slackChannel = model.slackAlertChannel
                     }
                 )
                 GotTeamCreatedResponse
