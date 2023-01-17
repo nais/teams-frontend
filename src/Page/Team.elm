@@ -2,15 +2,16 @@ module Page.Team exposing (..)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (AuditLogData, KeyValueData, SyncErrorData, TeamData, TeamMemberData, TeamSync, TeamSyncState, addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
+import Api.Team exposing (AuditLogData, KeyValueData, SlackAlertsChannel, SyncErrorData, TeamData, TeamMemberData, TeamSync, TeamSyncState, addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
 import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
+import Backend.Object.SlackAlertsChannel exposing (channelName)
 import Backend.Scalar exposing (RoleName(..), Slug, Uuid(..))
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, button, datalist, div, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, classList, colspan, disabled, id, list, selected, type_, value)
+import Html exposing (Html, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, classList, colspan, disabled, for, id, list, placeholder, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List exposing (member)
@@ -62,7 +63,8 @@ type Msg
     | ClickedEnableTeam TeamData
     | ClickedDisableTeam TeamData
     | PurposeChanged String
-    | SlackAlertChannelChanged String
+    | SlackChannelChanged String
+    | SlackAlertsChannelChanged String String
     | AddMemberQueryChanged String
     | RemoveMember MemberChange
     | Undo MemberChange
@@ -112,8 +114,11 @@ update msg model =
         PurposeChanged s ->
             ( mapTeam (\team -> { team | purpose = s }) model, Cmd.none )
 
-        SlackAlertChannelChanged s ->
-            ( mapTeam (\team -> { team | slackAlertChannel = s }) model, Cmd.none )
+        SlackChannelChanged s ->
+            ( mapTeam (\team -> { team | slackChannel = s }) model, Cmd.none )
+
+        SlackAlertsChannelChanged e s ->
+            ( mapTeam (\team -> { team | slackAlertsChannels = mapSlackAlertsChannels e s team.slackAlertsChannels }) model, Cmd.none )
 
         ClickedSaveOverview team ->
             ( model, saveOverview team )
@@ -306,6 +311,28 @@ mapMember typ memberToChange m =
         m
 
 
+mapSlackAlertsChannel : String -> String -> SlackAlertsChannel -> SlackAlertsChannel
+mapSlackAlertsChannel environment channelName channel =
+    if environment == channel.environment then
+        { channel
+            | channelName =
+                case channelName of
+                    "" ->
+                        Nothing
+
+                    _ ->
+                        Just channelName
+        }
+
+    else
+        channel
+
+
+mapSlackAlertsChannels : String -> String -> List SlackAlertsChannel -> List SlackAlertsChannel
+mapSlackAlertsChannels environment channelName channels =
+    List.map (mapSlackAlertsChannel environment channelName) channels
+
+
 synchronize : Slug -> Cmd Msg
 synchronize slug =
     Api.Do.mutate
@@ -319,7 +346,17 @@ saveOverview team =
         (updateTeam
             team.slug
             { purpose = Graphql.OptionalArgument.Present team.purpose
-            , slackAlertsChannel = Graphql.OptionalArgument.Present team.slackAlertChannel
+            , slackChannel = Graphql.OptionalArgument.Present team.slackChannel
+            , slackAlertsChannels =
+                Graphql.OptionalArgument.Present
+                    (List.map
+                        (\s ->
+                            { environment = s.environment
+                            , channelName = Graphql.OptionalArgument.fromMaybe s.channelName
+                            }
+                        )
+                        team.slackAlertsChannels
+                    )
             }
         )
         (GotSaveOverviewResponse << RemoteData.fromResult)
@@ -594,6 +631,24 @@ viewTeamState team =
         ]
 
 
+viewSlackChannel : SlackAlertsChannel -> List (Html msg)
+viewSlackChannel channel =
+    case channel.channelName of
+        Nothing ->
+            []
+
+        Just channelName ->
+            [ dt [] [ text channel.environment ]
+            , dd [] [ text channelName ]
+            ]
+
+
+viewSlackChannels : TeamData -> Html msg
+viewSlackChannels team =
+    dl []
+        (List.concatMap viewSlackChannel team.slackAlertsChannels)
+
+
 viewTeamOverview : User -> TeamData -> Html Msg
 viewTeamOverview user team =
     div [ class "card" ]
@@ -604,8 +659,31 @@ viewTeamOverview user team =
                 |> concatMaybe (editorButton ClickedEditMain user team)
             )
         , p [] [ text team.purpose ]
+        , h3 [] [ text "Slack channel" ]
+        , p [] [ text team.slackChannel ]
+        , h3 [] [ text "Slack alert channels" ]
+        , p []
+            [ text "Per-environment slack channels to be used for alerts sent by the platform. "
+            , strong [] [ text team.slackChannel ]
+            , text " will be used if no override is set."
+            ]
+        , viewSlackChannels team
         , viewSyncSuccess team
         ]
+
+
+viewSlackAlertsChannel : String -> SlackAlertsChannel -> List (Html Msg)
+viewSlackAlertsChannel placeholder entry =
+    let
+        inputID =
+            "slack-alerts-channel" ++ entry.environment
+
+        val =
+            Maybe.withDefault "" entry.channelName
+    in
+    [ label [ for inputID ] [ entry.environment |> text ]
+    , input [ id inputID, type_ "text", value val, Html.Attributes.placeholder placeholder, onInput (SlackAlertsChannelChanged entry.environment) ] []
+    ]
 
 
 viewEditTeamOverview : TeamData -> Maybe (Graphql.Http.Error TeamData) -> Html Msg
@@ -620,17 +698,26 @@ viewEditTeamOverview team error =
                     div [ class "error" ] [ text <| Api.Error.errorToString err ]
     in
     div [ class "card" ]
-        [ h2 [] [ text ("Team " ++ slugstr team.slug) ]
-        , label [] [ text "Purpose" ]
-        , input [ type_ "text", Html.Attributes.placeholder "Describe team's purpose", onInput PurposeChanged, value team.purpose ] []
-        , label [] [ text "Slack alert channel" ]
-        , input [ type_ "text", Html.Attributes.placeholder "#slack-alert-channel", onInput SlackAlertChannelChanged, value team.slackAlertChannel ] []
-        , errorMessage
-        , div [ class "button-row" ]
-            [ button [ onClick (ClickedSaveOverview team) ] [ text "Save changes" ]
-            , button [ class "transparent", onClick ClickedCancelEditOverview ] [ text "Cancel changes" ]
+        ([ h2 [] [ text ("Team " ++ slugstr team.slug) ]
+         , label [] [ text "Purpose" ]
+         , input [ type_ "text", Html.Attributes.placeholder "Describe team's purpose", onInput PurposeChanged, value team.purpose ] []
+         , label [] [ text "Slack channel" ]
+         , input [ type_ "text", Html.Attributes.placeholder "#team-slack-channel", onInput SlackChannelChanged, value team.slackChannel ] []
+         , h3 [] [ text "Slack alerts channels" ]
+         , p []
+            [ text "Per-environment slack channels to be used for alerts sent by the platform. "
+            , strong [] [ text team.slackChannel ]
+            , text " will be used if no override is set."
             ]
-        ]
+         ]
+            ++ List.concatMap (viewSlackAlertsChannel team.slackChannel) team.slackAlertsChannels
+            ++ [ errorMessage
+               , div [ class "button-row" ]
+                    [ button [ onClick (ClickedSaveOverview team) ] [ text "Save changes" ]
+                    , button [ class "transparent", onClick ClickedCancelEditOverview ] [ text "Cancel changes" ]
+                    ]
+               ]
+        )
 
 
 viewMembers : User -> TeamData -> Html Msg

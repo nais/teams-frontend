@@ -5,7 +5,6 @@ import Api.Error exposing (errorToString)
 import Api.Team exposing (TeamData, createTeam)
 import Backend.Scalar
 import Graphql.Http exposing (RawError(..))
-import Graphql.OptionalArgument
 import Html exposing (Html, button, div, form, h2, input, label, li, p, text, ul)
 import Html.Attributes exposing (class, for, placeholder, type_)
 import Html.Events exposing (onInput, onSubmit)
@@ -16,7 +15,7 @@ type alias Model =
     { session : Session
     , slug : String
     , purpose : String
-    , slackAlertChannel : String
+    , slackChannel : String
     , error : Maybe String
     }
 
@@ -34,7 +33,7 @@ init session =
     ( { session = session
       , purpose = ""
       , slug = ""
-      , slackAlertChannel = ""
+      , slackChannel = ""
       , error = Nothing
       }
     , Cmd.none
@@ -60,7 +59,7 @@ update msg model =
                 (createTeam
                     { purpose = model.purpose
                     , slug = Backend.Scalar.Slug model.slug
-                    , slackAlertsChannel = model.slackAlertChannel
+                    , slackChannel = model.slackChannel
                     }
                 )
                 GotTeamCreatedResponse
@@ -79,7 +78,7 @@ update msg model =
             ( { model | purpose = s }, Cmd.none )
 
         SlackChannelChanged s ->
-            ( { model | slackAlertChannel = s }, Cmd.none )
+            ( { model | slackChannel = s }, Cmd.none )
 
 
 textbox : (String -> Msg) -> String -> String -> String -> Html Msg
@@ -111,7 +110,7 @@ createTeamForm model =
             (ul []
                 [ textbox SlugChanged "slug" "Identifier" "customer-satisfaction"
                 , textbox PurposeChanged "purpose" "Purpose of the team" "Making sure customers have a good user experience"
-                , textbox SlackChannelChanged "slack-alert-channel" "Slack alert channel" "#my-team-alerts"
+                , textbox SlackChannelChanged "team-slack-channel" "Slack channel" "#my-team"
                 ]
                 :: errorView model.error
                 ++ [ div [ class "button-row" ]

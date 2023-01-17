@@ -205,7 +205,8 @@ type alias CreateTeamRequiredArguments =
 
 {-| Create a new team
 
-The user creating the team will be granted team ownership, unless the user is a service account, in which case the team will not get an initial owner. To add one or more owners to the team, refer to the `addTeamOwners` mutation.
+The user creating the team will be granted team ownership, unless the user is a service account, in which case the
+team will not get an initial owner. To add one or more owners to the team, refer to the `addTeamOwners` mutation.
 
 The new team will be returned on success.
 
@@ -286,6 +287,19 @@ synchronizeTeam :
     -> SelectionSet decodesTo RootMutation
 synchronizeTeam requiredArgs____ object____ =
     Object.selectionForCompositeField "synchronizeTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
+
+
+{-| Manually synchronize all teams
+
+This action will trigger a full synchronization of all teams against the configured third party systems. The action
+is asynchronous. The operation can take a while, depending on the amount of teams currently enabled in Console.
+
+-}
+synchronizeAllTeams :
+    SelectionSet decodesTo Backend.Object.TeamSync
+    -> SelectionSet (List decodesTo) RootMutation
+synchronizeAllTeams object____ =
+    Object.selectionForCompositeField "synchronizeAllTeams" [] object____ (Basics.identity >> Decode.list)
 
 
 type alias AddTeamMembersRequiredArguments =
