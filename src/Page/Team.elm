@@ -10,7 +10,7 @@ import Backend.Object.SlackAlertsChannel exposing (channelName)
 import Backend.Scalar exposing (RoleName(..), Slug, Uuid(..))
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, button, datalist, div, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html exposing (Html, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, classList, colspan, disabled, for, id, list, placeholder, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
@@ -631,6 +631,24 @@ viewTeamState team =
         ]
 
 
+viewSlackChannel : SlackAlertsChannel -> List (Html msg)
+viewSlackChannel channel =
+    case channel.channelName of
+        Nothing ->
+            []
+
+        Just channelName ->
+            [ dt [] [ text channel.environment ]
+            , dd [] [ text channelName ]
+            ]
+
+
+viewSlackChannels : TeamData -> Html msg
+viewSlackChannels team =
+    dl []
+        (List.concatMap viewSlackChannel team.slackAlertsChannels)
+
+
 viewTeamOverview : User -> TeamData -> Html Msg
 viewTeamOverview user team =
     div [ class "card" ]
@@ -641,6 +659,15 @@ viewTeamOverview user team =
                 |> concatMaybe (editorButton ClickedEditMain user team)
             )
         , p [] [ text team.purpose ]
+        , h3 [] [ text "Slack channel" ]
+        , p [] [ text team.slackChannel ]
+        , h3 [] [ text "Slack alert channels" ]
+        , p []
+            [ text "Per-environment slack channels to be used for alerts sent by the platform. "
+            , strong [] [ text team.slackChannel ]
+            , text " will be used if no override is set."
+            ]
+        , viewSlackChannels team
         , viewSyncSuccess team
         ]
 
@@ -678,9 +705,9 @@ viewEditTeamOverview team error =
          , input [ type_ "text", Html.Attributes.placeholder "#team-slack-channel", onInput SlackChannelChanged, value team.slackChannel ] []
          , h3 [] [ text "Slack alerts channels" ]
          , p []
-            [ text "Add per-environment slack channels to be used for alerts sent by the platforms. "
+            [ text "Per-environment slack channels to be used for alerts sent by the platform. "
             , strong [] [ text team.slackChannel ]
-            , text " will be used if no override is set for the environment."
+            , text " will be used if no override is set."
             ]
          ]
             ++ List.concatMap (viewSlackAlertsChannel team.slackChannel) team.slackAlertsChannels

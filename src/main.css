@@ -530,3 +530,7 @@ p.secret-help-text {
 .team-owner {
     font-weight: bold;
 }
+
+dt {
+  font-weight: 700;
+}
