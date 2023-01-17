@@ -77,6 +77,43 @@ encodeReconcilerConfigInput input____ =
         [ ( "key", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerConfigKey) input____.key |> Just ), ( "value", Encode.string input____.value |> Just ) ]
 
 
+buildSlackAlertsChannelInput :
+    SlackAlertsChannelInputRequiredFields
+    -> (SlackAlertsChannelInputOptionalFields -> SlackAlertsChannelInputOptionalFields)
+    -> SlackAlertsChannelInput
+buildSlackAlertsChannelInput required____ fillOptionals____ =
+    let
+        optionals____ =
+            fillOptionals____
+                { channelName = Absent }
+    in
+    { environment = required____.environment, channelName = optionals____.channelName }
+
+
+type alias SlackAlertsChannelInputRequiredFields =
+    { environment : String }
+
+
+type alias SlackAlertsChannelInputOptionalFields =
+    { channelName : OptionalArgument String }
+
+
+{-| Type for the SlackAlertsChannelInput input object.
+-}
+type alias SlackAlertsChannelInput =
+    { environment : String
+    , channelName : OptionalArgument String
+    }
+
+
+{-| Encode a SlackAlertsChannelInput into a value that can be used as an argument.
+-}
+encodeSlackAlertsChannelInput : SlackAlertsChannelInput -> Value
+encodeSlackAlertsChannelInput input____ =
+    Encode.maybeObject
+        [ ( "environment", Encode.string input____.environment |> Just ), ( "channelName", Encode.string |> Encode.optional input____.channelName ) ]
+
+
 buildUpdateTeamInput :
     (UpdateTeamInputOptionalFields -> UpdateTeamInputOptionalFields)
     -> UpdateTeamInput
@@ -84,14 +121,15 @@ buildUpdateTeamInput fillOptionals____ =
     let
         optionals____ =
             fillOptionals____
-                { purpose = Absent, slackChannel = Absent }
+                { purpose = Absent, slackChannel = Absent, slackAlertsChannels = Absent }
     in
-    { purpose = optionals____.purpose, slackChannel = optionals____.slackChannel }
+    { purpose = optionals____.purpose, slackChannel = optionals____.slackChannel, slackAlertsChannels = optionals____.slackAlertsChannels }
 
 
 type alias UpdateTeamInputOptionalFields =
     { purpose : OptionalArgument String
     , slackChannel : OptionalArgument String
+    , slackAlertsChannels : OptionalArgument (List SlackAlertsChannelInput)
     }
 
 
@@ -100,6 +138,7 @@ type alias UpdateTeamInputOptionalFields =
 type alias UpdateTeamInput =
     { purpose : OptionalArgument String
     , slackChannel : OptionalArgument String
+    , slackAlertsChannels : OptionalArgument (List SlackAlertsChannelInput)
     }
 
 
@@ -108,4 +147,4 @@ type alias UpdateTeamInput =
 encodeUpdateTeamInput : UpdateTeamInput -> Value
 encodeUpdateTeamInput input____ =
     Encode.maybeObject
-        [ ( "purpose", Encode.string |> Encode.optional input____.purpose ), ( "slackChannel", Encode.string |> Encode.optional input____.slackChannel ) ]
+        [ ( "purpose", Encode.string |> Encode.optional input____.purpose ), ( "slackChannel", Encode.string |> Encode.optional input____.slackChannel ), ( "slackAlertsChannels", (encodeSlackAlertsChannelInput |> Encode.list) |> Encode.optional input____.slackAlertsChannels ) ]

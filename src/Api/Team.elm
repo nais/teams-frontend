@@ -9,6 +9,7 @@ import Backend.Object.AuditLog as AuditLog
 import Backend.Object.GcpProject as GcpProject
 import Backend.Object.NaisNamespace as NaisNamespace
 import Backend.Object.ReconcilerState as ReconcilerState
+import Backend.Object.SlackAlertsChannel
 import Backend.Object.SyncError as SyncError
 import Backend.Object.Team as Team
 import Backend.Object.TeamMember as TeamMember
@@ -78,10 +79,17 @@ type alias TeamSyncState =
     }
 
 
+type alias SlackAlertsChannel =
+    { environment : String
+    , channelName : Maybe String
+    }
+
+
 type alias TeamData =
     { slug : Slug
     , purpose : String
-    , slackAlertChannel : String
+    , slackChannel : String
+    , slackAlertsChannels : List SlackAlertsChannel
     , members : List TeamMemberData
     , auditLogs : List AuditLogData
     , metadata : List KeyValueData
@@ -164,7 +172,8 @@ teamDataSelection =
     Graphql.SelectionSet.succeed TeamData
         |> with Team.slug
         |> with Team.purpose
-        |> with (Team.slackChannel |> mapMaybeToString)
+        |> with Team.slackChannel
+        |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
@@ -179,7 +188,8 @@ teamDataFullSelection =
     Graphql.SelectionSet.succeed TeamData
         |> with Team.slug
         |> with Team.purpose
-        |> with (Team.slackChannel |> mapMaybeToString)
+        |> with Team.slackChannel
+        |> with (Team.slackAlertsChannels slackAlertsChannelsSelection)
         |> with (Team.members teamMemberSelection)
         |> with (Team.auditLogs auditLogSelection)
         |> with (Team.metadata keyValueSelection)
@@ -195,6 +205,14 @@ teamMemberSelection =
         TeamMemberData
         (TeamMember.user userDataSelection)
         TeamMember.role
+
+
+slackAlertsChannelsSelection : SelectionSet SlackAlertsChannel Backend.Object.SlackAlertsChannel
+slackAlertsChannelsSelection =
+    Graphql.SelectionSet.map2
+        SlackAlertsChannel
+        Backend.Object.SlackAlertsChannel.environment
+        Backend.Object.SlackAlertsChannel.channelName
 
 
 auditLogSelection : SelectionSet AuditLogData Backend.Object.AuditLog

@@ -94,6 +94,15 @@ reconcilerState object____ =
 
 {-| Slack channel for the team.
 -}
-slackChannel : SelectionSet (Maybe String) Backend.Object.Team
+slackChannel : SelectionSet String Backend.Object.Team
 slackChannel =
-    Object.selectionForField "(Maybe String)" "slackChannel" [] (Decode.string |> Decode.nullable)
+    Object.selectionForField "String" "slackChannel" [] Decode.string
+
+
+{-| A list of Slack channels for NAIS alerts. If no channel is specified for a given environment, NAIS will fallback to the slackChannel value.
+-}
+slackAlertsChannels :
+    SelectionSet decodesTo Backend.Object.SlackAlertsChannel
+    -> SelectionSet (List decodesTo) Backend.Object.Team
+slackAlertsChannels object____ =
+    Object.selectionForCompositeField "slackAlertsChannels" [] object____ (Basics.identity >> Decode.list)

@@ -205,7 +205,8 @@ type alias CreateTeamRequiredArguments =
 
 {-| Create a new team
 
-The user creating the team will be granted team ownership, unless the user is a service account, in which case the team will not get an initial owner. To add one or more owners to the team, refer to the `addTeamOwners` mutation.
+The user creating the team will be granted team ownership, unless the user is a service account, in which case the
+team will not get an initial owner. To add one or more owners to the team, refer to the `addTeamOwners` mutation.
 
 The new team will be returned on success.
 

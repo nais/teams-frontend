@@ -37,6 +37,10 @@ type ServiceAccount
     = ServiceAccount
 
 
+type SlackAlertsChannel
+    = SlackAlertsChannel
+
+
 type SyncError
     = SyncError
 
