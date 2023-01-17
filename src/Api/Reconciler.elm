@@ -73,3 +73,23 @@ reconcilerConfigDataSelection =
         |> Graphql.SelectionSet.with ReconcilerConfig.key
         |> Graphql.SelectionSet.with ReconcilerConfig.value
         |> Graphql.SelectionSet.with ReconcilerConfig.secret
+
+
+synchronizeUsers : SelectionSet () Graphql.Operation.RootMutation
+synchronizeUsers =
+    Mutation.synchronizeUsers emptyDataSelection
+
+
+synchronizeAllTeams : SelectionSet () Graphql.Operation.RootMutation
+synchronizeAllTeams =
+    Graphql.SelectionSet.map flattenListOfNothing (Mutation.synchronizeAllTeams emptyDataSelection)
+
+
+emptyDataSelection : SelectionSet () a
+emptyDataSelection =
+    Graphql.SelectionSet.empty
+
+
+flattenListOfNothing : List () -> ()
+flattenListOfNothing _ =
+    ()

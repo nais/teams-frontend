@@ -458,7 +458,7 @@ metadataRow kv =
 smallButton : Msg -> String -> String -> Html Msg
 smallButton msg iconClass title =
     div [ class "small button", onClick msg ]
-        [ div [ classList [ ( "icon", True ), ( iconClass, True ) ] ] []
+        [ div [ class "icon", class iconClass ] []
         , text title
         ]
 

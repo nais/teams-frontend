@@ -2,7 +2,7 @@ module Page.ReconcilerAdmin exposing (..)
 
 import Api.Do exposing (mutate, query)
 import Api.Error
-import Api.Reconciler exposing (ReconcilerConfigData, ReconcilerData, disableReconciler, enableReconciler, getReconcilers, updateReconcilerConfig)
+import Api.Reconciler exposing (ReconcilerConfigData, ReconcilerData, disableReconciler, enableReconciler, getReconcilers, synchronizeAllTeams, synchronizeUsers, updateReconcilerConfig)
 import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, a, button, div, form, h2, input, label, li, p, text, textarea, ul)
@@ -24,9 +24,12 @@ type Msg
     = GotReconcilersResponse (RemoteData (Graphql.Http.Error (List ReconcilerData)) (List ReconcilerData))
     | GotUpdateReconcilerResponse (Result (Graphql.Http.Error ReconcilerData) ReconcilerData)
     | GotEnableReconcilerResponse (Result (Graphql.Http.Error ReconcilerData) ReconcilerData)
+    | GotEmptyResponse (Result (Graphql.Http.Error ()) ())
     | Submit ReconcilerName
     | OnInput ReconcilerName ReconcilerConfigKey String
     | OnToggle ReconcilerName Bool
+    | OnSynchronizeUsers
+    | OnSynchronizeAllTeams
     | AckError
     | Reload
     | NoOp
@@ -106,11 +109,25 @@ update msg model =
                 Err e ->
                     ( { model | error = Just (Api.Error.errorToString e) }, Cmd.none )
 
+        GotEmptyResponse r ->
+            case r of
+                Ok _ ->
+                    ( { model | error = Nothing }, Cmd.none )
+
+                Err e ->
+                    ( { model | error = Just (Api.Error.errorToString e) }, Cmd.none )
+
         GotReconcilersResponse r ->
             ( { model | reconcilers = r }, Cmd.none )
 
         OnToggle name value ->
             ( { model | reconcilers = mapReconcilers (mapReconcilerEnabled name value) model.reconcilers }, Cmd.none )
+
+        OnSynchronizeUsers ->
+            ( model, mutate synchronizeUsers GotEmptyResponse )
+
+        OnSynchronizeAllTeams ->
+            ( model, mutate synchronizeAllTeams GotEmptyResponse )
 
         NoOp ->
             ( model, Cmd.none )
@@ -355,7 +372,26 @@ viewReconcilerConfig rd =
 
 viewForm : List ReconcilerData -> Html Msg
 viewForm lrd =
-    div [ class "cards" ] (List.map viewReconcilerConfig lrd)
+    div [ class "cards" ] (viewAdminActions :: List.map viewReconcilerConfig lrd)
+
+
+viewAdminActions : Html Msg
+viewAdminActions =
+    div [ class "card" ]
+        [ div [ class "title" ]
+            [ h2 [] [ text "Admin actions" ]
+            , smallButton OnSynchronizeUsers "synchronize" "Synchronize users"
+            , smallButton OnSynchronizeAllTeams "synchronize" "Synchronize teams"
+            ]
+        ]
+
+
+smallButton : Msg -> String -> String -> Html Msg
+smallButton msg iconClass title =
+    div [ class "small button", onClick msg ]
+        [ div [ class "icon", class iconClass ] []
+        , text title
+        ]
 
 
 onClickStopPropagation : msg -> Html.Attribute msg
