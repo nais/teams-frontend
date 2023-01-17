@@ -631,22 +631,19 @@ viewTeamState team =
         ]
 
 
-viewSlackChannel : SlackAlertsChannel -> List (Html msg)
-viewSlackChannel channel =
-    case channel.channelName of
-        Nothing ->
-            []
-
-        Just channelName ->
-            [ dt [] [ text channel.environment ]
-            , dd [] [ text channelName ]
-            ]
+viewSlackChannel : String -> SlackAlertsChannel -> List (Html msg)
+viewSlackChannel defaultSlackChannel channel =
+    [ dt [] [ text channel.environment ]
+    , dd []
+        [ text (Maybe.withDefault defaultSlackChannel channel.channelName)
+        ]
+    ]
 
 
 viewSlackChannels : TeamData -> Html msg
 viewSlackChannels team =
     dl []
-        (List.concatMap viewSlackChannel team.slackAlertsChannels)
+        (List.concatMap (viewSlackChannel team.slackChannel) team.slackAlertsChannels)
 
 
 viewTeamOverview : User -> TeamData -> Html Msg
@@ -663,10 +660,7 @@ viewTeamOverview user team =
         , p [] [ text team.slackChannel ]
         , h3 [] [ text "Slack alert channels" ]
         , p []
-            [ text "Per-environment slack channels to be used for alerts sent by the platform. "
-            , strong [] [ text team.slackChannel ]
-            , text " will be used if no override is set."
-            ]
+            [ text "Per-environment slack channels to be used for alerts sent by the platform." ]
         , viewSlackChannels team
         , viewSyncSuccess team
         ]
@@ -705,10 +699,7 @@ viewEditTeamOverview team error =
          , input [ type_ "text", Html.Attributes.placeholder "#team-slack-channel", onInput SlackChannelChanged, value team.slackChannel ] []
          , h3 [] [ text "Slack alerts channels" ]
          , p []
-            [ text "Per-environment slack channels to be used for alerts sent by the platform. "
-            , strong [] [ text team.slackChannel ]
-            , text " will be used if no override is set."
-            ]
+            [ text "Per-environment slack channels to be used for alerts sent by the platform." ]
          ]
             ++ List.concatMap (viewSlackAlertsChannel team.slackChannel) team.slackAlertsChannels
             ++ [ errorMessage
