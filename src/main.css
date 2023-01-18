@@ -45,8 +45,7 @@ select {
 }
 
 button:disabled {
-  background-color: var(--gray);
-  cursor: not-allowed;
+  cursor: not-allowed !important;
 }
 
 code {

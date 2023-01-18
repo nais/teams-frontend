@@ -169,7 +169,7 @@ update msg model =
         OnSubmitAddMember ->
             case model.userList of
                 Success userList ->
-                    case List.head (List.filter (\u -> nameAndEmail u == model.addMemberQuery) userList) of
+                    case queryUserList model.addMemberQuery userList of
                         Just u ->
                             ( { model | addMemberQuery = "", memberChanges = addUserToTeam u model.addMemberRole model.memberChanges, addMemberRole = Member }, Cmd.none )
 
@@ -259,6 +259,12 @@ initMembers response =
 
         _ ->
             []
+
+
+queryUserList : String -> List UserData -> Maybe UserData
+queryUserList query userList =
+    List.filter (\u -> nameAndEmail u == query) userList
+        |> List.head
 
 
 memberData : MemberChange -> TeamMemberData
@@ -870,7 +876,7 @@ viewEditMembers model team _ =
                             --
                             , td [] [ viewRoleSelector model.addMemberRole AddMemberRoleDropDownClicked False ]
                             , td [ colspan 2 ]
-                                [ button [ type_ "submit", class "small button", Html.Attributes.form "addMemberForm" ]
+                                [ button [ type_ "submit", class "small button", Html.Attributes.form "addMemberForm", disabled (queryUserList model.addMemberQuery userList == Nothing) ]
                                     [ div [ class "icon add" ] []
                                     , text "Add"
                                     ]
