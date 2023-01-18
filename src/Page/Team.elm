@@ -311,6 +311,21 @@ mapMember typ memberToChange m =
         m
 
 
+noMemberChanges : List MemberChange -> Bool
+noMemberChanges changes =
+    List.filter
+        (\c ->
+            case c of
+                Unchanged _ ->
+                    False
+
+                _ ->
+                    True
+        )
+        changes
+        |> List.isEmpty
+
+
 mapSlackAlertsChannel : String -> String -> SlackAlertsChannel -> SlackAlertsChannel
 mapSlackAlertsChannel environment channelName channel =
     if environment == channel.environment then
@@ -865,7 +880,7 @@ viewEditMembers model team _ =
                         )
                     ]
                 , div [ class "button-row" ]
-                    [ button [ onClick (ClickedSaveTeamMembers team model.memberChanges) ] [ text "Save members" ]
+                    [ button [ disabled (noMemberChanges model.memberChanges || not (model.addMemberQuery == "")), onClick (ClickedSaveTeamMembers team model.memberChanges) ] [ text "Save members" ]
                     , button [ class "transparent", onClick ClickedCancelEditMembers ] [ text "Cancel changes" ]
                     ]
                 ]
