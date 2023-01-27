@@ -3,7 +3,7 @@ module Page.CreateTeam exposing (..)
 import Api.Do
 import Api.Error exposing (errorToString)
 import Api.Team exposing (TeamData, createTeam)
-import Backend.Scalar
+import Backend.Scalar exposing (Slug)
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, button, div, form, h2, input, label, li, p, text, ul)
 import Html.Attributes exposing (class, for, placeholder, type_)
@@ -72,7 +72,9 @@ update msg model =
             ( { model | error = Just (errorToString e) }, Cmd.none )
 
         SlugChanged s ->
-            ( { model | slug = s }, Cmd.none )
+            ( { model | slug = s, error = validateTeamName s }
+            , Cmd.none
+            )
 
         PurposeChanged s ->
             ( { model | purpose = s }, Cmd.none )
@@ -119,6 +121,15 @@ createTeamForm model =
                    ]
             )
         ]
+
+
+validateTeamName : String -> Maybe String
+validateTeamName name =
+    if String.toLower name |> String.startsWith "nais" then
+        Just "team name cannot start with 'nais'"
+
+    else
+        Nothing
 
 
 view : Model -> Html Msg
