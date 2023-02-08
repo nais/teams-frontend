@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Backend.Scalar exposing (AuditAction(..), AuditLogsTargetType(..), Codecs, Id(..), ReconcilerConfigKey(..), ReconcilerName(..), RoleName(..), Slug(..), SystemName(..), Time(..), Uuid(..), defaultCodecs, defineCodecs, unwrapCodecs, unwrapEncoder)
+module Backend.Scalar exposing (AuditAction(..), AuditLogsTargetType(..), Codecs, DeployKey(..), Id(..), ReconcilerConfigKey(..), ReconcilerName(..), RoleName(..), Slug(..), SystemName(..), Time(..), Uuid(..), defaultCodecs, defineCodecs, unwrapCodecs, unwrapEncoder)
 
 import Graphql.Codec exposing (Codec)
 import Graphql.Internal.Builder.Object as Object
@@ -17,6 +17,10 @@ type AuditAction
 
 type AuditLogsTargetType
     = AuditLogsTargetType String
+
+
+type DeployKey
+    = DeployKey String
 
 
 type Id
@@ -54,6 +58,7 @@ type Uuid
 defineCodecs :
     { codecAuditAction : Codec valueAuditAction
     , codecAuditLogsTargetType : Codec valueAuditLogsTargetType
+    , codecDeployKey : Codec valueDeployKey
     , codecId : Codec valueId
     , codecReconcilerConfigKey : Codec valueReconcilerConfigKey
     , codecReconcilerName : Codec valueReconcilerName
@@ -63,16 +68,17 @@ defineCodecs :
     , codecTime : Codec valueTime
     , codecUuid : Codec valueUuid
     }
-    -> Codecs valueAuditAction valueAuditLogsTargetType valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid
+    -> Codecs valueAuditAction valueAuditLogsTargetType valueDeployKey valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid
 defineCodecs definitions =
     Codecs definitions
 
 
 unwrapCodecs :
-    Codecs valueAuditAction valueAuditLogsTargetType valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid
+    Codecs valueAuditAction valueAuditLogsTargetType valueDeployKey valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid
     ->
         { codecAuditAction : Codec valueAuditAction
         , codecAuditLogsTargetType : Codec valueAuditLogsTargetType
+        , codecDeployKey : Codec valueDeployKey
         , codecId : Codec valueId
         , codecReconcilerConfigKey : Codec valueReconcilerConfigKey
         , codecReconcilerName : Codec valueReconcilerName
@@ -87,21 +93,22 @@ unwrapCodecs (Codecs unwrappedCodecs) =
 
 
 unwrapEncoder :
-    (RawCodecs valueAuditAction valueAuditLogsTargetType valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid -> Codec getterValue)
-    -> Codecs valueAuditAction valueAuditLogsTargetType valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid
+    (RawCodecs valueAuditAction valueAuditLogsTargetType valueDeployKey valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid -> Codec getterValue)
+    -> Codecs valueAuditAction valueAuditLogsTargetType valueDeployKey valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid
     -> getterValue
     -> Graphql.Internal.Encode.Value
 unwrapEncoder getter (Codecs unwrappedCodecs) =
     (unwrappedCodecs |> getter |> .encoder) >> Graphql.Internal.Encode.fromJson
 
 
-type Codecs valueAuditAction valueAuditLogsTargetType valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid
-    = Codecs (RawCodecs valueAuditAction valueAuditLogsTargetType valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid)
+type Codecs valueAuditAction valueAuditLogsTargetType valueDeployKey valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid
+    = Codecs (RawCodecs valueAuditAction valueAuditLogsTargetType valueDeployKey valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid)
 
 
-type alias RawCodecs valueAuditAction valueAuditLogsTargetType valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid =
+type alias RawCodecs valueAuditAction valueAuditLogsTargetType valueDeployKey valueId valueReconcilerConfigKey valueReconcilerName valueRoleName valueSlug valueSystemName valueTime valueUuid =
     { codecAuditAction : Codec valueAuditAction
     , codecAuditLogsTargetType : Codec valueAuditLogsTargetType
+    , codecDeployKey : Codec valueDeployKey
     , codecId : Codec valueId
     , codecReconcilerConfigKey : Codec valueReconcilerConfigKey
     , codecReconcilerName : Codec valueReconcilerName
@@ -113,7 +120,7 @@ type alias RawCodecs valueAuditAction valueAuditLogsTargetType valueId valueReco
     }
 
 
-defaultCodecs : RawCodecs AuditAction AuditLogsTargetType Id ReconcilerConfigKey ReconcilerName RoleName Slug SystemName Time Uuid
+defaultCodecs : RawCodecs AuditAction AuditLogsTargetType DeployKey Id ReconcilerConfigKey ReconcilerName RoleName Slug SystemName Time Uuid
 defaultCodecs =
     { codecAuditAction =
         { encoder = \(AuditAction raw) -> Encode.string raw
@@ -122,6 +129,10 @@ defaultCodecs =
     , codecAuditLogsTargetType =
         { encoder = \(AuditLogsTargetType raw) -> Encode.string raw
         , decoder = Object.scalarDecoder |> Decode.map AuditLogsTargetType
+        }
+    , codecDeployKey =
+        { encoder = \(DeployKey raw) -> Encode.string raw
+        , decoder = Object.scalarDecoder |> Decode.map DeployKey
         }
     , codecId =
         { encoder = \(Id raw) -> Encode.string raw

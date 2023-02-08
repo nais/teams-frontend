@@ -15,6 +15,7 @@ type Route
     | MyTeams
     | AllTeams
     | CreateTeam
+    | Users
     | Team Backend.Scalar.Slug
 
 
@@ -26,6 +27,7 @@ parser =
         , Parser.map AllTeams (s "teams")
         , Parser.map MyTeams (s "teams" </> s "my")
         , Parser.map CreateTeam (s "teams" </> s "create")
+        , Parser.map Users (s "users")
         , Parser.map (\s -> Team (Slug s)) (s "teams" </> string)
         ]
 
@@ -72,6 +74,9 @@ routeToString page =
 
                 CreateTeam ->
                     [ "teams", "create" ]
+
+                Users ->
+                    [ "users" ]
 
                 Team (Slug id) ->
                     [ "teams", id ]

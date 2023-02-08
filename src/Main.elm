@@ -13,6 +13,7 @@ import Page.Home as Home
 import Page.ReconcilerAdmin as ReconcilerAdmin
 import Page.Team as Team exposing (slugstr)
 import Page.Teams as Teams
+import Page.Users as Users
 import RemoteData exposing (RemoteData(..))
 import Route exposing (Route(..), link)
 import Session exposing (Session, User(..))
@@ -30,6 +31,7 @@ type Model
     | Team Team.Model
     | Teams Teams.Model
     | CreateTeam CreateTeam.Model
+    | Users Users.Model
     | Error Error.Model
 
 
@@ -45,6 +47,7 @@ type Msg
     | GotTeamMsg Team.Msg
     | GotTeamsMsg Teams.Msg
     | GotCreateTeamMsg CreateTeam.Msg
+    | GotUsersMsg Users.Msg
     | LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
 
@@ -96,8 +99,11 @@ changeRouteTo maybeRoute session =
                 Just (Route.Team id) ->
                     Team.init session id |> updateWith Team GotTeamMsg
 
+                Just Route.Users ->
+                    Users.init session |> updateWith Users GotUsersMsg
+
                 Nothing ->
-                    Error.init session "404" |> updateWith Error (\_ -> NoOp)
+                    Error.init session "changeRouteTo: no route found" |> updateWith Error (\_ -> NoOp)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -141,8 +147,11 @@ update msg model =
         ( GotMeResponse url r, _ ) ->
             handleMeResponse (toSession model) url r
 
+        ( GotUsersMsg subMsg, Users subModel ) ->
+            Users.update subMsg subModel |> updateWith Users GotUsersMsg
+
         ( _, _ ) ->
-            ( model, Cmd.none )
+            Error.init (toSession model) "Main.update: no case added for this (msg, model) combination" |> updateWith Error (\_ -> NoOp)
 
 
 
@@ -171,6 +180,9 @@ view model =
 
                 CreateTeam subModel ->
                     CreateTeam.view subModel |> Html.map GotCreateTeamMsg
+
+                Users subModel ->
+                    Users.view subModel |> Html.map GotUsersMsg
 
                 Error subModel ->
                     Error.view subModel |> Html.map (\_ -> NoOp)
@@ -244,16 +256,18 @@ viewNav model =
                 _ ->
                     []
 
-        adminButton =
+        adminButtons =
             if Session.isGlobalAdmin (Session.user (toSession model)) then
-                [ menuItem model Route.ReconcilerAdmin False "Synchronizers" ]
+                [ menuItem model Route.ReconcilerAdmin False "Synchronizers"
+                , menuItem model Route.Users False "Users"
+                ]
 
             else
                 []
     in
     case user of
         LoggedIn _ ->
-            nav [] [ ul [] (teamsButton ++ ephemeralButtons ++ adminButton) ]
+            nav [] [ ul [] (teamsButton ++ ephemeralButtons ++ adminButtons) ]
 
         _ ->
             nav [] []
@@ -275,6 +289,9 @@ isActiveRoute model target =
             True
 
         ( Admin _, Route.ReconcilerAdmin ) ->
+            True
+
+        ( Users _, Route.Users ) ->
             True
 
         ( _, _ ) ->
@@ -324,6 +341,9 @@ toSession model =
             m.session
 
         Teams m ->
+            m.session
+
+        Users m ->
             m.session
 
         CreateTeam m ->

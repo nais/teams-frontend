@@ -1,8 +1,9 @@
-module Api.Do exposing (mutate, query)
+module Api.Do exposing (mutate, query, queryRD)
 
 import Graphql.Http
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
+import RemoteData exposing (RemoteData)
 
 
 
@@ -20,6 +21,14 @@ query q toMsg =
         |> Graphql.Http.queryRequest graphQLBackend
         |> Graphql.Http.withCredentials
         |> Graphql.Http.send toMsg
+
+
+queryRD : SelectionSet decodesTo RootQuery -> (RemoteData (Graphql.Http.Error decodesTo) decodesTo -> msg) -> Cmd msg
+queryRD q toMsg =
+    q
+        |> Graphql.Http.queryRequest graphQLBackend
+        |> Graphql.Http.withCredentials
+        |> Graphql.Http.send (RemoteData.fromResult >> toMsg)
 
 
 mutate : SelectionSet decodesTo RootMutation -> (Result (Graphql.Http.Error decodesTo) decodesTo -> msg) -> Cmd msg

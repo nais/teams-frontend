@@ -56,3 +56,10 @@ roles :
     -> SelectionSet (List decodesTo) Backend.Object.User
 roles object____ =
     Object.selectionForCompositeField "roles" [] object____ (Basics.identity >> Decode.list)
+
+
+{-| The external ID of the user.
+-}
+externalId : SelectionSet String Backend.Object.User
+externalId =
+    Object.selectionForField "String" "externalId" [] Decode.string

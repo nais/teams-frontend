@@ -70,6 +70,22 @@ team requiredArgs____ object____ =
     Object.selectionForCompositeField "team" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
 
 
+type alias DeployKeyRequiredArguments =
+    { slug : Backend.ScalarCodecs.Slug }
+
+
+{-| Get deploy key for specific team.
+
+  - slug - Slug of the team.
+
+-}
+deployKey :
+    DeployKeyRequiredArguments
+    -> SelectionSet Backend.ScalarCodecs.DeployKey RootQuery
+deployKey requiredArgs____ =
+    Object.selectionForField "ScalarCodecs.DeployKey" "deployKey" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecDeployKey |> .decoder)
+
+
 {-| Get a collection of users, sorted by name.
 -}
 users :

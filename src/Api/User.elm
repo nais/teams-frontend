@@ -36,6 +36,7 @@ type alias UserData =
     { id : Uuid
     , email : String
     , name : String
+    , externalId : String
     , teamMemberships : List TeamMembershipData
     , roles : List RoleData
     }
@@ -51,12 +52,18 @@ getAllUsers =
     Query.users userDataSelection
 
 
+getAllUsersWithRoles : SelectionSet (List UserData) RootQuery
+getAllUsersWithRoles =
+    Query.users userDataWithRoleSelection
+
+
 userDataWithRoleSelection : SelectionSet UserData Backend.Object.User
 userDataWithRoleSelection =
     SelectionSet.succeed UserData
         |> SelectionSet.with User.id
         |> SelectionSet.with User.email
         |> SelectionSet.with User.name
+        |> SelectionSet.with User.externalId
         |> SelectionSet.with (User.teams teamMembershipSelection)
         |> SelectionSet.with (User.roles roleDataSelection)
 
@@ -67,6 +74,7 @@ userDataSelection =
         |> SelectionSet.with User.id
         |> SelectionSet.with User.email
         |> SelectionSet.with User.name
+        |> SelectionSet.with User.externalId
         |> SelectionSet.hardcoded []
         |> SelectionSet.hardcoded []
 
