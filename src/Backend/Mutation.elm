@@ -297,9 +297,9 @@ is asynchronous. The operation can take a while, depending on the amount of team
 -}
 synchronizeAllTeams :
     SelectionSet decodesTo Backend.Object.TeamSync
-    -> SelectionSet (List decodesTo) RootMutation
+    -> SelectionSet decodesTo RootMutation
 synchronizeAllTeams object____ =
-    Object.selectionForCompositeField "synchronizeAllTeams" [] object____ (Basics.identity >> Decode.list)
+    Object.selectionForCompositeField "synchronizeAllTeams" [] object____ Basics.identity
 
 
 type alias AddTeamMembersRequiredArguments =

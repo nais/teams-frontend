@@ -19,15 +19,6 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
-{-| The team that will be synced.
--}
-team :
-    SelectionSet decodesTo Backend.Object.Team
-    -> SelectionSet decodesTo Backend.Object.TeamSync
-team object____ =
-    Object.selectionForCompositeField "team" [] object____ Basics.identity
-
-
 {-| The correlation ID for the sync.
 -}
 correlationID : SelectionSet Backend.ScalarCodecs.Uuid Backend.Object.TeamSync

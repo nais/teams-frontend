@@ -82,14 +82,9 @@ synchronizeUsers =
 
 synchronizeAllTeams : SelectionSet () Graphql.Operation.RootMutation
 synchronizeAllTeams =
-    Graphql.SelectionSet.map flattenListOfNothing (Mutation.synchronizeAllTeams emptyDataSelection)
+    Mutation.synchronizeAllTeams emptyDataSelection
 
 
 emptyDataSelection : SelectionSet () a
 emptyDataSelection =
     Graphql.SelectionSet.empty
-
-
-flattenListOfNothing : List () -> ()
-flattenListOfNothing _ =
-    ()
