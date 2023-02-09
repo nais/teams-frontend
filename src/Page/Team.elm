@@ -11,7 +11,7 @@ import Backend.Scalar exposing (RoleName(..), Slug, Uuid(..))
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
 import Html exposing (Html, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, classList, colspan, disabled, for, id, list, placeholder, selected, type_, value)
+import Html.Attributes exposing (class, classList, colspan, disabled, for, id, list, placeholder, selected, type_, value, width)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List exposing (member)
@@ -263,7 +263,7 @@ initMembers response =
 
 queryUserList : String -> List UserData -> Maybe UserData
 queryUserList query userList =
-    List.filter (\u -> nameAndEmail u == query) userList
+    List.filter (\u -> u.email == query) userList
         |> List.head
 
 
@@ -764,7 +764,7 @@ nameAndEmail user =
 
 addUserCandidateOption : UserData -> Html msg
 addUserCandidateOption user =
-    option [] [ text (nameAndEmail user) ]
+    option [] [ text user.email ]
 
 
 editMemberRow : MemberChange -> Html Msg

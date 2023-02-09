@@ -121,6 +121,11 @@ h1 a {
   text-decoration: inherit;
 }
 
+td input {
+  width: min(20em, 90%);
+  padding-right: 0;
+}
+
 h1 a:hover {
   text-decoration: underline;
 }
