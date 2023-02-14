@@ -13,6 +13,14 @@ type GcpProject
     = GcpProject
 
 
+type GitHubRepository
+    = GitHubRepository
+
+
+type GitHubRepositoryPermission
+    = GitHubRepositoryPermission
+
+
 type NaisNamespace
     = NaisNamespace
 

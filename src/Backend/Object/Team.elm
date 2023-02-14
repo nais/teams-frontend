@@ -106,3 +106,12 @@ slackAlertsChannels :
     -> SelectionSet (List decodesTo) Backend.Object.Team
 slackAlertsChannels object____ =
     Object.selectionForCompositeField "slackAlertsChannels" [] object____ (Basics.identity >> Decode.list)
+
+
+{-| A list of GitHub repositories for the team.
+-}
+gitHubRepositories :
+    SelectionSet decodesTo Backend.Object.GitHubRepository
+    -> SelectionSet (List decodesTo) Backend.Object.Team
+gitHubRepositories object____ =
+    Object.selectionForCompositeField "gitHubRepositories" [] object____ (Basics.identity >> Decode.list)

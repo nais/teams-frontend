@@ -7,6 +7,8 @@ import Backend.Mutation as Mutation
 import Backend.Object
 import Backend.Object.AuditLog as AuditLog
 import Backend.Object.GcpProject as GcpProject
+import Backend.Object.GitHubRepository
+import Backend.Object.GitHubRepositoryPermission
 import Backend.Object.NaisNamespace as NaisNamespace
 import Backend.Object.ReconcilerState as ReconcilerState
 import Backend.Object.SlackAlertsChannel
@@ -96,7 +98,20 @@ type alias TeamData =
     , syncErrors : List SyncErrorData
     , lastSuccessfulSync : Maybe ISO8601.Time
     , syncState : Maybe TeamSyncState
+    , repositories : List GitHubRepository
     , enabled : Bool
+    }
+
+
+type alias GitHubRepository =
+    { name : String
+    , permissions : List GitHubRepositoryPermission
+    }
+
+
+type alias GitHubRepositoryPermission =
+    { name : String
+    , granted : Bool
     }
 
 
@@ -180,6 +195,7 @@ teamDataSelection =
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded Nothing
         |> Graphql.SelectionSet.hardcoded Nothing
+        |> Graphql.SelectionSet.hardcoded []
         |> with Team.enabled
 
 
@@ -196,7 +212,24 @@ teamDataFullSelection =
         |> with (Team.syncErrors syncErrorSelection)
         |> with (Team.lastSuccessfulSync |> mapToMaybeDateTime)
         |> with (Graphql.SelectionSet.map Just (Team.reconcilerState syncStateSelection))
+        |> with (Team.gitHubRepositories gitHubRepositorySelection)
         |> with Team.enabled
+
+
+gitHubRepositorySelection : SelectionSet GitHubRepository Backend.Object.GitHubRepository
+gitHubRepositorySelection =
+    Graphql.SelectionSet.map2
+        GitHubRepository
+        Backend.Object.GitHubRepository.name
+        (Backend.Object.GitHubRepository.permissions gitHubRepositoryPermissionSelection)
+
+
+gitHubRepositoryPermissionSelection : SelectionSet GitHubRepositoryPermission Backend.Object.GitHubRepositoryPermission
+gitHubRepositoryPermissionSelection =
+    Graphql.SelectionSet.map2
+        GitHubRepositoryPermission
+        Backend.Object.GitHubRepositoryPermission.name
+        Backend.Object.GitHubRepositoryPermission.granted
 
 
 teamMemberSelection : SelectionSet TeamMemberData Backend.Object.TeamMember

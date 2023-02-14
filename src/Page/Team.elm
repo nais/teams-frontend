@@ -2,7 +2,7 @@ module Page.Team exposing (..)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (AuditLogData, KeyValueData, SlackAlertsChannel, SyncErrorData, TeamData, TeamMemberData, TeamSync, TeamSyncState, addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
+import Api.Team exposing (AuditLogData, GitHubRepository, KeyValueData, SlackAlertsChannel, SyncErrorData, TeamData, TeamMemberData, TeamSync, TeamSyncState, addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
 import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
@@ -10,8 +10,8 @@ import Backend.Object.SlackAlertsChannel exposing (channelName)
 import Backend.Scalar exposing (RoleName(..), Slug, Uuid(..))
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
-import Html exposing (Html, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, classList, colspan, disabled, for, id, list, placeholder, selected, type_, value, width)
+import Html exposing (Html, a, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, classList, colspan, disabled, for, href, id, list, placeholder, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List exposing (member)
@@ -914,6 +914,7 @@ viewCards model team =
                 , viewSyncErrors team
                 , viewMembers user team
                 , viewTeamState team
+                , viewGitHubRepositories team
                 , viewLogs team
                 ]
 
@@ -933,6 +934,44 @@ viewCards model team =
                 , viewLogs team
                 ]
         )
+
+
+viewGitHubRepositories : TeamData -> Html Msg
+viewGitHubRepositories team =
+    div [ class "card" ]
+        [ h2 [] [ text "Repositories" ]
+        , p []
+            [ text "These are repositories that "
+            , strong [] [ text (slugstr team.slug) ]
+            , text " has access to. If it has the "
+            , strong [] [ text "push" ]
+            , text " permission it will be able to push images to this teams artifact registry."
+            ]
+        , table []
+            [ thead []
+                [ tr []
+                    [ th [] [ text "Repository" ]
+                    , th [] [ text "Permissions" ]
+                    ]
+                ]
+            , tbody []
+                (List.map viewGitHubRepository team.repositories)
+            ]
+        ]
+
+
+viewGitHubRepository : GitHubRepository -> Html msg
+viewGitHubRepository repository =
+    tr []
+        [ td [] [ a [ href ("https://github.com/" ++ repository.name) ] [ text repository.name ] ]
+        , td []
+            [ repository.permissions
+                |> List.filter (\p -> p.granted)
+                |> List.map (\p -> p.name)
+                |> String.join ", "
+                |> text
+            ]
+        ]
 
 
 view : Model -> Html Msg
