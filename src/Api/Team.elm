@@ -86,19 +86,22 @@ type alias SlackAlertsChannel =
     , channelName : Maybe String
     }
 
+type Expandable a
+  = Preview a
+  | Expanded a
 
 type alias TeamData =
     { slug : Slug
     , purpose : String
     , slackChannel : String
     , slackAlertsChannels : List SlackAlertsChannel
-    , members : List TeamMemberData
-    , auditLogs : List AuditLogData
+    , members : Expandable (List TeamMemberData)
+    , auditLogs : Expandable (List AuditLogData)
     , metadata : List KeyValueData
     , syncErrors : List SyncErrorData
     , lastSuccessfulSync : Maybe ISO8601.Time
     , syncState : Maybe TeamSyncState
-    , repositories : List GitHubRepository
+    , repositories : Expandable (List GitHubRepository)
     , enabled : Bool
     }
 
@@ -189,13 +192,13 @@ teamDataSelection =
         |> with Team.purpose
         |> with Team.slackChannel
         |> Graphql.SelectionSet.hardcoded []
-        |> Graphql.SelectionSet.hardcoded []
-        |> Graphql.SelectionSet.hardcoded []
+        |> Graphql.SelectionSet.hardcoded (Preview [])
+        |> Graphql.SelectionSet.hardcoded (Preview [])
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded Nothing
         |> Graphql.SelectionSet.hardcoded Nothing
-        |> Graphql.SelectionSet.hardcoded []
+        |> Graphql.SelectionSet.hardcoded (Preview [])
         |> with Team.enabled
 
 
@@ -206,13 +209,13 @@ teamDataFullSelection =
         |> with Team.purpose
         |> with Team.slackChannel
         |> with (Team.slackAlertsChannels slackAlertsChannelsSelection)
-        |> with (Team.members teamMemberSelection)
-        |> with (Team.auditLogs auditLogSelection)
+        |> with (Graphql.SelectionSet.map Preview (Team.members teamMemberSelection))
+        |> with (Graphql.SelectionSet.map Preview (Team.auditLogs auditLogSelection))
         |> with (Team.metadata keyValueSelection)
         |> with (Team.syncErrors syncErrorSelection)
         |> with (Team.lastSuccessfulSync |> mapToMaybeDateTime)
         |> with (Graphql.SelectionSet.map Just (Team.reconcilerState syncStateSelection))
-        |> with (Team.gitHubRepositories gitHubRepositorySelection)
+        |> with (Graphql.SelectionSet.map Preview (Team.gitHubRepositories gitHubRepositorySelection))
         |> with Team.enabled
 
 

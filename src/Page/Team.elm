@@ -2,7 +2,7 @@ module Page.Team exposing (..)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (AuditLogData, GitHubRepository, KeyValueData, SlackAlertsChannel, SyncErrorData, TeamData, TeamMemberData, TeamSync, TeamSyncState, addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
+import Api.Team exposing (AuditLogData, Expandable(..), GitHubRepository, KeyValueData, SlackAlertsChannel, SyncErrorData, TeamData, TeamMemberData, TeamSync, TeamSyncState, addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
 import Api.User exposing (UserData)
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
@@ -11,12 +11,13 @@ import Backend.Scalar exposing (RoleName(..), Slug, Uuid(..))
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
 import Html exposing (Html, a, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, classList, colspan, disabled, for, href, id, list, placeholder, selected, type_, value, width)
+import Html.Attributes exposing (class, classList, colspan, disabled, for, href, id, list, placeholder, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List exposing (member)
 import RemoteData exposing (RemoteData(..))
 import Session exposing (Session, User(..))
+import List exposing (concatMap)
 
 
 type EditError
@@ -36,6 +37,11 @@ type MemberChange
     | Add TeamRole TeamMemberData
     | ChangeRole TeamRole TeamMemberData
 
+type ExpandableList
+    = Members
+    | Repositories
+    | AuditLogs
+
 
 type alias Model =
     { team : RemoteData (Graphql.Http.Error TeamData) TeamData
@@ -45,7 +51,6 @@ type alias Model =
     , session : Session
     , addMemberQuery : String
     , addMemberRole : TeamRole
-    , repositoriesShowMore : Bool
     }
 
 
@@ -73,7 +78,7 @@ type Msg
     | AddMemberRoleDropDownClicked String
     | GotUserListResponse (RemoteData (Graphql.Http.Error (List UserData)) (List UserData))
     | OnSubmitAddMember
-    | RepositoriesShowMore Bool
+    | ToggleExpandableList ExpandableList
 
 
 init : Session -> Backend.Scalar.Slug -> ( Model, Cmd Msg )
@@ -85,7 +90,6 @@ init session slug =
       , memberChanges = []
       , addMemberQuery = ""
       , addMemberRole = Backend.Enum.TeamRole.Member
-      , repositoriesShowMore = False
       }
     , Cmd.batch [ fetchTeam slug, getUserList ]
     )
@@ -227,8 +231,31 @@ update msg model =
         ClickedDisableTeam team ->
             ( model, Api.Do.mutate (disableTeam team) (GotTeamResponse << RemoteData.fromResult) )
 
-        RepositoriesShowMore showMore ->
-            ( { model | repositoriesShowMore = showMore }, Cmd.none )
+        ToggleExpandableList l ->
+            case model.team of
+                Success team ->
+                    case l of
+                        Repositories ->
+                            ( mapTeam (\t -> { t | repositories = flipExpanded team.repositories }) model, Cmd.none )
+
+                        Members ->
+                            ( mapTeam (\t -> { t | members = flipExpanded team.members }) model, Cmd.none )
+
+                        AuditLogs ->
+                            ( mapTeam (\t -> { t | auditLogs = flipExpanded team.auditLogs }) model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+
+flipExpanded : Expandable a -> Expandable a
+flipExpanded e =
+    case e of
+        Preview i ->
+            Expanded i
+
+        Expanded i ->
+            Preview i
 
 
 teamRoleFromString : String -> TeamRole
@@ -257,11 +284,21 @@ mapMemberChangeToCmds team change =
             []
 
 
+expandableAll : Expandable (List a) -> List a
+expandableAll e =
+    case e of
+        Preview i ->
+            i
+
+        Expanded i ->
+            i
+
+
 initMembers : RemoteData (Graphql.Http.Error TeamData) TeamData -> List MemberChange
 initMembers response =
     case response of
         Success t ->
-            List.map Unchanged t.members
+            List.map Unchanged (expandableAll t.members)
 
         _ ->
             []
@@ -741,11 +778,11 @@ viewEditTeamOverview team error =
 viewMembers : User -> TeamData -> Html Msg
 viewMembers user team =
     div [ class "card" ]
-        [ div [ class "title" ]
+        ([ div [ class "title" ]
             ([ h2 [] [ text "Members" ] ]
                 |> concatMaybe (editorButton ClickedEditMembers user team)
             )
-        , table []
+         , table []
             [ thead []
                 [ tr []
                     [ th [] [ text "Email" ]
@@ -753,14 +790,16 @@ viewMembers user team =
                     ]
                 ]
             , tbody []
-                (if List.length team.members == 0 then
+                (if List.length (unexpand team.members) == 0 then
                     [ tr [] [ td [ colspan 2 ] [ text "This team has no members" ] ] ]
 
                  else
-                    List.map memberRow team.members
+                    List.map memberRow (unexpand team.members)
                 )
             ]
-        ]
+         ]
+            |> concatMaybe (showMoreButton team.members numberOfPreviewElements (ToggleExpandableList Members))
+        )
 
 
 nameAndEmail : UserData -> String
@@ -899,12 +938,22 @@ viewEditMembers model team _ =
         )
 
 
+unexpand : Expandable (List a) -> List a
+unexpand l =
+    case l of
+        Preview p ->
+            List.take numberOfPreviewElements p
+
+        Expanded e ->
+            e
+
+
 viewLogs : TeamData -> Html Msg
 viewLogs team =
     div [ class "card" ]
-        [ h2 [] [ text "Logs" ]
-        , ul [ class "logs" ] (List.map auditLogLine team.auditLogs)
-        ]
+        ([ h2 [] [ text "Logs" ]
+        , ul [ class "logs" ] (team.auditLogs |> unexpand |> List.map auditLogLine)
+        ] |> concatMaybe (showMoreButton team.auditLogs numberOfPreviewElements (ToggleExpandableList AuditLogs)))
 
 
 viewCards : Model -> TeamData -> Html Msg
@@ -920,7 +969,7 @@ viewCards model team =
                 , viewSyncErrors team
                 , viewMembers user team
                 , viewTeamState team
-                , viewGitHubRepositories team model.repositoriesShowMore
+                , viewGitHubRepositories team
                 , viewLogs team
                 ]
 
@@ -942,22 +991,13 @@ viewCards model team =
         )
 
 
-defaultNumberOfRepositories : Int
-defaultNumberOfRepositories =
+numberOfPreviewElements : Int
+numberOfPreviewElements =
     5
 
 
-withLimit : Bool -> Int -> List a -> List a
-withLimit showAll limit list =
-    if showAll then
-        list
-
-    else
-        List.take limit list
-
-
-viewGitHubRepositories : TeamData -> Bool -> Html Msg
-viewGitHubRepositories team showAll =
+viewGitHubRepositories : TeamData -> Html Msg
+viewGitHubRepositories team =
     div [ class "card" ]
         ([ h2 [] [ text "Repositories" ]
          , p []
@@ -975,37 +1015,47 @@ viewGitHubRepositories team showAll =
                     ]
                 ]
             , tbody []
-                (team.repositories
-                    |> withLimit showAll defaultNumberOfRepositories
+                ((case team.repositories of
+                    Preview r ->
+                        List.take numberOfPreviewElements r
+
+                    Expanded r ->
+                        r
+                 )
                     |> List.map viewGitHubRepository
                 )
             ]
          ]
             |> concatMaybe
-                (showMoreButton showAll (List.length team.repositories > defaultNumberOfRepositories) RepositoriesShowMore)
+                (showMoreButton team.repositories numberOfPreviewElements (ToggleExpandableList Repositories))
         )
 
 
-showMoreButton : Bool -> Bool -> (Bool -> Msg) -> Maybe (Html Msg)
-showMoreButton showMore aboveLimit msg =
+showMoreButton : Expandable (List a) -> Int -> Msg -> Maybe (Html Msg)
+showMoreButton expandable previewSize msg =
     let
-        t =
-            if showMore then
-                "show less"
+        ( belowPreview, showMore, t ) =
+            case expandable of
+                Preview list ->
+                    if List.length list > previewSize then
+                        ( False, True, "show more" )
 
-            else
-                "show more"
+                    else
+                        ( True, True, "" )
+
+                Expanded _ ->
+                    ( False, False, "show less" )
     in
-    if aboveLimit then
+    if belowPreview then
+        Nothing
+
+    else
         div []
             [ button
-                [ class "text", onClick (msg (not showMore)) ]
+                [ class "text", onClick msg ]
                 [ text t ]
             ]
             |> Just
-
-    else
-        Nothing
 
 
 viewGitHubRepository : GitHubRepository -> Html msg
@@ -1038,11 +1088,11 @@ view model =
             div [ class "card" ] [ text "No data loaded" ]
 
 
-teamRoleForUser : TeamData -> User -> Maybe TeamRole
-teamRoleForUser team user =
+teamRoleForUser : List TeamMemberData -> User -> Maybe TeamRole
+teamRoleForUser members user =
     case user of
         LoggedIn u ->
-            List.head (List.filter (\m -> m.user.id == u.id) team.members)
+            List.head (List.filter (\m -> m.user.id == u.id) members)
                 |> Maybe.map (\m -> m.role)
 
         Anonymous ->
@@ -1056,7 +1106,7 @@ editor : TeamData -> User -> Bool
 editor team user =
     List.any (\b -> b)
         [ Session.isGlobalAdmin user
-        , teamRoleForUser team user == Just Owner
+        , teamRoleForUser (expandableAll team.members) user == Just Owner
         ]
 
 
