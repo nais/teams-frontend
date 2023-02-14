@@ -11,7 +11,7 @@ import Backend.Scalar exposing (RoleName(..), Slug, Uuid(..))
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
 import Html exposing (Html, a, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, classList, colspan, disabled, for, href, id, list, placeholder, selected, type_, value)
+import Html.Attributes exposing (class, classList, colspan, disabled, for, href, id, list, placeholder, selected, type_, value, width)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List exposing (member)
@@ -45,6 +45,7 @@ type alias Model =
     , session : Session
     , addMemberQuery : String
     , addMemberRole : TeamRole
+    , repositoriesShowMore : Bool
     }
 
 
@@ -72,6 +73,7 @@ type Msg
     | AddMemberRoleDropDownClicked String
     | GotUserListResponse (RemoteData (Graphql.Http.Error (List UserData)) (List UserData))
     | OnSubmitAddMember
+    | RepositoriesShowMore Bool
 
 
 init : Session -> Backend.Scalar.Slug -> ( Model, Cmd Msg )
@@ -83,6 +85,7 @@ init session slug =
       , memberChanges = []
       , addMemberQuery = ""
       , addMemberRole = Backend.Enum.TeamRole.Member
+      , repositoriesShowMore = False
       }
     , Cmd.batch [ fetchTeam slug, getUserList ]
     )
@@ -223,6 +226,9 @@ update msg model =
 
         ClickedDisableTeam team ->
             ( model, Api.Do.mutate (disableTeam team) (GotTeamResponse << RemoteData.fromResult) )
+
+        RepositoriesShowMore showMore ->
+            ( { model | repositoriesShowMore = showMore }, Cmd.none )
 
 
 teamRoleFromString : String -> TeamRole
@@ -914,7 +920,7 @@ viewCards model team =
                 , viewSyncErrors team
                 , viewMembers user team
                 , viewTeamState team
-                , viewGitHubRepositories team
+                , viewGitHubRepositories team model.repositoriesShowMore
                 , viewLogs team
                 ]
 
@@ -936,18 +942,32 @@ viewCards model team =
         )
 
 
-viewGitHubRepositories : TeamData -> Html Msg
-viewGitHubRepositories team =
+defaultNumberOfRepositories : Int
+defaultNumberOfRepositories =
+    5
+
+
+withLimit : Bool -> Int -> List a -> List a
+withLimit showAll limit list =
+    if showAll then
+        list
+
+    else
+        List.take limit list
+
+
+viewGitHubRepositories : TeamData -> Bool -> Html Msg
+viewGitHubRepositories team showAll =
     div [ class "card" ]
-        [ h2 [] [ text "Repositories" ]
-        , p []
+        ([ h2 [] [ text "Repositories" ]
+         , p []
             [ text "These are repositories that "
             , strong [] [ text (slugstr team.slug) ]
             , text " has access to. If it has the "
             , strong [] [ text "push" ]
             , text " permission it will be able to push images to this teams artifact registry."
             ]
-        , table []
+         , table [ class "repolist" ]
             [ thead []
                 [ tr []
                     [ th [] [ text "Repository" ]
@@ -955,9 +975,37 @@ viewGitHubRepositories team =
                     ]
                 ]
             , tbody []
-                (List.map viewGitHubRepository team.repositories)
+                (team.repositories
+                    |> withLimit showAll defaultNumberOfRepositories
+                    |> List.map viewGitHubRepository
+                )
             ]
-        ]
+         ]
+            |> concatMaybe
+                (showMoreButton showAll (List.length team.repositories > defaultNumberOfRepositories) RepositoriesShowMore)
+        )
+
+
+showMoreButton : Bool -> Bool -> (Bool -> Msg) -> Maybe (Html Msg)
+showMoreButton showMore aboveLimit msg =
+    let
+        t =
+            if showMore then
+                "show less"
+
+            else
+                "show more"
+    in
+    if aboveLimit then
+        div []
+            [ button
+                [ class "text", onClick (msg (not showMore)) ]
+                [ text t ]
+            ]
+            |> Just
+
+    else
+        Nothing
 
 
 viewGitHubRepository : GitHubRepository -> Html msg

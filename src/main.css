@@ -48,6 +48,15 @@ button:disabled {
   cursor: not-allowed !important;
 }
 
+button.text {
+  text-decoration: underline !important;
+  color: var(--link);
+  background-color: transparent;
+  padding: 0;
+  margin: 0 0 0 45%;
+  font-size: 0.9em;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
@@ -282,6 +291,10 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin: 0.5rem 0 1rem;
+}
+
+table.repolist td{
+  width: 50%;
 }
 
 td,
