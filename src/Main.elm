@@ -75,9 +75,6 @@ changeRouteTo maybeRoute session =
         Anonymous ->
             ( Home (Home.init session maybeRoute), Cmd.none )
 
-        Unknown ->
-            ( Home (Home.init session maybeRoute), Cmd.none )
-
         LoggedIn _ ->
             case maybeRoute of
                 Just Route.Home ->

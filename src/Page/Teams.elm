@@ -49,7 +49,7 @@ myTeams user teams =
                 LoggedIn u ->
                     map (\x -> x.team.slug) u.teamMemberships
 
-                _ ->
+                Anonymous ->
                     []
     in
     filter (\x -> member x.slug teamSlugs) teams

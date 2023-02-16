@@ -15,7 +15,7 @@ import Html exposing (Html, a, button, datalist, dd, div, dl, dt, em, form, h2, 
 import Html.Attributes exposing (class, classList, colspan, disabled, for, href, id, list, placeholder, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
-import List
+import List exposing (member)
 import RemoteData exposing (RemoteData(..))
 import Session exposing (Session, Viewer(..))
 
@@ -1093,16 +1093,11 @@ view model =
 
 teamRoleForViewer : List TeamMember -> Viewer -> Maybe TeamRole
 teamRoleForViewer members viewer =
-    case viewer of
-        LoggedIn u ->
-            List.head (List.filter (\m -> m.user.id == u.id) members)
-                |> Maybe.map (\m -> m.role)
-
-        Anonymous ->
-            Nothing
-
-        Unknown ->
-            Nothing
+    Session.user viewer
+        |> Maybe.andThen
+            (\u ->
+                List.filter (\m -> m.user.id == u.id) members |> List.head |> Maybe.map (\m -> m.role)
+            )
 
 
 editor : Team -> Viewer -> Bool
