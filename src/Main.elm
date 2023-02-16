@@ -1,9 +1,10 @@
 module Main exposing (..)
 
 import Api.Do exposing (query)
-import Api.User exposing (UserData)
+import Api.User
 import Browser exposing (Document)
 import Browser.Navigation as Nav
+import DataModel exposing (..)
 import Graphql.Http
 import Html exposing (Html, a, div, h1, header, li, main_, nav, p, text, ul)
 import Html.Attributes exposing (class, classList, href, id)
@@ -16,7 +17,7 @@ import Page.Teams as Teams
 import Page.Users as Users
 import RemoteData exposing (RemoteData(..))
 import Route exposing (Route(..), link)
-import Session exposing (Session, User(..))
+import Session exposing (Session, Viewer(..))
 import Url
 import Url.Builder
 
@@ -41,7 +42,7 @@ type Model
 
 type Msg
     = NoOp
-    | GotMeResponse Url.Url (Result (Graphql.Http.Error (Maybe UserData)) (Maybe UserData))
+    | GotMeResponse Url.Url (Result (Graphql.Http.Error (Maybe User)) (Maybe User))
     | GotHomeMsg Home.Msg
     | GotAdminMsg ReconcilerAdmin.Msg
     | GotTeamMsg Team.Msg
@@ -70,7 +71,7 @@ updateWith toModel toMsg ( subModel, subCmd ) =
 
 changeRouteTo : Maybe Route -> Session -> ( Model, Cmd Msg )
 changeRouteTo maybeRoute session =
-    case Session.user session of
+    case Session.viewer session of
         Anonymous ->
             ( Home (Home.init session maybeRoute), Cmd.none )
 
@@ -188,7 +189,7 @@ view model =
                     Error.view subModel |> Html.map (\_ -> NoOp)
 
         user =
-            Session.user (toSession model)
+            Session.viewer (toSession model)
 
         logoutURL =
             Url.Builder.absolute [ "oauth2", "logout" ] []
@@ -234,7 +235,7 @@ viewNav : Model -> Html msg
 viewNav model =
     let
         user =
-            Session.user (toSession model)
+            Session.viewer (toSession model)
 
         teamsButton =
             [ menuItem model Route.MyTeams False "Teams" ]
@@ -257,7 +258,7 @@ viewNav model =
                     []
 
         adminButtons =
-            if Session.isGlobalAdmin (Session.user (toSession model)) then
+            if Session.isGlobalAdmin (Session.viewer (toSession model)) then
                 [ menuItem model Route.ReconcilerAdmin False "Synchronizers"
                 , menuItem model Route.Users False "Users"
                 ]
@@ -355,16 +356,16 @@ getMe url =
     query Api.User.getMe (GotMeResponse url)
 
 
-handleMeResponse : Session -> Url.Url -> Result (Graphql.Http.Error (Maybe UserData)) (Maybe UserData) -> ( Model, Cmd Msg )
+handleMeResponse : Session -> Url.Url -> Result (Graphql.Http.Error (Maybe User)) (Maybe User) -> ( Model, Cmd Msg )
 handleMeResponse session url result =
     case result of
         Ok maybeU ->
             case maybeU of
                 Just u ->
-                    changeRouteTo (Route.fromUrl url) (Session.mapUser (Session.LoggedIn u) session)
+                    changeRouteTo (Route.fromUrl url) (Session.mapViewer (Session.LoggedIn u) session)
 
                 Nothing ->
-                    changeRouteTo (Route.fromUrl url) (Session.mapUser Session.Anonymous session)
+                    changeRouteTo (Route.fromUrl url) (Session.mapViewer Session.Anonymous session)
 
         Err _ ->
-            changeRouteTo (Route.fromUrl url) (Session.mapUser Session.Anonymous session)
+            changeRouteTo (Route.fromUrl url) (Session.mapViewer Session.Anonymous session)

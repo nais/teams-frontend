@@ -1,14 +1,14 @@
 module Api.User exposing (..)
 
-import Backend.Object exposing (TeamMembership(..))
-import Backend.Object.Role as Role
-import Backend.Object.Team
-import Backend.Object.TeamMembership as TeamMembership
-import Backend.Object.User as User
+import Backend.Object
+import Backend.Object.Role as BORole
+import Backend.Object.Team as BOTeam
+import Backend.Object.TeamMembership as BOTeamMembership
+import Backend.Object.User as BOUser
 import Backend.Query as Query
-import Backend.Scalar exposing (RoleName, Slug, Uuid)
 import Backend.Union
-import Backend.Union.AuthenticatedUser as AuthenticatedUser
+import Backend.Union.AuthenticatedUser
+import DataModel exposing (..)
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 
@@ -17,91 +17,66 @@ import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 ---- MODEL ----
 
 
-type alias RoleData =
-    { name : RoleName
-    , isGlobal : Bool
-    , targetTeamSlug : Maybe Slug
-    }
-
-
-type alias TeamSlugData =
-    { slug : Slug }
-
-
-type alias TeamMembershipData =
-    { team : TeamSlugData }
-
-
-type alias UserData =
-    { id : Uuid
-    , email : String
-    , name : String
-    , externalId : String
-    , teamMemberships : List TeamMembershipData
-    , roles : List RoleData
-    }
-
-
-getMe : SelectionSet (Maybe UserData) RootQuery
+getMe : SelectionSet (Maybe User) RootQuery
 getMe =
     Query.me meSelection
 
 
-getAllUsers : SelectionSet (List UserData) RootQuery
+getAllUsers : SelectionSet (List User) RootQuery
 getAllUsers =
-    Query.users userDataSelection
+    Query.users userSelection
 
 
-getAllUsersWithRoles : SelectionSet (List UserData) RootQuery
+getAllUsersWithRoles : SelectionSet (List User) RootQuery
 getAllUsersWithRoles =
-    Query.users userDataWithRoleSelection
+    Query.users userWithRoleSelection
 
 
-userDataWithRoleSelection : SelectionSet UserData Backend.Object.User
-userDataWithRoleSelection =
-    SelectionSet.succeed UserData
-        |> SelectionSet.with User.id
-        |> SelectionSet.with User.email
-        |> SelectionSet.with User.name
-        |> SelectionSet.with User.externalId
-        |> SelectionSet.with (User.teams teamMembershipSelection)
-        |> SelectionSet.with (User.roles roleDataSelection)
+userWithRoleSelection : SelectionSet User Backend.Object.User
+userWithRoleSelection =
+    SelectionSet.succeed User
+        |> SelectionSet.with BOUser.id
+        |> SelectionSet.with BOUser.email
+        |> SelectionSet.with BOUser.name
+        |> SelectionSet.with BOUser.externalId
+        |> SelectionSet.with (BOUser.teams teamMembershipSelection)
+        |> SelectionSet.with (BOUser.roles roleSelection)
 
 
-userDataSelection : SelectionSet UserData Backend.Object.User
-userDataSelection =
-    SelectionSet.succeed UserData
-        |> SelectionSet.with User.id
-        |> SelectionSet.with User.email
-        |> SelectionSet.with User.name
-        |> SelectionSet.with User.externalId
+userSelection : SelectionSet User Backend.Object.User
+userSelection =
+    SelectionSet.succeed User
+        |> SelectionSet.with BOUser.id
+        |> SelectionSet.with BOUser.email
+        |> SelectionSet.with BOUser.name
+        |> SelectionSet.with BOUser.externalId
         |> SelectionSet.hardcoded []
         |> SelectionSet.hardcoded []
 
 
-roleDataSelection : SelectionSet RoleData Backend.Object.Role
-roleDataSelection =
-    SelectionSet.map3 RoleData
-        Role.name
-        Role.isGlobal
-        Role.targetTeamSlug
+roleSelection : SelectionSet Role Backend.Object.Role
+roleSelection =
+    SelectionSet.map3 Role
+        BORole.name
+        BORole.isGlobal
+        BORole.targetTeamSlug
 
 
-teamMembershipSelection : SelectionSet TeamMembershipData Backend.Object.TeamMembership
+teamMembershipSelection : SelectionSet TeamMembership Backend.Object.TeamMembership
 teamMembershipSelection =
-    SelectionSet.succeed TeamMembershipData
-        |> SelectionSet.with (TeamMembership.team teamDataSelection)
+    SelectionSet.succeed TeamMembership
+        |> SelectionSet.with (BOTeamMembership.team teamSelection)
 
 
-teamDataSelection : SelectionSet TeamSlugData Backend.Object.Team
-teamDataSelection =
-    SelectionSet.succeed TeamSlugData
-        |> SelectionSet.with Backend.Object.Team.slug
+teamSelection : SelectionSet TeamSlug Backend.Object.Team
+teamSelection =
+    SelectionSet.succeed TeamSlug
+        |> SelectionSet.with BOTeam.slug
 
 
-meSelection : SelectionSet (Maybe UserData) Backend.Union.AuthenticatedUser
+meSelection : SelectionSet (Maybe User) Backend.Union.AuthenticatedUser
 meSelection =
-    AuthenticatedUser.fragments
-        { onUser = SelectionSet.map Just userDataWithRoleSelection
+    Backend.Union.AuthenticatedUser.fragments
+        { onUser = SelectionSet.map Just userWithRoleSelection
         , onServiceAccount = SelectionSet.map (\_ -> Nothing) SelectionSet.empty
         }

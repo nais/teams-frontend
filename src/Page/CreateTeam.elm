@@ -2,8 +2,9 @@ module Page.CreateTeam exposing (..)
 
 import Api.Do
 import Api.Error exposing (errorToString)
-import Api.Team exposing (TeamData, createTeam)
-import Backend.Scalar exposing (Slug)
+import Api.Team exposing (createTeam)
+import Backend.Scalar
+import DataModel exposing (..)
 import Graphql.Http exposing (RawError(..))
 import Html exposing (Html, button, div, form, h2, input, label, li, p, text, ul)
 import Html.Attributes exposing (class, for, placeholder, type_)
@@ -22,7 +23,7 @@ type alias Model =
 
 type Msg
     = CreateTeamSubmit
-    | GotTeamCreatedResponse (Result (Graphql.Http.Error TeamData) TeamData)
+    | GotTeamCreatedResponse (Result (Graphql.Http.Error Team) Team)
     | SlugChanged String
     | PurposeChanged String
     | SlackChannelChanged String

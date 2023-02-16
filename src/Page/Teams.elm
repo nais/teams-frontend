@@ -2,15 +2,16 @@ module Page.Teams exposing (..)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (TeamData, getTeams)
+import Api.Team exposing (getTeams)
 import Backend.Scalar
+import DataModel exposing (..)
 import Graphql.Http
 import Html exposing (Html, div, h2, p, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class)
 import List exposing (filter, map, member)
 import RemoteData exposing (RemoteData(..))
 import Route exposing (link)
-import Session exposing (Session, User(..))
+import Session exposing (Session, Viewer(..))
 
 
 type ViewMode
@@ -20,14 +21,14 @@ type ViewMode
 
 type alias Model =
     { session : Session
-    , teams : RemoteData (Graphql.Http.Error (List TeamData)) (List TeamData)
+    , teams : RemoteData (Graphql.Http.Error (List Team)) (List Team)
     , viewMode : ViewMode
     }
 
 
 type Msg
     = NoOp
-    | GotTeamsResponse (RemoteData (Graphql.Http.Error (List TeamData)) (List TeamData))
+    | GotTeamsResponse (RemoteData (Graphql.Http.Error (List Team)) (List Team))
 
 
 init : Session -> ViewMode -> ( Model, Cmd Msg )
@@ -40,7 +41,7 @@ init session viewMode =
     )
 
 
-myTeams : Session.User -> List TeamData -> List TeamData
+myTeams : Session.Viewer -> List Team -> List Team
 myTeams user teams =
     let
         teamSlugs =
@@ -69,7 +70,7 @@ slugstr (Backend.Scalar.Slug u) =
     u
 
 
-row : TeamData -> Html Msg
+row : Team -> Html Msg
 row team =
     tr []
         [ td []
@@ -79,7 +80,7 @@ row team =
         ]
 
 
-teamTable : List TeamData -> Html Msg
+teamTable : List Team -> Html Msg
 teamTable teams =
     table []
         [ thead []
@@ -127,7 +128,7 @@ view model =
                             teamTable teams
 
                         MyTeams ->
-                            teamTable (myTeams (Session.user model.session) teams)
+                            teamTable (myTeams (Session.viewer model.session) teams)
 
                 Failure err ->
                     text <| errorToString err

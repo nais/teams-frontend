@@ -1,13 +1,13 @@
 module Page.Home exposing (..)
 
-import Api.User exposing (UserData)
 import Browser.Navigation
+import DataModel exposing (..)
 import Graphql.Http
 import Html exposing (Html, button, div, h2, p, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Route exposing (Route)
-import Session exposing (Session, User(..))
+import Session exposing (Session, Viewer(..))
 import Url.Builder
 
 
@@ -18,8 +18,8 @@ type alias Model =
 
 
 type Msg
-    = GotMeResponse (Result (Graphql.Http.Error UserData) UserData)
-    | GotUser Session.User
+    = GotMeResponse (Result (Graphql.Http.Error Viewer) Viewer)
+    | GotUser Session.Viewer
     | LoginClicked
     | LogoutClicked
 
@@ -62,7 +62,7 @@ update msg model =
 
 
 view : Model -> Html Msg
-view model =
+view _ =
     div []
         [ div [ class "card" ]
             [ h2 [] [ text "Welcome to NAIS console" ]
@@ -77,6 +77,6 @@ view model =
         ]
 
 
-mapUser : User -> Model -> Model
+mapUser : Viewer -> Model -> Model
 mapUser user model =
-    { model | session = Session.mapUser user model.session }
+    { model | session = Session.mapViewer user model.session }

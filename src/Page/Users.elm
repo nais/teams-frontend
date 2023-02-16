@@ -2,8 +2,9 @@ module Page.Users exposing (..)
 
 import Api.Do
 import Api.Error
-import Api.User exposing (RoleData, UserData)
+import Api.User
 import Backend.Scalar exposing (RoleName(..), Slug(..))
+import DataModel exposing (..)
 import Graphql.Http
 import Html exposing (Html, p, table, tbody, td, text, th, thead, tr)
 import RemoteData exposing (RemoteData(..))
@@ -13,13 +14,13 @@ import Session exposing (Session)
 type alias Model =
     { session : Session
     , error : Maybe String
-    , users : RemoteData (Graphql.Http.Error (List UserData)) (List UserData)
+    , users : RemoteData (Graphql.Http.Error (List User)) (List User)
     }
 
 
 type Msg
     = NoOp
-    | GotUsers (RemoteData (Graphql.Http.Error (List UserData)) (List UserData))
+    | GotUsers (RemoteData (Graphql.Http.Error (List User)) (List User))
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -63,7 +64,7 @@ view model =
             p [] [ text (f |> Api.Error.errorToString) ]
 
 
-viewUser : UserData -> Html Msg
+viewUser : User -> Html Msg
 viewUser user =
     tr []
         [ td [] [ text user.name ]
@@ -83,7 +84,7 @@ slugToString (Slug s) =
     s
 
 
-viewRoleData : RoleData -> Html Msg
+viewRoleData : Role -> Html Msg
 viewRoleData r =
     tr []
         [ td [] [ text (roleNameToString r.name) ]
@@ -104,7 +105,7 @@ viewRoleData r =
         ]
 
 
-viewRoleDatas : List RoleData -> Html Msg
+viewRoleDatas : List Role -> Html Msg
 viewRoleDatas roleDatas =
     table [] [ tbody [] (List.map viewRoleData roleDatas) ]
 

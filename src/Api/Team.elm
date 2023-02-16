@@ -1,196 +1,103 @@
 module Api.Team exposing (..)
 
-import Api.User exposing (UserData, userDataSelection)
+import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.InputObject exposing (CreateTeamInput, UpdateTeamInput)
 import Backend.Mutation as Mutation
 import Backend.Object
-import Backend.Object.AuditLog as AuditLog
-import Backend.Object.GcpProject as GcpProject
-import Backend.Object.GitHubRepository
-import Backend.Object.GitHubRepositoryPermission
-import Backend.Object.NaisNamespace as NaisNamespace
-import Backend.Object.ReconcilerState as ReconcilerState
-import Backend.Object.SlackAlertsChannel
-import Backend.Object.SyncError as SyncError
-import Backend.Object.Team as Team
-import Backend.Object.TeamMember as TeamMember
-import Backend.Object.TeamMetadata as TeamMetadata
-import Backend.Object.TeamSync
+import Backend.Object.AuditLog as BOAuditLog
+import Backend.Object.GcpProject as BOGcpProject
+import Backend.Object.GitHubRepository as BOGitHubRepository
+import Backend.Object.GitHubRepositoryPermission as BOGitHubRepositoryPermission
+import Backend.Object.NaisNamespace as BONaisNamespace
+import Backend.Object.ReconcilerState as BOReconcilerState
+import Backend.Object.SlackAlertsChannel as BOSlackAlertsChannel
+import Backend.Object.SyncError as BOSyncError
+import Backend.Object.Team as BOTeam
+import Backend.Object.TeamMember as BOTeamMember
+import Backend.Object.TeamMetadata as BOTeamMetadata
+import Backend.Object.TeamSync as BOTeamSync
 import Backend.Query as Query
-import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug, Uuid)
+import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug)
+import DataModel exposing (..)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet, with)
 import ISO8601
 
 
-
----- MODEL ----
-
-
-type alias TeamMemberData =
-    { user : UserData
-    , role : TeamRole
-    }
-
-
-type alias TeamSync =
-    { correlationID : Uuid
-    }
-
-
-type alias AuditLogData =
-    { action : Scalar.AuditAction
-    , actor : Maybe String
-    , message : String
-    , createdAt : ISO8601.Time
-    }
-
-
-type alias KeyValueData =
-    { key : String
-    , value : Maybe String
-    }
-
-
-type alias SyncErrorData =
-    { timestamp : ISO8601.Time
-    , reconcilerName : String
-    , message : String
-    }
-
-
-type alias GCPProject =
-    { environment : String
-    , projectID : String
-    }
-
-
-type alias NaisNamespace =
-    { environment : String
-    , namespace : Slug
-    }
-
-
-type alias TeamSyncState =
-    { githubTeamSlug : Maybe Slug
-    , googleWorkspaceGroupEmail : Maybe String
-    , gcpProjects : List GCPProject
-    , naisNamespaces : List NaisNamespace
-    , azureADGroupID : Maybe Uuid
-    }
-
-
-type alias SlackAlertsChannel =
-    { environment : String
-    , channelName : Maybe String
-    }
-
-type Expandable a
-  = Preview a
-  | Expanded a
-
-type alias TeamData =
-    { slug : Slug
-    , purpose : String
-    , slackChannel : String
-    , slackAlertsChannels : List SlackAlertsChannel
-    , members : Expandable (List TeamMemberData)
-    , auditLogs : Expandable (List AuditLogData)
-    , metadata : List KeyValueData
-    , syncErrors : List SyncErrorData
-    , lastSuccessfulSync : Maybe ISO8601.Time
-    , syncState : Maybe TeamSyncState
-    , repositories : Expandable (List GitHubRepository)
-    , enabled : Bool
-    }
-
-
-type alias GitHubRepository =
-    { name : String
-    , permissions : List GitHubRepositoryPermission
-    }
-
-
-type alias GitHubRepositoryPermission =
-    { name : String
-    , granted : Bool
-    }
-
-
-getTeams : SelectionSet (List TeamData) RootQuery
+getTeams : SelectionSet (List Team) RootQuery
 getTeams =
-    Query.teams teamDataSelection
+    Query.teams teamSelection
 
 
-getTeam : Scalar.Slug -> SelectionSet TeamData RootQuery
+getTeam : Scalar.Slug -> SelectionSet Team RootQuery
 getTeam slug =
-    Query.team { slug = slug } teamDataFullSelection
+    Query.team { slug = slug } teamFullSelection
 
 
-createTeam : CreateTeamInput -> SelectionSet TeamData RootMutation
+createTeam : CreateTeamInput -> SelectionSet Team RootMutation
 createTeam team =
-    Mutation.createTeam { input = team } teamDataFullSelection
+    Mutation.createTeam { input = team } teamFullSelection
 
 
-updateTeam : Slug -> UpdateTeamInput -> SelectionSet TeamData RootMutation
+updateTeam : Slug -> UpdateTeamInput -> SelectionSet Team RootMutation
 updateTeam slug team =
-    Mutation.updateTeam { slug = slug, input = team } teamDataFullSelection
+    Mutation.updateTeam { slug = slug, input = team } teamFullSelection
 
 
-addMemberToTeam : TeamData -> UserData -> SelectionSet TeamData RootMutation
+addMemberToTeam : Team -> User -> SelectionSet Team RootMutation
 addMemberToTeam team user =
     Mutation.addTeamMembers
         { slug = team.slug
         , userIds = [ user.id ]
         }
-        teamDataFullSelection
+        teamFullSelection
 
 
-addOwnerToTeam : TeamData -> UserData -> SelectionSet TeamData RootMutation
+addOwnerToTeam : Team -> User -> SelectionSet Team RootMutation
 addOwnerToTeam team user =
     Mutation.addTeamOwners
         { slug = team.slug
         , userIds = [ user.id ]
         }
-        teamDataFullSelection
+        teamFullSelection
 
 
-removeMemberFromTeam : TeamData -> UserData -> SelectionSet TeamData RootMutation
+removeMemberFromTeam : Team -> User -> SelectionSet Team RootMutation
 removeMemberFromTeam team user =
     Mutation.removeUsersFromTeam
         { userIds = [ user.id ]
         , slug = team.slug
         }
-        teamDataFullSelection
+        teamFullSelection
 
 
-setTeamMemberRole : TeamData -> TeamMemberData -> Backend.Enum.TeamRole.TeamRole -> SelectionSet TeamData RootMutation
+setTeamMemberRole : Team -> TeamMember -> Backend.Enum.TeamRole.TeamRole -> SelectionSet Team RootMutation
 setTeamMemberRole team member role =
     Mutation.setTeamMemberRole
         { slug = team.slug
         , userId = member.user.id
         , role = role
         }
-        teamDataFullSelection
+        teamFullSelection
 
 
-enableTeam : TeamData -> SelectionSet TeamData RootMutation
+enableTeam : Team -> SelectionSet Team RootMutation
 enableTeam team =
-    Mutation.enableTeam { slug = team.slug } teamDataFullSelection
+    Mutation.enableTeam { slug = team.slug } teamFullSelection
 
 
-disableTeam : TeamData -> SelectionSet TeamData RootMutation
+disableTeam : Team -> SelectionSet Team RootMutation
 disableTeam team =
-    Mutation.disableTeam { slug = team.slug } teamDataFullSelection
+    Mutation.disableTeam { slug = team.slug } teamFullSelection
 
 
-teamDataSelection : SelectionSet TeamData Backend.Object.Team
-teamDataSelection =
-    Graphql.SelectionSet.succeed TeamData
-        |> with Team.slug
-        |> with Team.purpose
-        |> with Team.slackChannel
+teamSelection : SelectionSet Team Backend.Object.Team
+teamSelection =
+    Graphql.SelectionSet.succeed Team
+        |> with BOTeam.slug
+        |> with BOTeam.purpose
+        |> with BOTeam.slackChannel
         |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded (Preview [])
         |> Graphql.SelectionSet.hardcoded (Preview [])
@@ -199,114 +106,114 @@ teamDataSelection =
         |> Graphql.SelectionSet.hardcoded Nothing
         |> Graphql.SelectionSet.hardcoded Nothing
         |> Graphql.SelectionSet.hardcoded (Preview [])
-        |> with Team.enabled
+        |> with BOTeam.enabled
 
 
-teamDataFullSelection : SelectionSet TeamData Backend.Object.Team
-teamDataFullSelection =
-    Graphql.SelectionSet.succeed TeamData
-        |> with Team.slug
-        |> with Team.purpose
-        |> with Team.slackChannel
-        |> with (Team.slackAlertsChannels slackAlertsChannelsSelection)
-        |> with (Graphql.SelectionSet.map Preview (Team.members teamMemberSelection))
-        |> with (Graphql.SelectionSet.map Preview (Team.auditLogs auditLogSelection))
-        |> with (Team.metadata keyValueSelection)
-        |> with (Team.syncErrors syncErrorSelection)
-        |> with (Team.lastSuccessfulSync |> mapToMaybeDateTime)
-        |> with (Graphql.SelectionSet.map Just (Team.reconcilerState syncStateSelection))
-        |> with (Graphql.SelectionSet.map Preview (Team.gitHubRepositories gitHubRepositorySelection))
-        |> with Team.enabled
+teamFullSelection : SelectionSet Team Backend.Object.Team
+teamFullSelection =
+    Graphql.SelectionSet.succeed Team
+        |> with BOTeam.slug
+        |> with BOTeam.purpose
+        |> with BOTeam.slackChannel
+        |> with (BOTeam.slackAlertsChannels slackAlertsChannelsSelection)
+        |> with (Graphql.SelectionSet.map Preview (BOTeam.members teamMemberSelection))
+        |> with (Graphql.SelectionSet.map Preview (BOTeam.auditLogs auditLogSelection))
+        |> with (BOTeam.metadata keyValueSelection)
+        |> with (BOTeam.syncErrors syncErrorSelection)
+        |> with (BOTeam.lastSuccessfulSync |> mapToMaybeDateTime)
+        |> with (Graphql.SelectionSet.map Just (BOTeam.reconcilerState syncStateSelection))
+        |> with (Graphql.SelectionSet.map Preview (BOTeam.gitHubRepositories gitHubRepositorySelection))
+        |> with BOTeam.enabled
 
 
 gitHubRepositorySelection : SelectionSet GitHubRepository Backend.Object.GitHubRepository
 gitHubRepositorySelection =
     Graphql.SelectionSet.map2
         GitHubRepository
-        Backend.Object.GitHubRepository.name
-        (Backend.Object.GitHubRepository.permissions gitHubRepositoryPermissionSelection)
+        BOGitHubRepository.name
+        (BOGitHubRepository.permissions gitHubRepositoryPermissionSelection)
 
 
 gitHubRepositoryPermissionSelection : SelectionSet GitHubRepositoryPermission Backend.Object.GitHubRepositoryPermission
 gitHubRepositoryPermissionSelection =
     Graphql.SelectionSet.map2
         GitHubRepositoryPermission
-        Backend.Object.GitHubRepositoryPermission.name
-        Backend.Object.GitHubRepositoryPermission.granted
+        BOGitHubRepositoryPermission.name
+        BOGitHubRepositoryPermission.granted
 
 
-teamMemberSelection : SelectionSet TeamMemberData Backend.Object.TeamMember
+teamMemberSelection : SelectionSet TeamMember Backend.Object.TeamMember
 teamMemberSelection =
     Graphql.SelectionSet.map2
-        TeamMemberData
-        (TeamMember.user userDataSelection)
-        TeamMember.role
+        TeamMember
+        (BOTeamMember.user Api.User.userSelection)
+        BOTeamMember.role
 
 
 slackAlertsChannelsSelection : SelectionSet SlackAlertsChannel Backend.Object.SlackAlertsChannel
 slackAlertsChannelsSelection =
     Graphql.SelectionSet.map2
         SlackAlertsChannel
-        Backend.Object.SlackAlertsChannel.environment
-        Backend.Object.SlackAlertsChannel.channelName
+        BOSlackAlertsChannel.environment
+        BOSlackAlertsChannel.channelName
 
 
-auditLogSelection : SelectionSet AuditLogData Backend.Object.AuditLog
+auditLogSelection : SelectionSet AuditLog Backend.Object.AuditLog
 auditLogSelection =
-    Graphql.SelectionSet.succeed AuditLogData
-        |> with AuditLog.action
-        |> with AuditLog.actor
-        |> with AuditLog.message
-        |> with (AuditLog.createdAt |> mapToDateTime)
+    Graphql.SelectionSet.succeed AuditLog
+        |> with BOAuditLog.action
+        |> with BOAuditLog.actor
+        |> with BOAuditLog.message
+        |> with (BOAuditLog.createdAt |> mapToDateTime)
 
 
 teamSyncSelection : SelectionSet TeamSync Backend.Object.TeamSync
 teamSyncSelection =
     Graphql.SelectionSet.succeed TeamSync
-        |> with Backend.Object.TeamSync.correlationID
+        |> with BOTeamSync.correlationID
 
 
 
 -- teamToggleSelection :
 
 
-keyValueSelection : SelectionSet KeyValueData Backend.Object.TeamMetadata
+keyValueSelection : SelectionSet KeyValue Backend.Object.TeamMetadata
 keyValueSelection =
-    Graphql.SelectionSet.map2 KeyValueData
-        TeamMetadata.key
-        TeamMetadata.value
+    Graphql.SelectionSet.map2 KeyValue
+        BOTeamMetadata.key
+        BOTeamMetadata.value
 
 
 syncStateSelection : SelectionSet TeamSyncState Backend.Object.ReconcilerState
 syncStateSelection =
     Graphql.SelectionSet.succeed TeamSyncState
-        |> with ReconcilerState.gitHubTeamSlug
-        |> with ReconcilerState.googleWorkspaceGroupEmail
-        |> with (ReconcilerState.gcpProjects gcpProjectSelection)
-        |> with (ReconcilerState.naisNamespaces naisNamespaceSelection)
-        |> with ReconcilerState.azureADGroupId
+        |> with BOReconcilerState.gitHubTeamSlug
+        |> with BOReconcilerState.googleWorkspaceGroupEmail
+        |> with (BOReconcilerState.gcpProjects gcpProjectSelection)
+        |> with (BOReconcilerState.naisNamespaces naisNamespaceSelection)
+        |> with BOReconcilerState.azureADGroupId
 
 
 gcpProjectSelection : SelectionSet GCPProject Backend.Object.GcpProject
 gcpProjectSelection =
     Graphql.SelectionSet.map2 GCPProject
-        GcpProject.environment
-        GcpProject.projectId
+        BOGcpProject.environment
+        BOGcpProject.projectId
 
 
 naisNamespaceSelection : SelectionSet NaisNamespace Backend.Object.NaisNamespace
 naisNamespaceSelection =
     Graphql.SelectionSet.map2 NaisNamespace
-        NaisNamespace.environment
-        NaisNamespace.namespace
+        BONaisNamespace.environment
+        BONaisNamespace.namespace
 
 
-syncErrorSelection : SelectionSet SyncErrorData Backend.Object.SyncError
+syncErrorSelection : SelectionSet SyncError Backend.Object.SyncError
 syncErrorSelection =
-    Graphql.SelectionSet.succeed SyncErrorData
-        |> with (SyncError.createdAt |> mapToDateTime)
-        |> with (Graphql.SelectionSet.map (\(ReconcilerName x) -> x) SyncError.reconciler)
-        |> with SyncError.error
+    Graphql.SelectionSet.succeed SyncError
+        |> with (BOSyncError.createdAt |> mapToDateTime)
+        |> with (Graphql.SelectionSet.map (\(ReconcilerName x) -> x) BOSyncError.reconciler)
+        |> with BOSyncError.error
 
 
 mapMaybeToString : SelectionSet (Maybe String) scope -> SelectionSet String scope

@@ -7,29 +7,9 @@ import Backend.Object.Reconciler as Reconciler
 import Backend.Object.ReconcilerConfig as ReconcilerConfig
 import Backend.Query as Query
 import Backend.Scalar exposing (ReconcilerName)
+import DataModel exposing (..)
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
-
-
-type alias ReconcilerConfigData =
-    { configured : Bool
-    , description : String
-    , displayName : String
-    , key : Backend.Scalar.ReconcilerConfigKey
-    , value : Maybe String
-    , secret : Bool
-    }
-
-
-type alias ReconcilerData =
-    { configured : Bool
-    , description : String
-    , displayname : String
-    , enabled : Bool
-    , name : ReconcilerName
-    , runorder : Int
-    , config : List ReconcilerConfigData
-    }
 
 
 getReconcilers : SelectionSet (List ReconcilerData) RootQuery

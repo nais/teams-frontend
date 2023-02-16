@@ -6,6 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "fmt": "elm-format src/*.elm --yes; elm-format src/Page/*.elm --yes; elm-format src/Api/*.elm --yes",
     "gqlgen": "elm-graphql http://localhost:3000/query --base Backend --output src"
   },
   "author": "nais features",

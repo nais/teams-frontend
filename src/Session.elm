@@ -1,18 +1,18 @@
-module Session exposing (Session, User(..), init, isGlobalAdmin, mapUser, navKey, user, username)
+module Session exposing (Session, Viewer(..), init, isGlobalAdmin, mapViewer, navKey, username, viewer)
 
-import Api.User exposing (UserData)
 import Backend.Scalar exposing (RoleName(..))
 import Browser.Navigation as Nav
+import DataModel exposing (User)
 
 
-type User
-    = LoggedIn UserData
+type Viewer
+    = LoggedIn User
     | Anonymous
     | Unknown
 
 
 type Session
-    = Session Nav.Key User
+    = Session Nav.Key Viewer
 
 
 init : Nav.Key -> Session
@@ -20,9 +20,9 @@ init nk =
     Session nk Unknown
 
 
-mapUser : User -> Session -> Session
-mapUser u (Session nk _) =
-    Session nk u
+mapViewer : Viewer -> Session -> Session
+mapViewer v (Session nk _) =
+    Session nk v
 
 
 navKey : Session -> Nav.Key
@@ -30,26 +30,26 @@ navKey (Session nk _) =
     nk
 
 
-user : Session -> User
-user (Session _ u) =
-    u
+viewer : Session -> Viewer
+viewer (Session _ v) =
+    v
 
 
-username : User -> String
-username u =
-    case u of
-        LoggedIn loggedIn ->
-            loggedIn.email
+username : Viewer -> String
+username v =
+    case v of
+        LoggedIn user ->
+            user.email
 
         _ ->
             "Not logged in"
 
 
-isGlobalAdmin : User -> Bool
-isGlobalAdmin u =
-    case u of
-        LoggedIn lu ->
-            List.any (\r -> r.isGlobal && r.name == RoleName "Admin") lu.roles
+isGlobalAdmin : Viewer -> Bool
+isGlobalAdmin v =
+    case v of
+        LoggedIn u ->
+            List.any (\r -> r.isGlobal && r.name == RoleName "Admin") u.roles
 
         Unknown ->
             False

@@ -2,40 +2,41 @@ module Page.Team exposing (..)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (AuditLogData, Expandable(..), GitHubRepository, KeyValueData, SlackAlertsChannel, SyncErrorData, TeamData, TeamMemberData, TeamSync, TeamSyncState, addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
-import Api.User exposing (UserData)
+import Api.Team exposing (addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
+import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
 import Backend.Object.SlackAlertsChannel exposing (channelName)
 import Backend.Scalar exposing (RoleName(..), Slug, Uuid(..))
+import DataModel exposing (..)
 import Graphql.Http exposing (RawError(..))
 import Graphql.OptionalArgument
 import Html exposing (Html, a, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, classList, colspan, disabled, for, href, id, list, placeholder, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
-import List exposing (member)
+import List
 import RemoteData exposing (RemoteData(..))
-import Session exposing (Session, User(..))
-import List exposing (concatMap)
+import Session exposing (Session, Viewer(..))
 
 
 type EditError
     = ErrString String
-    | ErrGraphql (Graphql.Http.Error TeamData)
+    | ErrGraphql (Graphql.Http.Error Team)
 
 
 type EditMode
     = View
-    | EditMain (Maybe (Graphql.Http.Error TeamData))
+    | EditMain (Maybe (Graphql.Http.Error Team))
     | EditMembers (Maybe EditError)
 
 
 type MemberChange
-    = Unchanged TeamMemberData
-    | Remove TeamMemberData
-    | Add TeamRole TeamMemberData
-    | ChangeRole TeamRole TeamMemberData
+    = Unchanged TeamMember
+    | Remove TeamMember
+    | Add TeamRole TeamMember
+    | ChangeRole TeamRole TeamMember
+
 
 type ExpandableList
     = Members
@@ -44,9 +45,9 @@ type ExpandableList
 
 
 type alias Model =
-    { team : RemoteData (Graphql.Http.Error TeamData) TeamData
+    { team : RemoteData (Graphql.Http.Error Team) Team
     , edit : EditMode
-    , userList : RemoteData (Graphql.Http.Error (List UserData)) (List UserData)
+    , userList : RemoteData (Graphql.Http.Error (List User)) (List User)
     , memberChanges : List MemberChange
     , session : Session
     , addMemberQuery : String
@@ -55,19 +56,19 @@ type alias Model =
 
 
 type Msg
-    = GotTeamResponse (RemoteData (Graphql.Http.Error TeamData) TeamData)
-    | GotSaveOverviewResponse (RemoteData (Graphql.Http.Error TeamData) TeamData)
-    | GotSaveTeamMembersResponse (RemoteData (Graphql.Http.Error TeamData) TeamData)
+    = GotTeamResponse (RemoteData (Graphql.Http.Error Team) Team)
+    | GotSaveOverviewResponse (RemoteData (Graphql.Http.Error Team) Team)
+    | GotSaveTeamMembersResponse (RemoteData (Graphql.Http.Error Team) Team)
     | GotSynchronizeResponse (RemoteData (Graphql.Http.Error TeamSync) TeamSync)
     | ClickedEditMain
     | ClickedEditMembers
-    | ClickedSaveOverview TeamData
-    | ClickedSaveTeamMembers TeamData (List MemberChange)
+    | ClickedSaveOverview Team
+    | ClickedSaveTeamMembers Team (List MemberChange)
     | ClickedCancelEditMembers
     | ClickedCancelEditOverview
     | ClickedSynchronize
-    | ClickedEnableTeam TeamData
-    | ClickedDisableTeam TeamData
+    | ClickedEnableTeam Team
+    | ClickedDisableTeam Team
     | PurposeChanged String
     | SlackChannelChanged String
     | SlackAlertsChannelChanged String String
@@ -76,7 +77,7 @@ type Msg
     | Undo MemberChange
     | RoleDropDownClicked MemberChange String
     | AddMemberRoleDropDownClicked String
-    | GotUserListResponse (RemoteData (Graphql.Http.Error (List UserData)) (List UserData))
+    | GotUserListResponse (RemoteData (Graphql.Http.Error (List User)) (List User))
     | OnSubmitAddMember
     | ToggleExpandableList ExpandableList
 
@@ -263,7 +264,7 @@ teamRoleFromString s =
     Maybe.withDefault Backend.Enum.TeamRole.Member <| Backend.Enum.TeamRole.fromString (String.toUpper s)
 
 
-mapMemberChangeToCmds : TeamData -> MemberChange -> List (Cmd Msg)
+mapMemberChangeToCmds : Team -> MemberChange -> List (Cmd Msg)
 mapMemberChangeToCmds team change =
     case change of
         Add r m ->
@@ -294,7 +295,7 @@ expandableAll e =
             i
 
 
-initMembers : RemoteData (Graphql.Http.Error TeamData) TeamData -> List MemberChange
+initMembers : RemoteData (Graphql.Http.Error Team) Team -> List MemberChange
 initMembers response =
     case response of
         Success t ->
@@ -304,13 +305,13 @@ initMembers response =
             []
 
 
-queryUserList : String -> List UserData -> Maybe UserData
+queryUserList : String -> List User -> Maybe User
 queryUserList query userList =
     List.filter (\u -> u.email == query) userList
         |> List.head
 
 
-memberData : MemberChange -> TeamMemberData
+memberData : MemberChange -> TeamMember
 memberData member =
     case member of
         Unchanged m ->
@@ -326,19 +327,19 @@ memberData member =
             m
 
 
-removeMember : TeamMemberData -> List MemberChange -> List MemberChange
+removeMember : TeamMember -> List MemberChange -> List MemberChange
 removeMember member members =
     List.filter (\m -> not (member.user.email == (memberData m).user.email)) members
 
 
-isMember : List MemberChange -> TeamMemberData -> Bool
+isMember : List MemberChange -> TeamMember -> Bool
 isMember members member =
     List.filter (\m -> member.user.email == (memberData m).user.email) members
         |> List.isEmpty
         |> not
 
 
-addUserToTeam : UserData -> TeamRole -> List MemberChange -> List MemberChange
+addUserToTeam : User -> TeamRole -> List MemberChange -> List MemberChange
 addUserToTeam user role members =
     let
         member =
@@ -351,7 +352,7 @@ addUserToTeam user role members =
         members
 
 
-mapMember : (TeamMemberData -> MemberChange) -> TeamMemberData -> MemberChange -> MemberChange
+mapMember : (TeamMember -> MemberChange) -> TeamMember -> MemberChange -> MemberChange
 mapMember typ memberToChange m =
     if (memberData m).user.email == memberToChange.user.email then
         typ (memberData m)
@@ -404,7 +405,7 @@ synchronize slug =
         (GotSynchronizeResponse << RemoteData.fromResult)
 
 
-saveOverview : TeamData -> Cmd Msg
+saveOverview : Team -> Cmd Msg
 saveOverview team =
     Api.Do.mutate
         (updateTeam
@@ -426,7 +427,7 @@ saveOverview team =
         (GotSaveOverviewResponse << RemoteData.fromResult)
 
 
-mapTeam : (TeamData -> TeamData) -> Model -> Model
+mapTeam : (Team -> Team) -> Model -> Model
 mapTeam fn model =
     case model.team of
         Success team ->
@@ -451,7 +452,7 @@ actionstr (Backend.Scalar.AuditAction u) =
     u
 
 
-memberRow : TeamMemberData -> Html Msg
+memberRow : TeamMember -> Html Msg
 memberRow member =
     tr []
         [ td [] [ text member.user.email ]
@@ -470,12 +471,12 @@ logLine ts actor message =
         ]
 
 
-errorLine : SyncErrorData -> Html Msg
+errorLine : SyncError -> Html Msg
 errorLine log =
     logLine log.timestamp log.reconcilerName log.message
 
 
-auditLogLine : AuditLogData -> Html Msg
+auditLogLine : AuditLog -> Html Msg
 auditLogLine log =
     let
         actor =
@@ -509,7 +510,7 @@ simpleRow header content =
         ]
 
 
-metadataRow : KeyValueData -> Html msg
+metadataRow : KeyValue -> Html msg
 metadataRow kv =
     case kv.value of
         Just v ->
@@ -527,16 +528,16 @@ smallButton msg iconClass title =
         ]
 
 
-editorButton : Msg -> User -> TeamData -> Maybe (Html Msg)
-editorButton msg user team =
-    if editor team user then
+editorButton : Msg -> Viewer -> Team -> Maybe (Html Msg)
+editorButton msg viewer team =
+    if editor team viewer then
         Just (smallButton msg "edit" "Edit")
 
     else
         Nothing
 
 
-toggleTeamButton : User -> TeamData -> Maybe (Html Msg)
+toggleTeamButton : Viewer -> Team -> Maybe (Html Msg)
 toggleTeamButton user team =
     if Session.isGlobalAdmin user then
         if team.enabled then
@@ -549,9 +550,9 @@ toggleTeamButton user team =
         Nothing
 
 
-syncButton : Msg -> User -> TeamData -> Maybe (Html Msg)
-syncButton msg user team =
-    if editor team user then
+syncButton : Msg -> Viewer -> Team -> Maybe (Html Msg)
+syncButton msg viewer team =
+    if editor team viewer then
         if team.enabled then
             Just (smallButton msg "synchronize" "Synchronize")
 
@@ -562,7 +563,7 @@ syncButton msg user team =
         Nothing
 
 
-viewSyncSuccess : TeamData -> Html msg
+viewSyncSuccess : Team -> Html msg
 viewSyncSuccess team =
     case team.lastSuccessfulSync of
         Nothing ->
@@ -574,7 +575,7 @@ viewSyncSuccess team =
                 ]
 
 
-viewSyncErrors : TeamData -> Html Msg
+viewSyncErrors : Team -> Html Msg
 viewSyncErrors team =
     case team.syncErrors of
         [] ->
@@ -653,7 +654,7 @@ syncStateRows state =
     gitHub ++ googleWorkspaceGroupEmail ++ gcpProjects ++ naisNamespaces ++ azureADGroupID
 
 
-viewStateTable : TeamData -> Html msg
+viewStateTable : Team -> Html msg
 viewStateTable team =
     let
         metaRows =
@@ -687,7 +688,7 @@ viewStateTable team =
         ]
 
 
-viewTeamState : TeamData -> Html Msg
+viewTeamState : Team -> Html Msg
 viewTeamState team =
     div [ class "card" ]
         [ h2 [] [ text "Managed resources" ]
@@ -704,20 +705,20 @@ viewSlackChannel defaultSlackChannel channel =
     ]
 
 
-viewSlackChannels : TeamData -> Html msg
+viewSlackChannels : Team -> Html msg
 viewSlackChannels team =
     dl []
         (List.concatMap (viewSlackChannel team.slackChannel) team.slackAlertsChannels)
 
 
-viewTeamOverview : User -> TeamData -> Html Msg
-viewTeamOverview user team =
+viewTeamOverview : Viewer -> Team -> Html Msg
+viewTeamOverview viewer team =
     div [ class "card" ]
         [ div [ class "title" ]
             ([ h2 [] [ text <| "Team " ++ slugstr team.slug ] ]
-                |> concatMaybe (toggleTeamButton user team)
-                |> concatMaybe (syncButton ClickedSynchronize user team)
-                |> concatMaybe (editorButton ClickedEditMain user team)
+                |> concatMaybe (toggleTeamButton viewer team)
+                |> concatMaybe (syncButton ClickedSynchronize viewer team)
+                |> concatMaybe (editorButton ClickedEditMain viewer team)
             )
         , p [] [ text team.purpose ]
         , h3 [] [ text "Slack channel" ]
@@ -744,7 +745,7 @@ viewSlackAlertsChannel placeholder entry =
     ]
 
 
-viewEditTeamOverview : TeamData -> Maybe (Graphql.Http.Error TeamData) -> Html Msg
+viewEditTeamOverview : Team -> Maybe (Graphql.Http.Error Team) -> Html Msg
 viewEditTeamOverview team error =
     let
         errorMessage =
@@ -775,12 +776,12 @@ viewEditTeamOverview team error =
         )
 
 
-viewMembers : User -> TeamData -> Html Msg
-viewMembers user team =
+viewMembers : Viewer -> Team -> Html Msg
+viewMembers viewer team =
     div [ class "card" ]
         ([ div [ class "title" ]
             ([ h2 [] [ text "Members" ] ]
-                |> concatMaybe (editorButton ClickedEditMembers user team)
+                |> concatMaybe (editorButton ClickedEditMembers viewer team)
             )
          , table []
             [ thead []
@@ -802,12 +803,12 @@ viewMembers user team =
         )
 
 
-nameAndEmail : UserData -> String
+nameAndEmail : User -> String
 nameAndEmail user =
     user.name ++ " <" ++ user.email ++ ">"
 
 
-addUserCandidateOption : UserData -> Html msg
+addUserCandidateOption : User -> Html msg
 addUserCandidateOption user =
     option [] [ text user.email ]
 
@@ -887,7 +888,7 @@ roleOption currentRole role =
         [ text (roleString role) ]
 
 
-viewEditMembers : Model -> TeamData -> Maybe EditError -> Html Msg
+viewEditMembers : Model -> Team -> Maybe EditError -> Html Msg
 viewEditMembers model team _ =
     div [ class "card" ]
         (case model.userList of
@@ -948,19 +949,21 @@ unexpand l =
             e
 
 
-viewLogs : TeamData -> Html Msg
+viewLogs : Team -> Html Msg
 viewLogs team =
     div [ class "card" ]
         ([ h2 [] [ text "Logs" ]
-        , ul [ class "logs" ] (team.auditLogs |> unexpand |> List.map auditLogLine)
-        ] |> concatMaybe (showMoreButton team.auditLogs numberOfPreviewElements (ToggleExpandableList AuditLogs)))
+         , ul [ class "logs" ] (team.auditLogs |> unexpand |> List.map auditLogLine)
+         ]
+            |> concatMaybe (showMoreButton team.auditLogs numberOfPreviewElements (ToggleExpandableList AuditLogs))
+        )
 
 
-viewCards : Model -> TeamData -> Html Msg
+viewCards : Model -> Team -> Html Msg
 viewCards model team =
     let
         user =
-            Session.user model.session
+            Session.viewer model.session
     in
     div [ class "cards" ]
         (case model.edit of
@@ -996,7 +999,7 @@ numberOfPreviewElements =
     5
 
 
-viewGitHubRepositories : TeamData -> Html Msg
+viewGitHubRepositories : Team -> Html Msg
 viewGitHubRepositories team =
     div [ class "card" ]
         ([ h2 [] [ text "Repositories" ]
@@ -1034,17 +1037,17 @@ viewGitHubRepositories team =
 showMoreButton : Expandable (List a) -> Int -> Msg -> Maybe (Html Msg)
 showMoreButton expandable previewSize msg =
     let
-        ( belowPreview, showMore, t ) =
+        ( belowPreview, t ) =
             case expandable of
                 Preview list ->
                     if List.length list > previewSize then
-                        ( False, True, "show more" )
+                        ( False, "show more" )
 
                     else
-                        ( True, True, "" )
+                        ( True, "" )
 
                 Expanded _ ->
-                    ( False, False, "show less" )
+                    ( False, "show less" )
     in
     if belowPreview then
         Nothing
@@ -1088,9 +1091,9 @@ view model =
             div [ class "card" ] [ text "No data loaded" ]
 
 
-teamRoleForUser : List TeamMemberData -> User -> Maybe TeamRole
-teamRoleForUser members user =
-    case user of
+teamRoleForViewer : List TeamMember -> Viewer -> Maybe TeamRole
+teamRoleForViewer members viewer =
+    case viewer of
         LoggedIn u ->
             List.head (List.filter (\m -> m.user.id == u.id) members)
                 |> Maybe.map (\m -> m.role)
@@ -1102,11 +1105,11 @@ teamRoleForUser members user =
             Nothing
 
 
-editor : TeamData -> User -> Bool
-editor team user =
+editor : Team -> Viewer -> Bool
+editor team viewer =
     List.any (\b -> b)
-        [ Session.isGlobalAdmin user
-        , teamRoleForUser (expandableAll team.members) user == Just Owner
+        [ Session.isGlobalAdmin viewer
+        , teamRoleForViewer (expandableAll team.members) viewer == Just Owner
         ]
 
 
