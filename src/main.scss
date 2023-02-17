@@ -9,24 +9,22 @@
   height: inherit;
 }
 
-:root {
-  --black: #262626;
-  --blue: #00374f;
-  --white: white;
-  --row-gray: #f7f7f7;
-  --red: #a32a17;
-  --error-background: #fde8e6;
-  --error-border: #ba3a26;
-  --light-gray: #f5f5f5;
-  --border-color: #a0a0a0;
-  --gray: #d1d1d1;
-  --green: darkgreen;
-  --link: #0067c5;
-  --gutter: 2rem;
-  --content-width: 60vw;
-  --gutter-width: 14vw;
-  --layout-gap: 4vw;
-}
+$color-black: #262626;
+$color-blue: #00374f;
+$color-white: white;
+$color-row-gray: #f7f7f7;
+$color-red: #a32a17;
+$color-error-background: #fde8e6;
+$color-error-border: #ba3a26;
+$color-light-gray: #f5f5f5;
+$color-border: #a0a0a0;
+$color-gray: #d1d1d1;
+$color-off-gray: #78706a;
+$color-green: darkgreen;
+$color-link: #0067c5;
+$content-width: 60vw;
+$gutter-width: 14vw;
+$layout-gap: 4vw;
 
 body {
   margin: 0;
@@ -34,8 +32,8 @@ body {
   font-family: "Source Sans Pro", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: var(--black);
-  background: var(--light-gray);
+  color: $color-black;
+  background: $color-light-gray;
 }
 
 input,
@@ -50,7 +48,7 @@ button:disabled {
 
 button.text {
   text-decoration: underline !important;
-  color: var(--link);
+  color: $color-link;
   background-color: transparent;
   padding: 0;
   margin: 0 0 0 45%;
@@ -64,12 +62,12 @@ code {
 
 a {
   text-decoration: underline;
-  color: var(--link);
+  color: $color-link;
 }
 
 header {
-  background: var(--blue);
-  color: var(--white);
+  background: $color-blue;
+  color: $color-white;
   margin-bottom: 3em;
   display: flex;
   justify-content: center;
@@ -77,9 +75,9 @@ header {
 
 header button,
 header .button {
-  background: var(--blue) !important;
-  border: 1px solid var(--white) !important;
-  color: var(--white) !important;
+  background: $color-blue !important;
+  border: 1px solid $color-white !important;
+  color: $color-white !important;
 }
 
 header .content {
@@ -90,7 +88,7 @@ header .content {
   height: 48px;
   gap: 1rem;
   flex-grow: 10;
-  max-width: var(--content-width);
+  max-width: $content-width;
 }
 
 /* Logo and header container */
@@ -147,11 +145,11 @@ h1 a:hover {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  gap: var(--layout-gap);
+  gap: $layout-gap;
 }
 
 #layout > * {
-  width: var(--gutter-width);
+  width: $gutter-width;
   flex-grow: 0;
 }
 
@@ -178,16 +176,16 @@ nav li {
 }
 
 nav a {
-  color: var(--link);
+  color: $color-link;
   text-decoration: underline;
 }
 
 nav a:hover {
-  color: var(--blue);
+  color: $color-blue;
 }
 
 nav li.active a {
-  color: var(--black);
+  color: $color-black;
   font-weight: bold;
   text-decoration: none;
 }
@@ -200,7 +198,7 @@ nav li.indent {
 nav .submenu-glyph {
   width: 16px;
   height: 16px;
-  border: 1px solid #000000;
+  border: 1px solid $color-white;
   border-top: 0;
   border-right: 0;
   border-radius: 0 0 0 4px;
@@ -208,7 +206,7 @@ nav .submenu-glyph {
 
 main {
   flex-grow: 100 !important;
-  max-width: var(--content-width) !important;
+  max-width: $content-width !important;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -219,8 +217,8 @@ main {
  */
 
 .error {
-  border: 1px solid var(--error-border);
-  background: var(--error-background);
+  border: 1px solid $color-error-border;
+  background: $color-error-background;
   padding: 1rem;
   margin: 0.5rem 0;
 }
@@ -234,7 +232,7 @@ main {
 .card {
   display: flex;
   flex-direction: column;
-  background: var(--white);
+  background: $color-white;
   padding: 1rem;
   width: calc(100% - 2rem);
 }
@@ -252,14 +250,14 @@ main {
 }
 
 .card.error {
-  background: var(--white);
-  border: 1px solid var(--error-border);
+  background: $color-white;
+  border: 1px solid $color-error-border;
   border-radius: 2px;
 }
 
 .card.error h2 {
-  background: var(--error-background);
-  border-bottom: 1px solid var(--error-border);
+  background: $color-error-background;
+  border-bottom: 1px solid $color-error-border;
   font-size: 1.2rem;
   margin: -1rem -1rem 0.5em;
   padding: 0.75rem 1rem;
@@ -274,7 +272,7 @@ ul.logs {
 ul.logs li {
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid $color-border;
   gap: 0;
   padding: 0.5rem 0;
 }
@@ -284,7 +282,7 @@ ul.logs li .meta {
   flex-direction: row;
   gap: 1rem;
   font-size: 0.8rem;
-  color: #78706a;
+  color: $color-off-gray;
 }
 
 table {
@@ -302,11 +300,11 @@ th {
   text-align: left;
   padding: 0.75rem 0.25rem;
   margin: 0;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid $color-border;
 }
 
 th {
-  border-bottom: 2px solid var(--border-color);
+  border-bottom: 2px solid $color-border;
 }
 
 form {
@@ -338,11 +336,11 @@ input[type="text"] {
   margin: 0;
   padding: 0.5rem;
   border-radius: 4px;
-  border: 1px solid var(--gray);
+  border: 1px solid $color-gray;
 }
 
 input[type="text"]:focus {
-  border-color: var(--blue);
+  border-color: $color-blue;
 }
 
 .checkbox {
@@ -358,17 +356,17 @@ input[type="text"]:focus {
 }
 
 thead {
-  border-bottom: 2px solid var(--light-gray);
+  border-bottom: 2px solid $color-light-gray;
 }
 
 tbody tr:nth-child(even),
 ul.logs li:nth-child(even) {
-  background: var(--row-gray);
+  background: $color-row-gray;
 }
 
 tbody tr:nth-child(odd),
 ul.logs li:nth-child(even) {
-  background: var(--white);
+  background: $color-white;
 }
 
 tbody.meta tr {
@@ -376,7 +374,7 @@ tbody.meta tr {
 }
 
 select:disabled {
-  color: var(--gray);
+  color: $color-gray;
 }
 
 select {
@@ -384,9 +382,9 @@ select {
   border-radius: 4px;
   font-size: 0.88rem;
   padding: 0.5em 1em;
-  border: 1px solid var(--gray);
-  color: var(--black);
-  background: var(--white);
+  border: 1px solid $color-gray;
+  color: $color-black;
+  background: $color-white;
 }
 
 .button-row {
@@ -400,10 +398,10 @@ button,
 .button {
   flex-grow: 0;
   padding: 1em;
-  background: var(--link);
+  background: $color-link;
   border: 0;
   border-radius: 2px;
-  color: var(--white);
+  color: $color-white;
   font-weight: bold;
   cursor: pointer;
   text-decoration: none !important;
@@ -450,15 +448,15 @@ button.small,
 .button.small {
   font-size: 0.88rem;
   padding: 0.5em 0.75em;
-  border: 1px solid var(--link);
-  color: var(--link);
-  background: var(--white);
+  border: 1px solid $color-link;
+  color: $color-link;
+  background: $color-white;
 }
 
 button.transparent,
 .button.transparent {
   background: transparent;
-  color: var(--link);
+  color: $color-link;
   font-weight: normal;
   text-decoration: underline !important;
   border: 0;
@@ -466,7 +464,7 @@ button.transparent,
 
 button.red,
 .button.red {
-  background: var(--red);
+  background: $color-red;
 }
 
 button:hover,
@@ -476,7 +474,7 @@ button:hover,
 
 /*
 .reconcilerConfigured {
-    border: 5px solid var(--green);
+    border: 5px solid $color-green;
     padding-left: 5px;
     border-right: 0;
     border-top: 0;
@@ -484,7 +482,7 @@ button:hover,
 }
 
 .reconcilerNotConfigured {
-    border: 5px solid var(--red);
+    border: 5px solid $color-red;
     padding-left: 5px;
     border-right: 0;
     border-top: 0;
@@ -542,8 +540,8 @@ p.secret-help-text {
 .modal > div {
   border-style: solid;
   border-radius: 2px;
-  border-color: white;
-  background-color: white;
+  border-color: $color-white;
+  background-color: $color-white;
   height: 30vw;
   width: 40vw;
   display: flex;
@@ -558,7 +556,7 @@ p.secret-help-text {
 }
 
 .server-error-message {
-  color: var(--red);
+  color: $color-red;
   font-weight: bold;
 }
 
