@@ -1,4 +1,4 @@
-module Page.Users exposing (..)
+module Page.Users exposing (Model, Msg(..), init, update, view)
 
 import Api.Do
 import Api.Error
@@ -19,8 +19,7 @@ type alias Model =
 
 
 type Msg
-    = NoOp
-    | GotUsers (RemoteData (Graphql.Http.Error (List User)) (List User))
+    = GotUsers (RemoteData (Graphql.Http.Error (List User)) (List User))
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -113,8 +112,5 @@ viewRoleDatas roleDatas =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         GotUsers r ->
             ( { model | users = r }, Cmd.none )

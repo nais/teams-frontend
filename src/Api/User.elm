@@ -1,4 +1,4 @@
-module Api.User exposing (..)
+module Api.User exposing (getAllUsers, getAllUsersWithRoles, getMe, userSelection)
 
 import Backend.Object
 import Backend.Object.Role as BORole

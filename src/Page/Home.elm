@@ -1,13 +1,11 @@
-module Page.Home exposing (..)
+module Page.Home exposing (Model, Msg(..), init, update, view)
 
 import Browser.Navigation
-import DataModel exposing (..)
-import Graphql.Http
 import Html exposing (Html, button, div, h2, p, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Route exposing (Route)
-import Session exposing (Session, Viewer(..))
+import Session exposing (Session)
 import Url.Builder
 
 
@@ -18,10 +16,7 @@ type alias Model =
 
 
 type Msg
-    = GotMeResponse (Result (Graphql.Http.Error Viewer) Viewer)
-    | GotUser Session.Viewer
-    | LoginClicked
-    | LogoutClicked
+    = LoginClicked
 
 
 init : Session -> Maybe Route -> Model
@@ -42,23 +37,12 @@ maybeRouteToString maybeRoute =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    let
-        login =
-            Url.Builder.absolute [ "oauth2", "login" ] [ Url.Builder.string "redirect_uri" (maybeRouteToString model.maybeRoute) ]
-
-        logout =
-            Url.Builder.absolute [ "oauth2", "logout" ] [ Url.Builder.string "redirect_uri" (Route.routeToString Route.Home) ]
-    in
-    case msg of
-        LoginClicked ->
-            ( model, Browser.Navigation.load login )
-
-        LogoutClicked ->
-            ( model, Browser.Navigation.load logout )
-
-        _ ->
-            ( model, Cmd.none )
+update _ model =
+  let
+      login =
+          Url.Builder.absolute [ "oauth2", "login" ] [ Url.Builder.string "redirect_uri" (maybeRouteToString model.maybeRoute) ]
+  in
+  ( model, Browser.Navigation.load login )
 
 
 view : Model -> Html Msg
@@ -75,8 +59,3 @@ view _ =
                 ]
             ]
         ]
-
-
-mapUser : Viewer -> Model -> Model
-mapUser user model =
-    { model | session = Session.mapViewer user model.session }

@@ -1,4 +1,4 @@
-module Session exposing (Session, Viewer(..), init, isGlobalAdmin, mapViewer, navKey, username, viewer, user)
+module Session exposing (Session, Viewer(..), init, isGlobalAdmin, mapViewer, navKey, user, viewer)
 
 import Backend.Scalar exposing (RoleName(..))
 import Browser.Navigation as Nav
@@ -34,22 +34,14 @@ viewer (Session _ v) =
     v
 
 
-username : Viewer -> String
-username v =
-    case v of
-        LoggedIn u ->
-            u.email
-
-        Anonymous ->
-            "Not logged in"
 user : Viewer -> Maybe User
 user v =
-  case v of
-    LoggedIn u ->
-      Just u
+    case v of
+        LoggedIn u ->
+            Just u
 
-    Anonymous ->
-        Nothing
+        Anonymous ->
+            Nothing
 
 
 isGlobalAdmin : Viewer -> Bool

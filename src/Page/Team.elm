@@ -1,4 +1,4 @@
-module Page.Team exposing (..)
+module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), MemberChange(..), Model, Msg(..), init, slugstr, update, view)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
@@ -6,18 +6,17 @@ import Api.Team exposing (addMemberToTeam, addOwnerToTeam, disableTeam, enableTe
 import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
-import Backend.Object.SlackAlertsChannel exposing (channelName)
-import Backend.Scalar exposing (RoleName(..), Slug, Uuid(..))
+import Backend.Scalar exposing (Slug, Uuid(..))
 import DataModel exposing (..)
-import Graphql.Http exposing (RawError(..))
+import Graphql.Http
 import Graphql.OptionalArgument
 import Html exposing (Html, a, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, classList, colspan, disabled, for, href, id, list, placeholder, selected, type_, value)
+import Html.Attributes exposing (class, classList, colspan, disabled, for, href, id, list, selected, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
-import List exposing (member)
+import List
 import RemoteData exposing (RemoteData(..))
-import Session exposing (Session, Viewer(..))
+import Session exposing (Session, Viewer)
 
 
 type EditError
@@ -801,11 +800,6 @@ viewMembers viewer team =
          ]
             |> concatMaybe (showMoreButton team.members numberOfPreviewElements (ToggleExpandableList Members))
         )
-
-
-nameAndEmail : User -> String
-nameAndEmail user =
-    user.name ++ " <" ++ user.email ++ ">"
 
 
 addUserCandidateOption : User -> Html msg

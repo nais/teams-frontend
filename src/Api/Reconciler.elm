@@ -1,4 +1,4 @@
-module Api.Reconciler exposing (..)
+module Api.Reconciler exposing (disableReconciler, enableReconciler, getReconcilers, synchronizeAllTeams, synchronizeUsers, updateReconcilerConfig)
 
 import Backend.InputObject exposing (ReconcilerConfigInput)
 import Backend.Mutation as Mutation

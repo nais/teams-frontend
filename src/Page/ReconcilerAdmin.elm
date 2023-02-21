@@ -1,11 +1,11 @@
-module Page.ReconcilerAdmin exposing (..)
+module Page.ReconcilerAdmin exposing (Model, Msg(..), init, update, view)
 
 import Api.Do exposing (mutate, query)
 import Api.Error
 import Api.Reconciler exposing (disableReconciler, enableReconciler, getReconcilers, synchronizeAllTeams, synchronizeUsers, updateReconcilerConfig)
 import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
 import DataModel exposing (..)
-import Graphql.Http exposing (RawError(..))
+import Graphql.Http
 import Html exposing (Html, a, button, div, form, h2, input, label, li, p, text, textarea, ul)
 import Html.Attributes exposing (checked, class, classList, for, href, id, placeholder, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput, onSubmit)
@@ -310,9 +310,7 @@ reconcilerDescription rd =
 configDescription : ReconcilerConfigData -> Html msg
 configDescription rcd =
     -- Use this function to override config descriptions
-    case rcd.key of
-        _ ->
-            p [] [ text rcd.description ]
+    p [] [ text rcd.description ]
 
 
 configElement : (ReconcilerConfigKey -> String -> Msg) -> ReconcilerConfigData -> Html Msg

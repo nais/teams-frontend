@@ -1,4 +1,4 @@
-module DataModel exposing (..)
+module DataModel exposing (AuditLog, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, KeyValue, NaisNamespace, ReconcilerConfigData, ReconcilerData, Role, SlackAlertsChannel, SyncError, Team, TeamMember, TeamMembership, TeamSlug, TeamSync, TeamSyncState, User)
 
 import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.Scalar exposing (AuditAction, ReconcilerName, RoleName, Slug, Uuid)

@@ -1,4 +1,4 @@
-module Page.Teams exposing (..)
+module Page.Teams exposing (Model, Msg(..), ViewMode(..), init, update, view)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
@@ -27,8 +27,7 @@ type alias Model =
 
 
 type Msg
-    = NoOp
-    | GotTeamsResponse (RemoteData (Graphql.Http.Error (List Team)) (List Team))
+    = GotTeamsResponse (RemoteData (Graphql.Http.Error (List Team)) (List Team))
 
 
 init : Session -> ViewMode -> ( Model, Cmd Msg )
@@ -58,9 +57,6 @@ myTeams user teams =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         GotTeamsResponse r ->
             ( { model | teams = r }, Cmd.none )
 

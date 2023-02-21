@@ -1,7 +1,6 @@
-module Api.Error exposing (..)
+module Api.Error exposing (errorToString)
 
-import Graphql.Http exposing (HttpError(..), RawError(..))
-import Http exposing (Error(..))
+import Graphql.Http
 import Json.Decode
 
 

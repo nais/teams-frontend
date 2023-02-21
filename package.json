@@ -8,7 +8,9 @@
     "preview": "vite preview",
     "fmt": "elm-format src/*.elm --yes; elm-format src/Page/*.elm --yes; elm-format src/Api/*.elm --yes",
     "gqlgen": "elm-graphql http://localhost:3000/query --base Backend --output src",
-    "review": "elm-review"
+    "review": "elm-review --ignore-dirs src/Backend",
+    "review-fix": "elm-review --ignore-dirs src/Backend --fix",
+    "review-fix-all": "elm-review --ignore-dirs src/Backend --fix-all"
   },
   "author": "nais features",
   "license": "MIT",

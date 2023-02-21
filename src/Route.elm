@@ -1,7 +1,6 @@
-module Route exposing (..)
+module Route exposing (Route(..), fromUrl, link, routeToString)
 
-import Backend.Scalar exposing (Slug(..), Uuid(..))
-import Browser.Navigation as Nav
+import Backend.Scalar exposing (Slug(..))
 import Html exposing (Html, a)
 import Html.Attributes exposing (href)
 import String
@@ -39,11 +38,6 @@ parser =
 link : Route -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
 link targetRoute attr body =
     a (href (routeToString targetRoute) :: attr) body
-
-
-replaceUrl : Nav.Key -> Route -> Cmd msg
-replaceUrl key route =
-    Nav.replaceUrl key (routeToString route)
 
 
 fromUrl : Url -> Maybe Route

@@ -1,13 +1,13 @@
-module Page.CreateTeam exposing (..)
+module Page.CreateTeam exposing (Model, Msg(..), init, update, view)
 
 import Api.Do
 import Api.Error exposing (errorToString)
 import Api.Team exposing (createTeam)
 import Backend.Scalar
 import DataModel exposing (..)
-import Graphql.Http exposing (RawError(..))
+import Graphql.Http
 import Html exposing (Html, button, div, form, h2, input, label, li, p, text, ul)
-import Html.Attributes exposing (class, for, placeholder, type_)
+import Html.Attributes exposing (class, for, type_)
 import Html.Events exposing (onInput, onSubmit)
 import Session exposing (Session)
 
@@ -39,16 +39,6 @@ init session =
       }
     , Cmd.none
     )
-
-
-blankStringMaybe : String -> Maybe String
-blankStringMaybe s =
-    case s of
-        "" ->
-            Nothing
-
-        _ ->
-            Just s
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

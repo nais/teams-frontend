@@ -1,4 +1,4 @@
-module Api.Team exposing (..)
+module Api.Team exposing (addMemberToTeam, addOwnerToTeam, createTeam, disableTeam, enableTeam, getTeam, getTeams, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
 
 import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
@@ -214,19 +214,6 @@ syncErrorSelection =
         |> with (BOSyncError.createdAt |> mapToDateTime)
         |> with (Graphql.SelectionSet.map (\(ReconcilerName x) -> x) BOSyncError.reconciler)
         |> with BOSyncError.error
-
-
-mapMaybeToString : SelectionSet (Maybe String) scope -> SelectionSet String scope
-mapMaybeToString =
-    Graphql.SelectionSet.map
-        (\x ->
-            case x of
-                Just s ->
-                    s
-
-                Nothing ->
-                    ""
-        )
 
 
 mapToMaybeDateTime : SelectionSet (Maybe Scalar.Time) scope -> SelectionSet (Maybe ISO8601.Time) scope

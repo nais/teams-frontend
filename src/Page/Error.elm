@@ -1,4 +1,4 @@
-module Page.Error exposing (..)
+module Page.Error exposing (Model, init, view)
 
 import Html exposing (Html, div, text)
 import Session exposing (Session)
@@ -17,11 +17,6 @@ init session error =
       }
     , Cmd.none
     )
-
-
-update : msg -> Model -> ( Model, Cmd msg )
-update _ model =
-    ( model, Cmd.none )
 
 
 view : Model -> Html msg

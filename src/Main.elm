@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (Model(..), Msg(..), main)
 
 import Api.Do exposing (query)
 import Api.User
@@ -16,7 +16,7 @@ import Page.Team as Team exposing (slugstr)
 import Page.Teams as Teams
 import Page.Users as Users
 import RemoteData exposing (RemoteData(..))
-import Route exposing (Route(..), link)
+import Route exposing (Route, link)
 import Session exposing (Session, Viewer(..))
 import Url
 import Url.Builder
@@ -148,7 +148,7 @@ update msg model =
         ( GotUsersMsg subMsg, Users subModel ) ->
             Users.update subMsg subModel |> updateWith Users GotUsersMsg
 
-        ( _, _ ) ->
+        _ ->
             Error.init (toSession model) "Main.update: no case added for this (msg, model) combination" |> updateWith Error (\_ -> NoOp)
 
 
@@ -188,21 +188,23 @@ view model =
         user =
             Session.viewer (toSession model)
 
-        logoutURL =
-            Url.Builder.absolute [ "oauth2", "logout" ] []
-
-        loginURL =
-            Url.Builder.absolute [ "oauth2", "login" ] []
-
         auth =
             case user of
                 LoggedIn loggedInUser ->
+                    let
+                        logoutURL =
+                            Url.Builder.absolute [ "oauth2", "logout" ] []
+                    in
                     div [ class "user-info" ]
                         [ p [] [ text loggedInUser.name ]
                         , a [ href logoutURL, class "button small" ] [ text "Logout" ]
                         ]
 
                 _ ->
+                    let
+                        loginURL =
+                            Url.Builder.absolute [ "oauth2", "login" ] []
+                    in
                     a [ href loginURL, class "button small" ] [ text "Login" ]
     in
     { title = "NAIS console"
@@ -234,9 +236,6 @@ viewNav model =
         user =
             Session.viewer (toSession model)
 
-        teamsButton =
-            [ menuItem model Route.MyTeams False "Teams" ]
-
         ephemeralButtons =
             case model of
                 Team teamPage ->
@@ -253,18 +252,22 @@ viewNav model =
 
                 _ ->
                     []
-
-        adminButtons =
-            if Session.isGlobalAdmin (Session.viewer (toSession model)) then
-                [ menuItem model Route.ReconcilerAdmin False "Synchronizers"
-                , menuItem model Route.Users False "Users"
-                ]
-
-            else
-                []
     in
     case user of
         LoggedIn _ ->
+            let
+                teamsButton =
+                    [ menuItem model Route.MyTeams False "Teams" ]
+
+                adminButtons =
+                    if Session.isGlobalAdmin (Session.viewer (toSession model)) then
+                        [ menuItem model Route.ReconcilerAdmin False "Synchronizers"
+                        , menuItem model Route.Users False "Users"
+                        ]
+
+                    else
+                        []
+            in
             nav [] [ ul [] (teamsButton ++ ephemeralButtons ++ adminButtons) ]
 
         _ ->
@@ -292,7 +295,7 @@ isActiveRoute model target =
         ( Users _, Route.Users ) ->
             True
 
-        ( _, _ ) ->
+        _ ->
             False
 
 
