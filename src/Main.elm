@@ -9,6 +9,7 @@ import Graphql.Http
 import Html exposing (Html, a, div, h1, header, li, main_, nav, p, text, ul)
 import Html.Attributes exposing (class, classList, href, id)
 import Page.CreateTeam as CreateTeam
+import Page.DeleteTeam as DeleteTeam
 import Page.Error as Error
 import Page.Home as Home
 import Page.ReconcilerAdmin as ReconcilerAdmin
@@ -16,7 +17,7 @@ import Page.Team as Team exposing (slugstr)
 import Page.Teams as Teams
 import Page.Users as Users
 import RemoteData exposing (RemoteData(..))
-import Route exposing (Route, link)
+import Route exposing (Route(..), link)
 import Session exposing (Session, Viewer(..))
 import Url
 import Url.Builder
@@ -33,6 +34,7 @@ type Model
     | Teams Teams.Model
     | CreateTeam CreateTeam.Model
     | Users Users.Model
+    | DeleteTeam DeleteTeam.Model
     | Error Error.Model
 
 
@@ -49,6 +51,7 @@ type Msg
     | GotTeamsMsg Teams.Msg
     | GotCreateTeamMsg CreateTeam.Msg
     | GotUsersMsg Users.Msg
+    | GotDeleteTeamMsg DeleteTeam.Msg
     | LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
 
@@ -100,8 +103,12 @@ changeRouteTo maybeRoute session =
                 Just Route.Users ->
                     Users.init session |> updateWith Users GotUsersMsg
 
+                Just (Route.DeleteTeam slug) ->
+                    DeleteTeam.init session slug |> updateWith DeleteTeam GotDeleteTeamMsg
+
                 Nothing ->
                     Error.init session "changeRouteTo: no route found" |> updateWith Error (\_ -> NoOp)
+
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -148,6 +155,9 @@ update msg model =
         ( GotUsersMsg subMsg, Users subModel ) ->
             Users.update subMsg subModel |> updateWith Users GotUsersMsg
 
+        ( GotDeleteTeamMsg subMsg, DeleteTeam subModel ) ->
+            DeleteTeam.update subMsg subModel |> updateWith DeleteTeam GotDeleteTeamMsg
+
         _ ->
             Error.init (toSession model) "Main.update: no case added for this (msg, model) combination" |> updateWith Error (\_ -> NoOp)
 
@@ -181,6 +191,9 @@ view model =
 
                 Users subModel ->
                     Users.view subModel |> Html.map GotUsersMsg
+
+                DeleteTeam subModel ->
+                    DeleteTeam.view subModel |> Html.map GotDeleteTeamMsg
 
                 Error subModel ->
                     Error.view subModel |> Html.map (\_ -> NoOp)
@@ -295,6 +308,9 @@ isActiveRoute model target =
         ( Users _, Route.Users ) ->
             True
 
+        ( DeleteTeam _, Route.DeleteTeam _ ) ->
+            True
+
         _ ->
             False
 
@@ -345,6 +361,9 @@ toSession model =
             m.session
 
         Users m ->
+            m.session
+
+        DeleteTeam m ->
             m.session
 
         CreateTeam m ->

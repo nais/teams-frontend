@@ -418,6 +418,47 @@ enableTeam requiredArgs____ object____ =
     Object.selectionForCompositeField "enableTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
 
 
+type alias RequestTeamDeletionRequiredArguments =
+    { slug : Backend.ScalarCodecs.Slug }
+
+
+{-| Request a key that can be used to trigger a team deletion process
+
+Deleting a team is a two step process. First the client will need to request a deletion key, and then use the
+key with the confirmTeamDeletion mutation to start the actual deletion process.
+
+  - slug - The slug of the team that the deletion key will be assigned to.
+
+-}
+requestTeamDeletion :
+    RequestTeamDeletionRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.TeamDeleteKey
+    -> SelectionSet decodesTo RootMutation
+requestTeamDeletion requiredArgs____ object____ =
+    Object.selectionForCompositeField "requestTeamDeletion" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
+
+
+type alias ConfirmTeamDeletionRequiredArguments =
+    { key : Backend.ScalarCodecs.Uuid }
+
+
+{-| Confirm a team deletion
+
+This will start the actual team deletion process, which will be done in an asynchronous manner. All external
+entities controlled by Console will also be deleted.
+
+WARNING: There is no going back after starting this process.
+
+  - key - Deletion key, acquired using the requestTeamDeletion mutation.
+
+-}
+confirmTeamDeletion :
+    ConfirmTeamDeletionRequiredArguments
+    -> SelectionSet Backend.ScalarCodecs.Uuid RootMutation
+confirmTeamDeletion requiredArgs____ =
+    Object.selectionForField "ScalarCodecs.Uuid" "confirmTeamDeletion" [ Argument.required "key" requiredArgs____.key (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
+
+
 {-| Trigger a user synchronization
 
 This mutation will trigger a full user synchronization with the connected Google Workspace. The action is

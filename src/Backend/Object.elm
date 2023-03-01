@@ -57,6 +57,10 @@ type Team
     = Team
 
 
+type TeamDeleteKey
+    = TeamDeleteKey
+
+
 type TeamMember
     = TeamMember
 
