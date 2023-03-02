@@ -259,6 +259,10 @@ viewNav model =
                         _ ->
                             []
 
+                DeleteTeam deletePage ->
+                    [ menuItem model (Route.DeleteTeam deletePage.slug) True "Delete team"
+                    ]
+
                 CreateTeam _ ->
                     [ menuItem model Route.CreateTeam True "Create team"
                     ]

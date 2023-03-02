@@ -16,6 +16,7 @@ import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List
 import RemoteData exposing (RemoteData(..))
+import Route
 import Session exposing (Session, Viewer)
 
 
@@ -67,7 +68,7 @@ type Msg
     | ClickedCancelEditOverview
     | ClickedSynchronize
     | ClickedEnableTeam Team
-    | ClickedDisableTeam Team
+    | ClickedDeleteTeam Team
     | PurposeChanged String
     | SlackChannelChanged String
     | SlackAlertsChannelChanged String String
@@ -228,7 +229,7 @@ update msg model =
         ClickedEnableTeam team ->
             ( model, Api.Do.mutate (enableTeam team) (GotTeamResponse << RemoteData.fromResult) )
 
-        ClickedDisableTeam team ->
+        ClickedDeleteTeam team ->
             ( model, Api.Do.mutate (disableTeam team) (GotTeamResponse << RemoteData.fromResult) )
 
         ToggleExpandableList l ->
@@ -536,14 +537,18 @@ editorButton msg viewer team =
         Nothing
 
 
-toggleTeamButton : Viewer -> Team -> Maybe (Html Msg)
-toggleTeamButton user team =
-    if Session.isGlobalAdmin user then
-        if team.enabled then
-            Just (smallButton (ClickedDisableTeam team) "locked" "Disable")
-
-        else
-            Just (smallButton (ClickedEnableTeam team) "locked" "Enable")
+deleteTeamButton : Viewer -> Team -> Maybe (Html Msg)
+deleteTeamButton user team =
+    if editor team user then
+        Just
+            (Route.link (Route.DeleteTeam team.slug)
+                [ class "nostyle" ]
+                [ div [ class "small button danger" ]
+                    [ div [ class "icon", class "delete-red" ] []
+                    , text "Delete"
+                    ]
+                ]
+            )
 
     else
         Nothing
@@ -613,7 +618,7 @@ syncStateRows state =
 
                 Just email ->
                     [ tr []
-                        [ td [] [ text "Google Workspace group email" ]
+                        [ td [] [ text "Google Workspace group" ]
                         , td [] [ text email ]
                         ]
                     ]
@@ -715,7 +720,7 @@ viewTeamOverview viewer team =
     div [ class "card" ]
         [ div [ class "title" ]
             ([ h2 [] [ text <| "Team " ++ slugstr team.slug ] ]
-                |> concatMaybe (toggleTeamButton viewer team)
+                |> concatMaybe (deleteTeamButton viewer team)
                 |> concatMaybe (syncButton ClickedSynchronize viewer team)
                 |> concatMaybe (editorButton ClickedEditMain viewer team)
             )
