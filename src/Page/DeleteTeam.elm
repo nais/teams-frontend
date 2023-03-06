@@ -83,33 +83,16 @@ card title elements =
 
 
 simpleRow : String -> String -> Html msg
-simpleRow header content =
-    let
-        headerText =
-            case header of
-                "slack-channel-generic" ->
-                    "Generic Slack channel"
-
-                "slack-channel-platform-alerts" ->
-                    "Alerting Slack channel"
-
-                _ ->
-                    header
-    in
+simpleRow title description =
     tr []
-        [ td [] [ text headerText ]
-        , td [] [ text content ]
+        [ td [] [ text title ]
+        , td [] [ text description ]
         ]
 
 
-metadataRow : KeyValue -> Html msg
-metadataRow kv =
-    case kv.value of
-        Just v ->
-            simpleRow kv.key v
-
-        Nothing ->
-            simpleRow kv.key ""
+keyValueRow : KeyValue -> Html msg
+keyValueRow kv =
+    simpleRow kv.key (kv.value |> Maybe.withDefault "")
 
 
 syncStateRows : TeamSyncState -> List (Html msg)
@@ -124,44 +107,19 @@ syncStateRows state =
                     []
         )
         ([ state.githubTeamSlug
-            |> Maybe.map
-                (\slug ->
-                    [ td [] [ text "GitHub team slug" ]
-                    , td [] [ text <| slugstr slug ]
-                    ]
-                )
+            |> Maybe.map (\slug -> [ simpleRow "GitHub team slug" (slugstr slug) ])
          , state.googleWorkspaceGroupEmail
-            |> Maybe.map
-                (\email ->
-                    [ td [] [ text "Google Workspace group" ]
-                    , td [] [ text email ]
-                    ]
-                )
+            |> Maybe.map (\email -> [ simpleRow "Google group email" email ])
          , state.azureADGroupID
-            |> Maybe.map
-                (\(Uuid id) ->
-                    [ td [] [ text "Azure AD group ID" ]
-                    , td [] [ text id ]
-                    ]
-                )
+            |> Maybe.map (\(Uuid id) -> [ simpleRow "Azure AD group ID" id ])
          ]
             ++ (state.gcpProjects
                     |> List.map
-                        (\project ->
-                            Just
-                                [ td [] [ text <| "GCP project for '" ++ project.environment ++ "'" ]
-                                , td [] [ text project.projectID ]
-                                ]
-                        )
+                        (\project -> Just [ simpleRow ("GCP project ID (" ++ project.environment ++ ")") project.projectID ])
                )
             ++ (state.naisNamespaces
                     |> List.map
-                        (\namespace ->
-                            Just
-                                [ td [] [ text <| "NAIS namespace in '" ++ namespace.environment ++ "' cluster" ]
-                                , td [] [ text <| slugstr namespace.namespace ]
-                                ]
-                        )
+                        (\namespace -> Just [ simpleRow ("NAIS namespace (" ++ namespace.environment ++ ")") (slugstr namespace.namespace) ])
                )
         )
 
@@ -170,7 +128,7 @@ viewTeamResources : Team -> Html msg
 viewTeamResources team =
     let
         metaRows =
-            List.map metadataRow team.metadata
+            List.map keyValueRow team.metadata
 
         stateRows =
             case team.syncState of
