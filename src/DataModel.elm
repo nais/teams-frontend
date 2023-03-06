@@ -141,6 +141,7 @@ type alias TeamSyncState =
     , gcpProjects : List GCPProject
     , naisNamespaces : List NaisNamespace
     , azureADGroupID : Maybe Uuid
+    , garRepository : Maybe String
     }
 
 

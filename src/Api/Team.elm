@@ -210,12 +210,14 @@ keyValueSelection =
 
 syncStateSelection : SelectionSet TeamSyncState Backend.Object.ReconcilerState
 syncStateSelection =
-    Graphql.SelectionSet.succeed TeamSyncState
-        |> with BOReconcilerState.gitHubTeamSlug
-        |> with BOReconcilerState.googleWorkspaceGroupEmail
-        |> with (BOReconcilerState.gcpProjects gcpProjectSelection)
-        |> with (BOReconcilerState.naisNamespaces naisNamespaceSelection)
-        |> with BOReconcilerState.azureADGroupId
+    Graphql.SelectionSet.map6
+        TeamSyncState
+        BOReconcilerState.gitHubTeamSlug
+        BOReconcilerState.googleWorkspaceGroupEmail
+        (BOReconcilerState.gcpProjects gcpProjectSelection)
+        (BOReconcilerState.naisNamespaces naisNamespaceSelection)
+        BOReconcilerState.azureADGroupId
+        BOReconcilerState.garRepositoryName
 
 
 gcpProjectSelection : SelectionSet GCPProject Backend.Object.GcpProject
