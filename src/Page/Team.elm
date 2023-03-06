@@ -1,8 +1,9 @@
-module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), MemberChange(..), Model, Msg(..), init, slugstr, update, view)
+module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), MemberChange(..), Model, Msg(..), init, update, view)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
+import Api.Str exposing (auditActionStr, roleStr, slugStr)
+import Api.Team exposing (addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, setTeamMemberRole, teamSyncSelection, updateTeam)
 import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
@@ -150,10 +151,10 @@ update msg model =
             , Cmd.none
             )
 
-        RoleDropDownClicked member roleString ->
+        RoleDropDownClicked member roleStr ->
             let
                 role =
-                    teamRoleFromString roleString
+                    teamRoleFromString roleStr
 
                 op =
                     case member of
@@ -442,21 +443,11 @@ fetchTeam slug =
     query (getTeam slug) (RemoteData.fromResult >> GotTeamResponse)
 
 
-slugstr : Backend.Scalar.Slug -> String
-slugstr (Backend.Scalar.Slug u) =
-    u
-
-
-actionstr : Backend.Scalar.AuditAction -> String
-actionstr (Backend.Scalar.AuditAction u) =
-    u
-
-
 memberRow : TeamMember -> Html Msg
 memberRow member =
     tr []
         [ td [] [ text member.user.email ]
-        , td [ classList [ ( "team-owner", member.role == Owner ) ] ] [ text <| roleString member.role ]
+        , td [ classList [ ( "team-owner", member.role == Owner ) ] ] [ text <| roleStr member.role ]
         ]
 
 
@@ -482,7 +473,7 @@ auditLogLine log =
         actor =
             case log.actor of
                 Nothing ->
-                    actionstr log.action
+                    auditActionStr log.action
 
                 Just s ->
                     s
@@ -588,7 +579,7 @@ viewSyncErrors team =
         _ ->
             div [ class "card error" ]
                 [ h2 [] [ text "Synchronization error" ]
-                , p [] [ text "Console failed to synchronize team ", strong [] [ text (slugstr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
+                , p [] [ text "Console failed to synchronize team ", strong [] [ text (slugStr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
                 , p [] [ text "If errors are caused by network outage, they will resolve automatically. If they persist for more than a few hours, please contact NAIS support." ]
                 , viewSyncSuccess team
                 , h3 [] [ text "Error messages" ]
@@ -719,7 +710,7 @@ viewTeamOverview : Viewer -> Team -> Html Msg
 viewTeamOverview viewer team =
     div [ class "card" ]
         [ div [ class "title" ]
-            ([ h2 [] [ text <| "Team " ++ slugstr team.slug ] ]
+            ([ h2 [] [ text <| "Team " ++ slugStr team.slug ] ]
                 |> concatMaybe (deleteTeamButton viewer team)
                 |> concatMaybe (syncButton ClickedSynchronize viewer team)
                 |> concatMaybe (editorButton ClickedEditMain viewer team)
@@ -761,7 +752,7 @@ viewEditTeamOverview team error =
                     div [ class "error" ] [ text <| Api.Error.errorToString err ]
     in
     div [ class "card" ]
-        ([ h2 [] [ text ("Team " ++ slugstr team.slug) ]
+        ([ h2 [] [ text ("Team " ++ slugStr team.slug) ]
          , label [] [ text "Purpose" ]
          , input [ type_ "text", Html.Attributes.placeholder "Describe team's purpose", onInput PurposeChanged, value team.purpose ] []
          , label [] [ text "Slack channel" ]
@@ -871,7 +862,7 @@ editMemberRow member =
 viewRoleSelector : TeamRole -> (String -> Msg) -> Bool -> Html Msg
 viewRoleSelector currentRole action disable =
     select
-        [ value (roleString currentRole)
+        [ value (roleStr currentRole)
         , onInput action
         , disabled disable
         ]
@@ -882,9 +873,9 @@ roleOption : TeamRole -> TeamRole -> Html Msg
 roleOption currentRole role =
     option
         [ selected (role == currentRole)
-        , value (roleString role)
+        , value (roleStr role)
         ]
-        [ text (roleString role) ]
+        [ text (roleStr role) ]
 
 
 viewEditMembers : Model -> Team -> Maybe EditError -> Html Msg
@@ -1004,7 +995,7 @@ viewGitHubRepositories team =
         ([ h2 [] [ text "Repositories" ]
          , p []
             [ text "These are repositories that "
-            , strong [] [ text (slugstr team.slug) ]
+            , strong [] [ text (slugStr team.slug) ]
             , text " has access to. If it has the "
             , strong [] [ text "push" ]
             , text " permission it will be able to push images to this teams artifact registry."

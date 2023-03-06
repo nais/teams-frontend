@@ -1,6 +1,7 @@
 module Main exposing (Model(..), Msg(..), main)
 
 import Api.Do exposing (query)
+import Api.Str exposing (slugStr)
 import Api.User
 import Browser exposing (Document)
 import Browser.Navigation as Nav
@@ -13,7 +14,7 @@ import Page.DeleteTeam as DeleteTeam
 import Page.Error as Error
 import Page.Home as Home
 import Page.ReconcilerAdmin as ReconcilerAdmin
-import Page.Team as Team exposing (slugstr)
+import Page.Team as Team
 import Page.Teams as Teams
 import Page.Users as Users
 import RemoteData exposing (RemoteData(..))
@@ -108,7 +109,6 @@ changeRouteTo maybeRoute session =
 
                 Nothing ->
                     Error.init session "changeRouteTo: no route found" |> updateWith Error (\_ -> NoOp)
-
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -254,7 +254,7 @@ viewNav model =
                 Team teamPage ->
                     case teamPage.team of
                         Success team ->
-                            [ menuItem model (Route.Team team.slug) True (slugstr team.slug) ]
+                            [ menuItem model (Route.Team team.slug) True (slugStr team.slug) ]
 
                         _ ->
                             []

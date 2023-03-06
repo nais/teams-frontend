@@ -2,6 +2,7 @@ module Page.DeleteTeam exposing (Model, Msg(..), init, update, view)
 
 import Api.Do
 import Api.Error exposing (errorToString)
+import Api.Str exposing (slugStr)
 import Api.Team
 import Backend.Query exposing (team)
 import Backend.Scalar exposing (Slug(..), Uuid(..))
@@ -10,7 +11,6 @@ import Graphql.Http
 import Html exposing (Html, button, div, h2, p, strong, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class, colspan)
 import Html.Events exposing (onClick)
-import Page.Team exposing (slugstr)
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session)
@@ -66,11 +66,6 @@ viewPhase phase =
 
         Done team teamDeleteConfirmed ->
             viewDone team teamDeleteConfirmed
-
-
-slugStr : Slug -> String
-slugStr (Slug str) =
-    str
 
 
 card : String -> List (Html msg) -> Html msg

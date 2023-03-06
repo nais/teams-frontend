@@ -1,4 +1,4 @@
-module Api.Team exposing (addMemberToTeam, addOwnerToTeam, confirmTeamDeletion, createTeam, disableTeam, enableTeam, getTeam, getTeams, removeMemberFromTeam, requestTeamDeletion, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
+module Api.Team exposing (addMemberToTeam, addOwnerToTeam, confirmTeamDeletion, createTeam, disableTeam, enableTeam, getTeam, getTeams, removeMemberFromTeam, requestTeamDeletion, setTeamMemberRole, teamSyncSelection, updateTeam)
 
 import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
@@ -255,13 +255,3 @@ mapToDateTime =
             ISO8601.fromString value
                 |> Result.mapError (\_ -> "Failed to parse " ++ value ++ " as ISO8601 timestamp.")
         )
-
-
-roleString : TeamRole -> String
-roleString teamRole =
-    case teamRole of
-        Member ->
-            "Member"
-
-        Owner ->
-            "Owner"
