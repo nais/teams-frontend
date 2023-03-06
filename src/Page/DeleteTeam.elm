@@ -6,12 +6,12 @@ import Api.Str exposing (slugStr, uuidStr)
 import Api.Team
 import Backend.Query exposing (team)
 import Backend.Scalar exposing (Slug(..), Uuid(..))
+import Component.ResourceTable as ResourceTable
 import DataModel exposing (Team, TeamDeleteConfirmed, TeamDeleteKey)
 import Graphql.Http
 import Html exposing (Html, button, div, h2, p, strong, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
-import Page.ResourceTable as ResourceTable
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session)

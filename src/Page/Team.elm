@@ -8,6 +8,7 @@ import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
 import Backend.Scalar exposing (Slug, Uuid(..))
+import Component.ResourceTable as ResourceTable
 import DataModel exposing (..)
 import Graphql.Http
 import Graphql.OptionalArgument
@@ -16,7 +17,6 @@ import Html.Attributes exposing (class, classList, colspan, disabled, for, href,
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List
-import Page.ResourceTable as ResourceTable
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session, Viewer)

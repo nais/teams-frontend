@@ -1,4 +1,4 @@
-module Page.ResourceTable exposing (view)
+module Component.ResourceTable exposing (view)
 
 import Api.Str exposing (slugStr, uuidStr)
 import DataModel exposing (GCPProject, KeyValue, NaisNamespace, TeamSyncState)
