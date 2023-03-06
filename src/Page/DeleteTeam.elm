@@ -2,15 +2,16 @@ module Page.DeleteTeam exposing (Model, Msg(..), init, update, view)
 
 import Api.Do
 import Api.Error exposing (errorToString)
-import Api.Str exposing (slugStr)
+import Api.Str exposing (slugStr, uuidStr)
 import Api.Team
 import Backend.Query exposing (team)
 import Backend.Scalar exposing (Slug(..), Uuid(..))
-import DataModel exposing (KeyValue, Team, TeamDeleteConfirmed, TeamDeleteKey, TeamSyncState)
+import DataModel exposing (Team, TeamDeleteConfirmed, TeamDeleteKey)
 import Graphql.Http
-import Html exposing (Html, button, div, h2, p, strong, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (class, colspan)
+import Html exposing (Html, button, div, h2, p, strong, text)
+import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
+import Page.ResourceTable as ResourceTable
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session)
@@ -77,89 +78,6 @@ card title elements =
         ]
 
 
-simpleRow : String -> String -> Html msg
-simpleRow title description =
-    tr []
-        [ td [] [ text title ]
-        , td [] [ text description ]
-        ]
-
-
-keyValueRow : KeyValue -> Html msg
-keyValueRow kv =
-    simpleRow kv.key (kv.value |> Maybe.withDefault "")
-
-
-syncStateRows : TeamSyncState -> List (Html msg)
-syncStateRows state =
-    List.concatMap
-        (\r ->
-            case r of
-                Just row ->
-                    [ tr [] row ]
-
-                Nothing ->
-                    []
-        )
-        ([ state.githubTeamSlug
-            |> Maybe.map (\slug -> [ simpleRow "GitHub team slug" (slugstr slug) ])
-         , state.googleWorkspaceGroupEmail
-            |> Maybe.map (\email -> [ simpleRow "Google group email" email ])
-         , state.azureADGroupID
-            |> Maybe.map (\(Uuid id) -> [ simpleRow "Azure AD group ID" id ])
-         , state.garRepository
-            |> Maybe.map (\name -> [ simpleRow "Artifact Registry repository" name ])
-         ]
-            ++ (state.gcpProjects
-                    |> List.map
-                        (\project -> Just [ simpleRow ("GCP project ID (" ++ project.environment ++ ")") project.projectID ])
-               )
-            ++ (state.naisNamespaces
-                    |> List.map
-                        (\namespace -> Just [ simpleRow ("NAIS namespace (" ++ namespace.environment ++ ")") (slugstr namespace.namespace) ])
-               )
-        )
-
-
-viewTeamResources : Team -> Html msg
-viewTeamResources team =
-    let
-        metaRows =
-            List.map keyValueRow team.metadata
-
-        stateRows =
-            case team.syncState of
-                Nothing ->
-                    []
-
-                Just syncState ->
-                    syncStateRows syncState
-
-        rows =
-            metaRows ++ stateRows
-    in
-    table []
-        [ thead []
-            [ tr []
-                [ th [] [ text "Description" ]
-                , th [] [ text "Value" ]
-                ]
-            ]
-        , tbody []
-            (if List.length rows == 0 then
-                [ tr [] [ td [ colspan 2 ] [ text "Console has not created any resources yet" ] ] ]
-
-             else
-                rows
-            )
-        ]
-
-
-uuidStr : Uuid -> String
-uuidStr (Uuid str) =
-    str
-
-
 viewRequest : Team -> Html Msg
 viewRequest team =
     card "Request team team"
@@ -187,7 +105,7 @@ viewConfirm team key =
             [ p []
                 [ text "Please confirm that you really want to delete the team." ]
             ]
-        , viewTeamResources team
+        , ResourceTable.view team.syncState team.metadata
         , div [ class "row" ]
             [ button [ class "button small" ]
                 [ Route.link (Route.Team team.slug) [ class "nostyle" ] [ text "no" ]

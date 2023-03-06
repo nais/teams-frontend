@@ -16,6 +16,7 @@ import Html.Attributes exposing (class, classList, colspan, disabled, for, href,
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List
+import Page.ResourceTable as ResourceTable
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session, Viewer)
@@ -481,36 +482,6 @@ auditLogLine log =
     logLine log.createdAt actor log.message
 
 
-simpleRow : String -> String -> Html msg
-simpleRow header content =
-    let
-        headerText =
-            case header of
-                "slack-channel-generic" ->
-                    "Generic Slack channel"
-
-                "slack-channel-platform-alerts" ->
-                    "Alerting Slack channel"
-
-                _ ->
-                    header
-    in
-    tr []
-        [ td [] [ text headerText ]
-        , td [] [ text content ]
-        ]
-
-
-metadataRow : KeyValue -> Html msg
-metadataRow kv =
-    case kv.value of
-        Just v ->
-            simpleRow kv.key v
-
-        Nothing ->
-            simpleRow kv.key ""
-
-
 smallButton : Msg -> String -> String -> Html Msg
 smallButton msg iconClass title =
     div [ class "small button", onClick msg ]
@@ -587,107 +558,11 @@ viewSyncErrors team =
                 ]
 
 
-syncStateRows : TeamSyncState -> List (Html msg)
-syncStateRows state =
-    let
-        gitHub =
-            case state.githubTeamSlug of
-                Nothing ->
-                    []
-
-                Just slug ->
-                    [ tr []
-                        [ td [] [ text "GitHub team slug" ]
-                        , td [] [ text <| slugstr slug ]
-                        ]
-                    ]
-
-        googleWorkspaceGroupEmail =
-            case state.googleWorkspaceGroupEmail of
-                Nothing ->
-                    []
-
-                Just email ->
-                    [ tr []
-                        [ td [] [ text "Google Workspace group" ]
-                        , td [] [ text email ]
-                        ]
-                    ]
-
-        azureADGroupID =
-            case state.azureADGroupID of
-                Nothing ->
-                    []
-
-                Just (Uuid id) ->
-                    [ tr []
-                        [ td [] [ text "Azure AD group ID" ]
-                        , td [] [ text id ]
-                        ]
-                    ]
-
-        gcpProjects =
-            List.map
-                (\project ->
-                    tr []
-                        [ td [] [ text <| "GCP project for '" ++ project.environment ++ "'" ]
-                        , td [] [ text project.projectID ]
-                        ]
-                )
-                state.gcpProjects
-
-        naisNamespaces =
-            List.map
-                (\namespace ->
-                    tr []
-                        [ td [] [ text <| "NAIS namespace in '" ++ namespace.environment ++ "' cluster" ]
-                        , td [] [ text <| slugstr namespace.namespace ]
-                        ]
-                )
-                state.naisNamespaces
-    in
-    gitHub ++ googleWorkspaceGroupEmail ++ gcpProjects ++ naisNamespaces ++ azureADGroupID
-
-
-viewStateTable : Team -> Html msg
-viewStateTable team =
-    let
-        metaRows =
-            List.map metadataRow team.metadata
-
-        stateRows =
-            case team.syncState of
-                Nothing ->
-                    []
-
-                Just syncState ->
-                    syncStateRows syncState
-
-        rows =
-            metaRows ++ stateRows
-    in
-    table []
-        [ thead []
-            [ tr []
-                [ th [] [ text "Description" ]
-                , th [] [ text "Value" ]
-                ]
-            ]
-        , tbody []
-            (if List.length rows == 0 then
-                [ tr [] [ td [ colspan 2 ] [ text "Console has not created any resources yet" ] ] ]
-
-             else
-                rows
-            )
-        ]
-
-
 viewTeamState : Team -> Html Msg
 viewTeamState team =
     div [ class "card" ]
         [ h2 [] [ text "Managed resources" ]
-        , viewStateTable team
+        , ResourceTable.view team.syncState team.metadata
         ]
 
 
