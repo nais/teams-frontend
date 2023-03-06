@@ -212,7 +212,7 @@ viewRequest team =
             [ p []
                 [ text "This will delete the team "
                 , strong [] [ text (slugStr team.slug) ]
-                , text "permanently."
+                , text " permanently."
                 ]
             , p [] [ text "Deleting a team is irreversible." ]
             ]
