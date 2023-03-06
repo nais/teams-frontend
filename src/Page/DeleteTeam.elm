@@ -112,6 +112,8 @@ syncStateRows state =
             |> Maybe.map (\email -> [ simpleRow "Google group email" email ])
          , state.azureADGroupID
             |> Maybe.map (\(Uuid id) -> [ simpleRow "Azure AD group ID" id ])
+         , state.garRepository
+            |> Maybe.map (\name -> [ simpleRow "Artifact Registry repository" name ])
          ]
             ++ (state.gcpProjects
                     |> List.map
