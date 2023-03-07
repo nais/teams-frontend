@@ -1,4 +1,6 @@
 module Page.DeleteTeam exposing (Model, Msg(..), confirmTeamDeletion, requestTeamDeletion, update, view)
+import Url
+import Url
 
 import Api.DeleteTeam
 import Api.Do
@@ -17,12 +19,15 @@ import Html.Events exposing (onClick)
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session)
+import Html.Attributes exposing (value)
+import Html exposing (input)
+import Html.Attributes exposing (type_)
 
 
 type alias Model =
     { session : Session
-    , state : Flow
     , slug : Slug
+    , state : Flow
     }
 
 
@@ -62,18 +67,18 @@ requestTeamDeletion session slug =
     )
 
 
-confirmTeamDeletion : Session -> Slug -> Uuid -> ( Model, Cmd Msg )
-confirmTeamDeletion session slug teamDeleteKey =
+confirmTeamDeletion : Session -> Uuid -> ( Model, Cmd Msg )
+confirmTeamDeletion session teamDeleteKey =
     ( { session = session
-      , slug = slug
+      , slug = Slug ""
       , state = ConfirmDelete ConfirmInit
       }
     , Api.Do.queryRD (Api.DeleteTeam.getTeamDeleteKey teamDeleteKey) GotTeamDeleteKey
     )
 
 
-viewState : Flow -> Html Msg
-viewState flow =
+viewState : Session -> Flow -> Html Msg
+viewState session flow =
     case flow of
         RequestDelete f ->
             case f of
@@ -84,7 +89,7 @@ viewState flow =
                     viewRequest t
 
                 RequestDone tdk ->
-                    viewRequestDone tdk
+                    viewRequestDone session tdk
 
         ConfirmDelete f ->
             case f of
@@ -103,11 +108,7 @@ viewState flow =
 
 card : String -> List (Html msg) -> Html msg
 card title elements =
-    div [ class "card" ]
-        [ div [ class "title" ]
-            [ h2 [] [ text title ] ]
-        , div [] elements
-        ]
+    div [ class "card" ] ((h2 [] [ text title ]) :: elements)
 
 
 viewRequest : Team -> Html Msg
@@ -127,17 +128,39 @@ viewRequest team =
         ]
 
 
-viewRequestDone : TeamDeleteKey -> Html Msg
-viewRequestDone tdk =
+baseUrl : Session -> String
+baseUrl session =
+    let
+        url =
+            Session.url session
+        protocol =
+            case url.protocol of
+                Url.Http ->
+                    "http://"
+                Url.Https ->
+                    "https://"
+        port_ =
+            case url.port_ of
+                Just p ->
+                     ":"++String.fromInt p
+                Nothing -> ""
+    in
+    String.join "" [protocol, url.host, port_]
+
+
+viewRequestDone : Session -> TeamDeleteKey -> Html Msg
+viewRequestDone session tdk =
     card "Team delete requested"
         [ p []
             [ text ("Deletion of team " ++ slugStr tdk.team.slug ++ " has been requested. To finalize the deletion send this link to another team owner and let them confirm the deletion.")
+                ]
+            , input [class "deleteLink", type_ "text", Html.Attributes.disabled True, value (baseUrl session ++ Route.routeToString (Route.DeleteTeamConfirm tdk.key))] []
+            , p [] [text "Current owners are listed below"]
             , ul []
                 (expandableAll tdk.team.members
                     |> List.filter (\m -> m.role == Owner)
                     |> List.map (\m -> li [] [ text m.user.email ])
                 )
-            ]
         ]
 
 
@@ -170,7 +193,7 @@ viewConfirmDone tdk tdc =
 view : Model -> Html Msg
 view model =
     div [ class "cards" ]
-        [ viewState model.state
+        [ viewState model.session model.state
         ]
 
 
@@ -210,7 +233,7 @@ update msg model =
                             ( { model | state = RequestDelete (RequestDone deleteKey) }, Cmd.none )
 
                         ConfirmDelete ConfirmInit ->
-                            ( { model | state = ConfirmDelete (ConfirmView deleteKey) }, Cmd.none )
+                            ( { model | state = ConfirmDelete (ConfirmView deleteKey), slug = deleteKey.team.slug }, Cmd.none )
 
                         _ ->
                             ( { model | state = Error "invalid state transition" }, Cmd.none )

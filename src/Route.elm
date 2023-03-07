@@ -1,6 +1,6 @@
 module Route exposing (Route(..), fromUrl, link, routeToString)
 
-import Backend.Scalar exposing (Slug(..))
+import Backend.Scalar exposing (Slug(..), Uuid(..))
 import Html exposing (Html, a)
 import Html.Attributes exposing (href)
 import String
@@ -15,8 +15,9 @@ type Route
     | AllTeams
     | CreateTeam
     | Users
-    | Team Backend.Scalar.Slug
-    | DeleteTeam Backend.Scalar.Slug
+    | Team Slug
+    | DeleteTeam Slug
+    | DeleteTeamConfirm Uuid
 
 
 parser : Parser (Route -> a) a
@@ -30,6 +31,7 @@ parser =
         , Parser.map Users (s "users")
         , Parser.map (\s -> Team (Slug s)) (s "teams" </> string)
         , Parser.map (\s -> DeleteTeam (Slug s)) (s "teams" </> s "delete" </> string)
+        , Parser.map (\s -> DeleteTeamConfirm (Uuid s)) (s "teams" </> s "delete" </> s "confirm" </> string)
         ]
 
 
@@ -79,5 +81,8 @@ routeToString page =
 
                 DeleteTeam (Slug id) ->
                     [ "teams", "delete", id ]
+
+                DeleteTeamConfirm (Uuid key) ->
+                    [ "teams", "delete", "confirm", key ]
     in
     "/" ++ String.join "/" pieces

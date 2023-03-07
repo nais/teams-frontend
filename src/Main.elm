@@ -59,7 +59,7 @@ type Msg
 
 init : a -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url nk =
-    ( Home (Home.init (Session.init nk) (Route.fromUrl url)), getMe url )
+    ( Home (Home.init (Session.init nk url) (Route.fromUrl url)), getMe url )
 
 
 
@@ -106,6 +106,9 @@ changeRouteTo maybeRoute session =
 
                 Just (Route.DeleteTeam slug) ->
                     DeleteTeam.requestTeamDeletion session slug |> updateWith DeleteTeam GotDeleteTeamMsg
+
+                Just (Route.DeleteTeamConfirm key) ->
+                    DeleteTeam.confirmTeamDeletion session key |> updateWith DeleteTeam GotDeleteTeamMsg
 
                 Nothing ->
                     Error.init session "changeRouteTo: no route found" |> updateWith Error (\_ -> NoOp)
@@ -313,6 +316,9 @@ isActiveRoute model target =
             True
 
         ( DeleteTeam _, Route.DeleteTeam _ ) ->
+            True
+
+        ( DeleteTeam _, Route.DeleteTeamConfirm _ ) ->
             True
 
         _ ->

@@ -1,8 +1,9 @@
-module Session exposing (Session, Viewer(..), init, isGlobalAdmin, mapViewer, navKey, user, viewer)
+module Session exposing (Session, Viewer(..), init, isGlobalAdmin, mapViewer, navKey, url, user, viewer)
 
 import Backend.Scalar exposing (RoleName(..))
 import Browser.Navigation as Nav
 import DataModel exposing (User)
+import Url
 
 
 type Viewer
@@ -11,27 +12,32 @@ type Viewer
 
 
 type Session
-    = Session Nav.Key Viewer
+    = Session Nav.Key Url.Url Viewer
 
 
-init : Nav.Key -> Session
-init nk =
-    Session nk Anonymous
+init : Nav.Key -> Url.Url -> Session
+init nk u =
+    Session nk u Anonymous
 
 
 mapViewer : Viewer -> Session -> Session
-mapViewer v (Session nk _) =
-    Session nk v
+mapViewer v (Session nk u _) =
+    Session nk u v
 
 
 navKey : Session -> Nav.Key
-navKey (Session nk _) =
+navKey (Session nk _ _) =
     nk
 
 
 viewer : Session -> Viewer
-viewer (Session _ v) =
+viewer (Session _ _ v) =
     v
+
+
+url : Session -> Url.Url
+url (Session _ u _) =
+    u
 
 
 user : Viewer -> Maybe User
