@@ -112,7 +112,7 @@ card title elements =
 
 viewRequest : Team -> Html Msg
 viewRequest team =
-    card "Confirm team deletion"
+    card "Request team deletion"
         [ div [ class "row" ]
             [ p []
                 [ text "Please confirm that you want to delete the following resources, and all resources they contain. Applications in the namespace, databases in the google project, etc will be irreversibly deleted." ]

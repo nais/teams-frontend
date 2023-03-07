@@ -96,7 +96,6 @@ teamSelection =
         |> Graphql.SelectionSet.hardcoded Nothing
         |> Graphql.SelectionSet.hardcoded Nothing
         |> Graphql.SelectionSet.hardcoded (Preview [])
-        |> with BOTeam.enabled
 
 
 teamFullSelection : SelectionSet Team Backend.Object.Team
@@ -113,7 +112,6 @@ teamFullSelection =
         |> with (BOTeam.lastSuccessfulSync |> mapToMaybeDateTime)
         |> with (Graphql.SelectionSet.map Just (BOTeam.reconcilerState syncStateSelection))
         |> with (Graphql.SelectionSet.map Preview (BOTeam.gitHubRepositories gitHubRepositorySelection))
-        |> with BOTeam.enabled
 
 
 gitHubRepositorySelection : SelectionSet GitHubRepository Backend.Object.GitHubRepository

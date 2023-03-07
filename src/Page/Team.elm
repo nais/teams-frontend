@@ -501,11 +501,7 @@ deleteTeamButton user team =
 syncButton : Msg -> Viewer -> Team -> Maybe (Html Msg)
 syncButton msg viewer team =
     if editor team viewer then
-        if team.enabled then
-            Just (smallButton msg "synchronize" "Synchronize")
-
-        else
-            Nothing
+        Just (smallButton msg "synchronize" "Synchronize")
 
     else
         Nothing
