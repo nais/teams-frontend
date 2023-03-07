@@ -292,7 +292,7 @@ synchronizeTeam requiredArgs____ object____ =
 {-| Manually synchronize all teams
 
 This action will trigger a full synchronization of all teams against the configured third party systems. The action
-is asynchronous. The operation can take a while, depending on the amount of teams currently enabled in Console.
+is asynchronous. The operation can take a while, depending on the amount of teams currently in Console.
 
 -}
 synchronizeAllTeams :
@@ -378,54 +378,16 @@ setTeamMemberRole requiredArgs____ object____ =
     Object.selectionForCompositeField "setTeamMemberRole" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "userId" requiredArgs____.userId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid), Argument.required "role" requiredArgs____.role (Encode.enum Backend.Enum.TeamRole.toString) ] object____ Basics.identity
 
 
-type alias DisableTeamRequiredArguments =
-    { slug : Backend.ScalarCodecs.Slug }
-
-
-{-| Disable a team
-
-When a team is disabled it will no longer be included during team reconciliation.
-
-The team will be returned on success.
-
-  - slug - The slug of the team to disable.
-
--}
-disableTeam :
-    DisableTeamRequiredArguments
-    -> SelectionSet decodesTo Backend.Object.Team
-    -> SelectionSet decodesTo RootMutation
-disableTeam requiredArgs____ object____ =
-    Object.selectionForCompositeField "disableTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
-
-
-type alias EnableTeamRequiredArguments =
-    { slug : Backend.ScalarCodecs.Slug }
-
-
-{-| Enable a previously disabled team
-
-The team will be returned on success.
-
-  - slug - The slug of the team to enable.
-
--}
-enableTeam :
-    EnableTeamRequiredArguments
-    -> SelectionSet decodesTo Backend.Object.Team
-    -> SelectionSet decodesTo RootMutation
-enableTeam requiredArgs____ object____ =
-    Object.selectionForCompositeField "enableTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] object____ Basics.identity
-
-
 type alias RequestTeamDeletionRequiredArguments =
     { slug : Backend.ScalarCodecs.Slug }
 
 
 {-| Request a key that can be used to trigger a team deletion process
 
-Deleting a team is a two step process. First the client will need to request a deletion key, and then use the
-key with the confirmTeamDeletion mutation to start the actual deletion process.
+Deleting a team is a two step process. First an owner of the team (or an admin) must request a team deletion key, and
+then a second owner of the team (or an admin) must confirm the deletion using the confirmTeamDeletion mutation.
+
+Note: Service accounts are not allowed to request team delete keys.
 
   - slug - The slug of the team that the deletion key will be assigned to.
 
@@ -448,6 +410,8 @@ This will start the actual team deletion process, which will be done in an async
 entities controlled by Console will also be deleted.
 
 WARNING: There is no going back after starting this process.
+
+Note: Service accounts are not allowed to confirm a team deletion.
 
   - key - Deletion key, acquired using the requestTeamDeletion mutation.
 

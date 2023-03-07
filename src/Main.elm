@@ -105,7 +105,7 @@ changeRouteTo maybeRoute session =
                     Users.init session |> updateWith Users GotUsersMsg
 
                 Just (Route.DeleteTeam slug) ->
-                    DeleteTeam.init session slug |> updateWith DeleteTeam GotDeleteTeamMsg
+                    DeleteTeam.requestTeamDeletion session slug |> updateWith DeleteTeam GotDeleteTeamMsg
 
                 Nothing ->
                     Error.init session "changeRouteTo: no route found" |> updateWith Error (\_ -> NoOp)

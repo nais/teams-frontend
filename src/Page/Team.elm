@@ -3,7 +3,7 @@ module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), Memb
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
 import Api.Str exposing (auditActionStr, roleStr, slugStr)
-import Api.Team exposing (addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, setTeamMemberRole, teamSyncSelection, updateTeam)
+import Api.Team exposing (addMemberToTeam, addOwnerToTeam, getTeam, removeMemberFromTeam, setTeamMemberRole, teamSyncSelection, updateTeam)
 import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
@@ -69,8 +69,6 @@ type Msg
     | ClickedCancelEditMembers
     | ClickedCancelEditOverview
     | ClickedSynchronize
-    | ClickedEnableTeam Team
-    | ClickedDeleteTeam Team
     | PurposeChanged String
     | SlackChannelChanged String
     | SlackAlertsChannelChanged String String
@@ -228,12 +226,6 @@ update msg model =
         GotSynchronizeResponse _ ->
             ( model, Cmd.none )
 
-        ClickedEnableTeam team ->
-            ( model, Api.Do.mutate (enableTeam team) (GotTeamResponse << RemoteData.fromResult) )
-
-        ClickedDeleteTeam team ->
-            ( model, Api.Do.mutate (disableTeam team) (GotTeamResponse << RemoteData.fromResult) )
-
         ToggleExpandableList l ->
             case model.team of
                 Success team ->
@@ -285,16 +277,6 @@ mapMemberChangeToCmds team change =
 
         Unchanged _ ->
             []
-
-
-expandableAll : Expandable (List a) -> List a
-expandableAll e =
-    case e of
-        Preview i ->
-            i
-
-        Expanded i ->
-            i
 
 
 initMembers : RemoteData (Graphql.Http.Error Team) Team -> List MemberChange

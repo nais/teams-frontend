@@ -1,4 +1,4 @@
-module Api.Team exposing (addMemberToTeam, addOwnerToTeam, confirmTeamDeletion, createTeam, disableTeam, enableTeam, getTeam, getTeams, removeMemberFromTeam, requestTeamDeletion, setTeamMemberRole, teamSyncSelection, updateTeam)
+module Api.Team exposing (addMemberToTeam, addOwnerToTeam, createTeam, getTeam, getTeams, removeMemberFromTeam, setTeamMemberRole, teamFullSelection, teamSyncSelection, updateTeam)
 
 import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
@@ -14,7 +14,6 @@ import Backend.Object.ReconcilerState as BOReconcilerState
 import Backend.Object.SlackAlertsChannel as BOSlackAlertsChannel
 import Backend.Object.SyncError as BOSyncError
 import Backend.Object.Team as BOTeam
-import Backend.Object.TeamDeleteKey as BOTeamDeleteKey
 import Backend.Object.TeamMember as BOTeamMember
 import Backend.Object.TeamMetadata as BOTeamMetadata
 import Backend.Object.TeamSync as BOTeamSync
@@ -81,39 +80,6 @@ setTeamMemberRole team member role =
         , role = role
         }
         teamFullSelection
-
-
-enableTeam : Team -> SelectionSet Team RootMutation
-enableTeam team =
-    Mutation.enableTeam { slug = team.slug } teamFullSelection
-
-
-disableTeam : Team -> SelectionSet Team RootMutation
-disableTeam team =
-    Mutation.disableTeam { slug = team.slug } teamFullSelection
-
-
-requestTeamDeletion : Team -> SelectionSet TeamDeleteKey RootMutation
-requestTeamDeletion team =
-    Mutation.requestTeamDeletion { slug = team.slug } teamDeletionKeySelection
-
-
-
--- This mutation just returns a single value so it has no SelectionSet
-
-
-confirmTeamDeletion : TeamDeleteKey -> SelectionSet TeamDeleteConfirmed RootMutation
-confirmTeamDeletion key =
-    Mutation.confirmTeamDeletion { key = key.key }
-        |> Graphql.SelectionSet.map TeamDeleteConfirmed
-
-
-teamDeletionKeySelection : SelectionSet TeamDeleteKey Backend.Object.TeamDeleteKey
-teamDeletionKeySelection =
-    Graphql.SelectionSet.map2
-        TeamDeleteKey
-        BOTeamDeleteKey.key
-        (BOTeamDeleteKey.expires |> mapToDateTime)
 
 
 teamSelection : SelectionSet Team Backend.Object.Team

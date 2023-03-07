@@ -26,8 +26,33 @@ key =
     Object.selectionForField "ScalarCodecs.Uuid" "key" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)
 
 
+{-| The creation timestamp of the key.
+-}
+createdAt : SelectionSet Backend.ScalarCodecs.Time Backend.Object.TeamDeleteKey
+createdAt =
+    Object.selectionForField "ScalarCodecs.Time" "createdAt" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecTime |> .decoder)
+
+
 {-| Expiration timestamp of the key.
 -}
 expires : SelectionSet Backend.ScalarCodecs.Time Backend.Object.TeamDeleteKey
 expires =
     Object.selectionForField "ScalarCodecs.Time" "expires" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecTime |> .decoder)
+
+
+{-| The user who created the key.
+-}
+createdBy :
+    SelectionSet decodesTo Backend.Object.User
+    -> SelectionSet decodesTo Backend.Object.TeamDeleteKey
+createdBy object____ =
+    Object.selectionForCompositeField "createdBy" [] object____ Basics.identity
+
+
+{-| The team the delete key is for.
+-}
+team :
+    SelectionSet decodesTo Backend.Object.Team
+    -> SelectionSet decodesTo Backend.Object.TeamDeleteKey
+team object____ =
+    Object.selectionForCompositeField "team" [] object____ Basics.identity
