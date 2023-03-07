@@ -103,7 +103,7 @@ viewConfirm team key =
     card "Confirm team deletion"
         [ div [ class "row" ]
             [ p []
-                [ text "Please confirm that you really want to delete the team." ]
+                [ text "Please confirm that you want to delete the following resources, and all resources they contain. Applications in the namespace, databases in the google project, etc will be irreversibly deleted." ]
             ]
         , ResourceTable.view team.syncState team.metadata
         , div [ class "row" ]
