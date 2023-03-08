@@ -7,7 +7,7 @@ import Api.Team exposing (addMemberToTeam, addOwnerToTeam, getTeam, removeMember
 import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
-import Backend.Scalar exposing (Slug, Uuid(..))
+import Backend.Scalar exposing (Slug)
 import Component.ResourceTable as ResourceTable
 import DataModel exposing (..)
 import Graphql.Http

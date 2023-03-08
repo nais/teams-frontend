@@ -1,7 +1,7 @@
 module Api.Team exposing (addMemberToTeam, addOwnerToTeam, createTeam, getTeam, getTeams, removeMemberFromTeam, setTeamMemberRole, teamFullSelection, teamSyncSelection, updateTeam)
 
 import Api.User
-import Backend.Enum.TeamRole exposing (TeamRole(..))
+import Backend.Enum.TeamRole
 import Backend.InputObject exposing (CreateTeamInput, UpdateTeamInput)
 import Backend.Mutation as Mutation
 import Backend.Object

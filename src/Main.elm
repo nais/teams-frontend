@@ -18,7 +18,7 @@ import Page.Team as Team
 import Page.Teams as Teams
 import Page.Users as Users
 import RemoteData exposing (RemoteData(..))
-import Route exposing (Route(..), link)
+import Route exposing (Route, link)
 import Session exposing (Session, Viewer(..))
 import Url
 import Url.Builder
