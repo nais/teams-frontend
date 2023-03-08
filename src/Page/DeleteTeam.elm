@@ -136,9 +136,11 @@ viewRequest team =
 baseUrl : Session -> String
 baseUrl session =
     let
+        url : Url.Url
         url =
             Session.url session
 
+        protocol : String
         protocol =
             case url.protocol of
                 Url.Http ->
@@ -147,6 +149,7 @@ baseUrl session =
                 Url.Https ->
                     "https://"
 
+        port_ : String
         port_ =
             case url.port_ of
                 Just p ->

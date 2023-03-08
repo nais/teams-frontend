@@ -38,11 +38,12 @@ maybeRouteToString maybeRoute =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update _ model =
-  let
-      login =
-          Url.Builder.absolute [ "oauth2", "login" ] [ Url.Builder.string "redirect_uri" (maybeRouteToString model.maybeRoute) ]
-  in
-  ( model, Browser.Navigation.load login )
+    let
+        login : String
+        login =
+            Url.Builder.absolute [ "oauth2", "login" ] [ Url.Builder.string "redirect_uri" (maybeRouteToString model.maybeRoute) ]
+    in
+    ( model, Browser.Navigation.load login )
 
 
 view : Model -> Html Msg

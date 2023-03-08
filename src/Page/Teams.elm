@@ -4,7 +4,7 @@ import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
 import Api.Team exposing (getTeams)
 import Backend.Scalar
-import DataModel exposing (..)
+import DataModel exposing (Team)
 import Graphql.Http
 import Html exposing (Html, div, h2, p, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class)
@@ -43,6 +43,7 @@ init session viewMode =
 myTeams : Session.Viewer -> List Team -> List Team
 myTeams user teams =
     let
+        teamSlugs : List Backend.Scalar.Slug
         teamSlugs =
             case user of
                 LoggedIn u ->
@@ -92,6 +93,7 @@ teamTable teams =
 view : Model -> Html Msg
 view model =
     let
+        title : String
         title =
             case model.viewMode of
                 AllTeams ->
@@ -100,6 +102,7 @@ view model =
                 MyTeams ->
                     "My teams"
 
+        switcher : Html msg
         switcher =
             case model.viewMode of
                 AllTeams ->

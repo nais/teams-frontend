@@ -19,7 +19,7 @@ import Backend.Object.TeamMetadata as BOTeamMetadata
 import Backend.Object.TeamSync as BOTeamSync
 import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug)
-import DataModel exposing (..)
+import DataModel exposing (AuditLog, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, KeyValue, NaisNamespace, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, TeamSyncState, User)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet, with)
 import ISO8601

@@ -9,7 +9,7 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
 import Backend.Scalar exposing (Slug)
 import Component.ResourceTable as ResourceTable
-import DataModel exposing (..)
+import DataModel exposing (AuditLog, Expandable(..), GitHubRepository, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, User, expandableAll)
 import Graphql.Http
 import Graphql.OptionalArgument
 import Html exposing (Html, a, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
@@ -152,9 +152,11 @@ update msg model =
 
         RoleDropDownClicked member roleStr ->
             let
+                role : TeamRole
                 role =
                     teamRoleFromString roleStr
 
+                op : TeamMember -> MemberChange
                 op =
                     case member of
                         Add _ _ ->
@@ -326,6 +328,7 @@ isMember members member =
 addUserToTeam : User -> TeamRole -> List MemberChange -> List MemberChange
 addUserToTeam user role members =
     let
+        member : { user : User, role : TeamRole }
         member =
             { user = user, role = role }
     in
@@ -384,9 +387,9 @@ mapSlackAlertsChannels environment channelName channels =
 
 synchronize : Slug -> Cmd Msg
 synchronize slug =
-    Api.Do.mutate
+    Api.Do.mutateRD
         (Mutation.synchronizeTeam { slug = slug } teamSyncSelection)
-        (GotSynchronizeResponse << RemoteData.fromResult)
+        GotSynchronizeResponse
 
 
 saveOverview : Team -> Cmd Msg
@@ -453,6 +456,7 @@ errorLine log =
 auditLogLine : AuditLog -> Html Msg
 auditLogLine log =
     let
+        actor : String
         actor =
             case log.actor of
                 Nothing ->
@@ -582,9 +586,11 @@ viewTeamOverview viewer team =
 viewSlackAlertsChannel : String -> SlackAlertsChannel -> List (Html Msg)
 viewSlackAlertsChannel placeholder entry =
     let
+        inputID : String
         inputID =
             "slack-alerts-channel" ++ entry.environment
 
+        val : String
         val =
             Maybe.withDefault "" entry.channelName
     in
@@ -596,6 +602,7 @@ viewSlackAlertsChannel placeholder entry =
 viewEditTeamOverview : Team -> Maybe (Graphql.Http.Error Team) -> Html Msg
 viewEditTeamOverview team error =
     let
+        errorMessage : Html msg
         errorMessage =
             case error of
                 Nothing ->
@@ -659,6 +666,7 @@ addUserCandidateOption user =
 editMemberRow : MemberChange -> Html Msg
 editMemberRow member =
     let
+        role : TeamRole
         role =
             case member of
                 Unchanged m ->
@@ -673,9 +681,11 @@ editMemberRow member =
                 Remove m ->
                     m.role
 
+        roleSelector : Bool -> Html Msg
         roleSelector =
             viewRoleSelector role (RoleDropDownClicked member)
 
+        viewButton : String -> String -> String -> msg -> Html msg
         viewButton cls svg txt msg =
             button [ class <| "button small " ++ cls, onClick msg ]
                 [ div [ class <| "icon " ++ svg ] []
@@ -805,6 +815,7 @@ viewLogs team =
 viewCards : Model -> Team -> Html Msg
 viewCards model team =
     let
+        user : Viewer
         user =
             Session.viewer model.session
     in

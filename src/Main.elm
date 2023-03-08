@@ -5,7 +5,7 @@ import Api.Str exposing (slugStr)
 import Api.User
 import Browser exposing (Document)
 import Browser.Navigation as Nav
-import DataModel exposing (..)
+import DataModel exposing (User)
 import Graphql.Http
 import Html exposing (Html, a, div, h1, header, li, main_, nav, p, text, ul)
 import Html.Attributes exposing (class, classList, href, id)
@@ -174,6 +174,7 @@ update msg model =
 view : Model -> Document Msg
 view model =
     let
+        html : Html Msg
         html =
             case model of
                 -- Add new view here when we add new modules
@@ -201,13 +202,16 @@ view model =
                 Error subModel ->
                     Error.view subModel |> Html.map (\_ -> NoOp)
 
+        user : Viewer
         user =
             Session.viewer (toSession model)
 
+        auth : Html msg
         auth =
             case user of
                 LoggedIn loggedInUser ->
                     let
+                        logoutURL : String
                         logoutURL =
                             Url.Builder.absolute [ "oauth2", "logout" ] []
                     in
@@ -218,6 +222,7 @@ view model =
 
                 _ ->
                     let
+                        loginURL : String
                         loginURL =
                             Url.Builder.absolute [ "oauth2", "login" ] []
                     in
@@ -248,37 +253,14 @@ view model =
 
 viewNav : Model -> Html msg
 viewNav model =
-    let
-        user =
-            Session.viewer (toSession model)
-
-        ephemeralButtons =
-            case model of
-                Team teamPage ->
-                    case teamPage.team of
-                        Success team ->
-                            [ menuItem model (Route.Team team.slug) True (slugStr team.slug) ]
-
-                        _ ->
-                            []
-
-                DeleteTeam deletePage ->
-                    [ menuItem model (Route.DeleteTeam deletePage.slug) True "Delete team"
-                    ]
-
-                CreateTeam _ ->
-                    [ menuItem model Route.CreateTeam True "Create team"
-                    ]
-
-                _ ->
-                    []
-    in
-    case user of
+    case Session.viewer (toSession model) of
         LoggedIn _ ->
             let
+                teamsButton : List (Html msg)
                 teamsButton =
                     [ menuItem model Route.MyTeams False "Teams" ]
 
+                adminButtons : List (Html msg)
                 adminButtons =
                     if Session.isGlobalAdmin (Session.viewer (toSession model)) then
                         [ menuItem model Route.ReconcilerAdmin False "Synchronizers"
@@ -287,6 +269,28 @@ viewNav model =
 
                     else
                         []
+
+                ephemeralButtons : List (Html msg)
+                ephemeralButtons =
+                    case model of
+                        Team teamPage ->
+                            case teamPage.team of
+                                Success team ->
+                                    [ menuItem model (Route.Team team.slug) True (slugStr team.slug) ]
+
+                                _ ->
+                                    []
+
+                        DeleteTeam deletePage ->
+                            [ menuItem model (Route.DeleteTeam deletePage.slug) True "Delete team"
+                            ]
+
+                        CreateTeam _ ->
+                            [ menuItem model Route.CreateTeam True "Create team"
+                            ]
+
+                        _ ->
+                            []
             in
             nav [] [ ul [] (teamsButton ++ ephemeralButtons ++ adminButtons) ]
 
@@ -328,6 +332,7 @@ isActiveRoute model target =
 menuItem : Model -> Route -> Bool -> String -> Html.Html msg
 menuItem model target indent title =
     let
+        classes : List ( String, Bool )
         classes =
             [ ( "active", isActiveRoute model target ) -- Remember to update isActiveRoute with model/route combo
             , ( "indent", indent ) -- Remember to update isActiveRoute with model/route combo

@@ -4,7 +4,7 @@ import Api.Do exposing (mutate, query)
 import Api.Error
 import Api.Reconciler exposing (disableReconciler, enableReconciler, getReconcilers, synchronizeAllTeams, synchronizeUsers, updateReconcilerConfig)
 import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
-import DataModel exposing (..)
+import DataModel exposing (ReconcilerConfigData, ReconcilerData)
 import Graphql.Http
 import Html exposing (Html, a, button, div, form, h2, input, label, li, p, text, textarea, ul)
 import Html.Attributes exposing (checked, class, classList, for, href, id, placeholder, type_, value)
@@ -86,9 +86,11 @@ update msg model =
             case r of
                 Ok rd ->
                     let
+                        updatedModel : Model
                         updatedModel =
                             { model | error = Nothing, reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }
 
+                        maybeExisting : Maybe ReconcilerData
                         maybeExisting =
                             filterReconciler rd.name model
                     in
@@ -138,6 +140,7 @@ saveReconcilerConfig : ReconcilerName -> Model -> ( Model, Cmd Msg )
 saveReconcilerConfig name model =
     -- TODO (show some confirmation dialog -> send gql msg)
     let
+        config : Maybe (List ReconcilerConfigData)
         config =
             case model.reconcilers of
                 Success recs ->
@@ -149,6 +152,7 @@ saveReconcilerConfig name model =
                 _ ->
                     Nothing
 
+        inputs : List { key : ReconcilerConfigKey, value : String }
         inputs =
             case config of
                 Just cfg ->
@@ -164,15 +168,11 @@ saveReconcilerConfig name model =
 
 enableDisableReconciler : ReconcilerData -> Cmd Msg
 enableDisableReconciler reconciler =
-    let
-        func =
-            if reconciler.enabled then
-                enableReconciler
+    if reconciler.enabled then
+        mutate (enableReconciler reconciler.name) GotEnableReconcilerResponse
 
-            else
-                disableReconciler
-    in
-    mutate (func reconciler.name) GotEnableReconcilerResponse
+    else
+        mutate (disableReconciler reconciler.name) GotEnableReconcilerResponse
 
 
 mapReconcilerEnabled : ReconcilerName -> Bool -> ReconcilerData -> ReconcilerData
@@ -319,6 +319,7 @@ configElement msg rcd =
         (ReconcilerConfigKey idKey) =
             rcd.key
 
+        element : Html Msg
         element =
             case idKey of
                 "github:app_private_key" ->

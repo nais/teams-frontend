@@ -45,9 +45,11 @@ syncStateRows state =
 view : Maybe TeamSyncState -> List KeyValue -> Html msg
 view syncState metadata =
     let
+        metaRows : List (Html msg)
         metaRows =
             List.concatMap keyValueRow metadata
 
+        stateRows : List (Html msg)
         stateRows =
             case syncState of
                 Nothing ->
@@ -56,6 +58,7 @@ view syncState metadata =
                 Just s ->
                     syncStateRows s
 
+        rows : List (Html msg)
         rows =
             metaRows ++ stateRows
     in

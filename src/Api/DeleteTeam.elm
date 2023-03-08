@@ -7,7 +7,7 @@ import Backend.Object
 import Backend.Object.TeamDeleteKey as BOTeamDeleteKey
 import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (Uuid)
-import DataModel exposing (..)
+import DataModel exposing (Team, TeamDeleteConfirmed, TeamDeleteKey)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
 import ISO8601
