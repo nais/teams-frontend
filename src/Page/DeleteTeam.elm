@@ -82,33 +82,33 @@ confirmTeamDeletion session teamDeleteKey =
     )
 
 
-viewState : Model -> Html Msg
+viewState : Model -> List (Html Msg)
 viewState model =
     case model.state of
         RequestDelete f ->
             case f of
                 RequestInit ->
-                    div [ class "card" ] [ text "loading team" ]
+                    [ div [ class "card" ] [ text "loading team" ] ]
 
                 RequestView t ->
                     viewRequest t
 
                 RequestDone tdk ->
-                    viewRequestDone model.session tdk
+                    [ viewRequestDone model.session tdk ]
 
         ConfirmDelete f ->
             case f of
                 ConfirmInit ->
-                    div [ class "card" ] [ text "loading delete request" ]
+                    [ div [ class "card" ] [ text "loading delete request" ] ]
 
                 ConfirmView tdk ->
                     viewConfirmDelete model.session tdk model.now
 
                 ConfirmDone tdk tdc ->
-                    viewConfirmDone tdk tdc
+                    [ viewConfirmDone tdk tdc ]
 
         Error error ->
-            div [ class "card error" ] [ text error ]
+            [ div [ class "card error" ] [ text error ] ]
 
 
 card : String -> List (Html msg) -> Html msg
@@ -116,21 +116,37 @@ card title elements =
     div [ class "card" ] (h2 [] [ text title ] :: elements)
 
 
-viewRequest : Team -> Html Msg
+viewRequest : Team -> List (Html Msg)
 viewRequest team =
-    card "Request team deletion"
-        [ div [ class "row" ]
+    [ card ("Request team deletion for team " ++ slugStr team.slug)
+        [ div [ class "column" ]
             [ p []
-                [ text "Please confirm that you want to delete the following resources, and all resources they contain. Applications in the namespace, databases in the google project, etc will be irreversibly deleted." ]
-            ]
-        , ResourceTable.view team.syncState team.metadata
-        , div [ class "row" ]
-            [ button [ class "button small" ]
-                [ Route.link (Route.Team team.slug) [ class "nostyle" ] [ text "no" ]
+                [ text "Please confirm that you intend to delete the team and all resources related to it."
                 ]
-            , button [ class "button small", onClick (ClickRequestDelete team) ] [ text "yes" ]
             ]
         ]
+    , card "Resources that would be deleted"
+        [ p []
+            [ text "The following resources and all resources within them would be deleted. Applications in the namespace, databases in the google project, etc will be irreversibly deleted."
+            ]
+        , ResourceTable.view team.syncState team.metadata
+        ]
+    , card "Danger zone"
+        [ p [] [ text "When you request deletion a delete key will be generated for this team. It is valid for 5 minutes. Another team-owner will have to confirm the deletion by using a generated link before the team is irreversibly deleted." ]
+        , p [] [ text "Current team owners are listed below" ]
+        , ul []
+            (expandableAll team.members
+                |> List.filter (\m -> m.role == Owner)
+                |> List.map (\m -> li [] [ text m.user.email ])
+            )
+        , div [ class "button-row" ]
+            [ button []
+                [ Route.link (Route.Team team.slug) [ class "nostyle" ] [ text "abort" ]
+                ]
+            , button [ class "red", onClick (ClickRequestDelete team) ] [ text "request team deletion" ]
+            ]
+        ]
+    ]
 
 
 baseUrl : Session -> String
@@ -163,7 +179,7 @@ baseUrl session =
 
 viewRequestDone : Session -> TeamDeleteKey -> Html Msg
 viewRequestDone session tdk =
-    card "Team delete requested"
+    card ("Requested team deletion for team " ++ slugStr tdk.team.slug)
         [ p []
             [ text ("Deletion of team " ++ slugStr tdk.team.slug ++ " has been requested. To finalize the deletion send this link to another team owner and let them confirm the deletion.")
             ]
@@ -192,43 +208,50 @@ expired expiry now =
     ISO8601.toTime expiry < Time.posixToMillis now
 
 
-viewConfirmDelete : Session -> TeamDeleteKey -> Time.Posix -> Html Msg
+viewConfirmDelete : Session -> TeamDeleteKey -> Time.Posix -> List (Html Msg)
 viewConfirmDelete session tdk now =
-    if expired tdk.expires now then
-        card "Confirm team deletion"
-            [ div [ class "row" ]
-                [ p []
-                    [ text "Delete key expired" ]
-                ]
-            ]
-
-    else if confirmOwnDeleteRequest session tdk then
-        card "Confirm team deletion"
-            [ div [ class "row" ]
-                [ p []
-                    [ text "You can not confirm your own delete request." ]
-                ]
-            ]
-
-    else
-        card "Confirm team deletion"
-            [ div [ class "row" ]
-                [ p []
-                    [ text "Please confirm that you want to delete the following resources, and all resources they contain. Applications in the namespace, databases in the google project, etc will be irreversibly deleted." ]
-                ]
-            , ResourceTable.view tdk.team.syncState tdk.team.metadata
-            , div [ class "row" ]
-                [ button [ class "button small" ]
-                    [ Route.link (Route.Team tdk.team.slug) [ class "nostyle" ] [ text "no" ]
+    card ("Confirm team deletion for team " ++ slugStr tdk.team.slug)
+        [ p [] [ text ("The deletion was initiated by " ++ tdk.createdBy.email ++ " and expires at " ++ ISO8601.toString tdk.expires) ] ]
+        :: (if expired tdk.expires now then
+                [ card "Error"
+                    [ div [ class "column" ]
+                        [ p []
+                            [ text "Delete key expired" ]
+                        ]
                     ]
-                , button [ class "button small", onClick (ClickConfirmDelete tdk) ] [ text "yes" ]
                 ]
-            ]
+
+            else if confirmOwnDeleteRequest session tdk then
+                [ card "Error"
+                    [ div [ class "column" ]
+                        [ p []
+                            [ text "You can not confirm your own delete request." ]
+                        ]
+                    ]
+                ]
+
+            else
+                [ card "Resources that will be deleted"
+                    [ p []
+                        [ text "The following resources and all resources within them would be deleted. Applications in the namespace, databases in the google project, etc will be irreversibly deleted." ]
+                    , ResourceTable.view tdk.team.syncState tdk.team.metadata
+                    ]
+                , card "Danger zone"
+                    [ p [] [ text "When you click delete team there is now way back." ]
+                    , div [ class "button-row" ]
+                        [ button []
+                            [ Route.link (Route.Team tdk.team.slug) [ class "nostyle" ] [ text "abort" ]
+                            ]
+                        , button [ class "red", onClick (ClickConfirmDelete tdk) ] [ text "delete team" ]
+                        ]
+                    ]
+                ]
+           )
 
 
 viewConfirmDone : TeamDeleteKey -> TeamDeleteConfirmed -> Html Msg
 viewConfirmDone tdk tdc =
-    card "Team deleted"
+    card ("Confirmed team deletion for team " ++ slugStr tdk.team.slug)
         [ p []
             [ text ("Team " ++ slugStr tdk.team.slug ++ " deleted. Correlation id: " ++ uuidStr tdc.correlationID)
             ]
@@ -238,8 +261,7 @@ viewConfirmDone tdk tdc =
 view : Model -> Html Msg
 view model =
     div [ class "cards" ]
-        [ viewState model
-        ]
+        (viewState model)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
