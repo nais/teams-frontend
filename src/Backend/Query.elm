@@ -86,6 +86,23 @@ deployKey requiredArgs____ =
     Object.selectionForField "ScalarCodecs.DeployKey" "deployKey" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug) ] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecDeployKey |> .decoder)
 
 
+type alias TeamDeleteKeyRequiredArguments =
+    { key : Backend.ScalarCodecs.Uuid }
+
+
+{-| Get a team delete key.
+
+  - key - The key to get.
+
+-}
+teamDeleteKey :
+    TeamDeleteKeyRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.TeamDeleteKey
+    -> SelectionSet decodesTo RootQuery
+teamDeleteKey requiredArgs____ object____ =
+    Object.selectionForCompositeField "teamDeleteKey" [ Argument.required "key" requiredArgs____.key (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
+
+
 {-| Get a collection of users, sorted by name.
 -}
 users :

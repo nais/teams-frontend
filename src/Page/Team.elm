@@ -1,13 +1,15 @@
-module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), MemberChange(..), Model, Msg(..), init, slugstr, update, view)
+module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), MemberChange(..), Model, Msg(..), init, update, view)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
-import Api.Team exposing (addMemberToTeam, addOwnerToTeam, disableTeam, enableTeam, getTeam, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
+import Api.Str exposing (auditActionStr, roleStr, slugStr)
+import Api.Team exposing (addMemberToTeam, addOwnerToTeam, getTeam, removeMemberFromTeam, setTeamMemberRole, teamSyncSelection, updateTeam)
 import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
-import Backend.Scalar exposing (Slug, Uuid(..))
-import DataModel exposing (..)
+import Backend.Scalar exposing (Slug)
+import Component.ResourceTable as ResourceTable
+import DataModel exposing (AuditLog, Expandable(..), GitHubRepository, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, User, expandableAll)
 import Graphql.Http
 import Graphql.OptionalArgument
 import Html exposing (Html, a, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
@@ -16,6 +18,7 @@ import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List
 import RemoteData exposing (RemoteData(..))
+import Route
 import Session exposing (Session, Viewer)
 
 
@@ -66,8 +69,6 @@ type Msg
     | ClickedCancelEditMembers
     | ClickedCancelEditOverview
     | ClickedSynchronize
-    | ClickedEnableTeam Team
-    | ClickedDisableTeam Team
     | PurposeChanged String
     | SlackChannelChanged String
     | SlackAlertsChannelChanged String String
@@ -149,11 +150,13 @@ update msg model =
             , Cmd.none
             )
 
-        RoleDropDownClicked member roleString ->
+        RoleDropDownClicked member roleStr ->
             let
+                role : TeamRole
                 role =
-                    teamRoleFromString roleString
+                    teamRoleFromString roleStr
 
+                op : TeamMember -> MemberChange
                 op =
                     case member of
                         Add _ _ ->
@@ -225,12 +228,6 @@ update msg model =
         GotSynchronizeResponse _ ->
             ( model, Cmd.none )
 
-        ClickedEnableTeam team ->
-            ( model, Api.Do.mutate (enableTeam team) (GotTeamResponse << RemoteData.fromResult) )
-
-        ClickedDisableTeam team ->
-            ( model, Api.Do.mutate (disableTeam team) (GotTeamResponse << RemoteData.fromResult) )
-
         ToggleExpandableList l ->
             case model.team of
                 Success team ->
@@ -284,16 +281,6 @@ mapMemberChangeToCmds team change =
             []
 
 
-expandableAll : Expandable (List a) -> List a
-expandableAll e =
-    case e of
-        Preview i ->
-            i
-
-        Expanded i ->
-            i
-
-
 initMembers : RemoteData (Graphql.Http.Error Team) Team -> List MemberChange
 initMembers response =
     case response of
@@ -341,6 +328,7 @@ isMember members member =
 addUserToTeam : User -> TeamRole -> List MemberChange -> List MemberChange
 addUserToTeam user role members =
     let
+        member : { user : User, role : TeamRole }
         member =
             { user = user, role = role }
     in
@@ -399,9 +387,9 @@ mapSlackAlertsChannels environment channelName channels =
 
 synchronize : Slug -> Cmd Msg
 synchronize slug =
-    Api.Do.mutate
+    Api.Do.mutateRD
         (Mutation.synchronizeTeam { slug = slug } teamSyncSelection)
-        (GotSynchronizeResponse << RemoteData.fromResult)
+        GotSynchronizeResponse
 
 
 saveOverview : Team -> Cmd Msg
@@ -441,21 +429,11 @@ fetchTeam slug =
     query (getTeam slug) (RemoteData.fromResult >> GotTeamResponse)
 
 
-slugstr : Backend.Scalar.Slug -> String
-slugstr (Backend.Scalar.Slug u) =
-    u
-
-
-actionstr : Backend.Scalar.AuditAction -> String
-actionstr (Backend.Scalar.AuditAction u) =
-    u
-
-
 memberRow : TeamMember -> Html Msg
 memberRow member =
     tr []
         [ td [] [ text member.user.email ]
-        , td [ classList [ ( "team-owner", member.role == Owner ) ] ] [ text <| roleString member.role ]
+        , td [ classList [ ( "team-owner", member.role == Owner ) ] ] [ text <| roleStr member.role ]
         ]
 
 
@@ -478,45 +456,16 @@ errorLine log =
 auditLogLine : AuditLog -> Html Msg
 auditLogLine log =
     let
+        actor : String
         actor =
             case log.actor of
                 Nothing ->
-                    actionstr log.action
+                    auditActionStr log.action
 
                 Just s ->
                     s
     in
     logLine log.createdAt actor log.message
-
-
-simpleRow : String -> String -> Html msg
-simpleRow header content =
-    let
-        headerText =
-            case header of
-                "slack-channel-generic" ->
-                    "Generic Slack channel"
-
-                "slack-channel-platform-alerts" ->
-                    "Alerting Slack channel"
-
-                _ ->
-                    header
-    in
-    tr []
-        [ td [] [ text headerText ]
-        , td [] [ text content ]
-        ]
-
-
-metadataRow : KeyValue -> Html msg
-metadataRow kv =
-    case kv.value of
-        Just v ->
-            simpleRow kv.key v
-
-        Nothing ->
-            simpleRow kv.key ""
 
 
 smallButton : Msg -> String -> String -> Html Msg
@@ -536,14 +485,18 @@ editorButton msg viewer team =
         Nothing
 
 
-toggleTeamButton : Viewer -> Team -> Maybe (Html Msg)
-toggleTeamButton user team =
-    if Session.isGlobalAdmin user then
-        if team.enabled then
-            Just (smallButton (ClickedDisableTeam team) "locked" "Disable")
-
-        else
-            Just (smallButton (ClickedEnableTeam team) "locked" "Enable")
+deleteTeamButton : Viewer -> Team -> Maybe (Html Msg)
+deleteTeamButton user team =
+    if editor team user then
+        Just
+            (Route.link (Route.DeleteTeam team.slug)
+                [ class "nostyle" ]
+                [ div [ class "small button danger" ]
+                    [ div [ class "icon", class "delete-red" ] []
+                    , text "Delete"
+                    ]
+                ]
+            )
 
     else
         Nothing
@@ -552,11 +505,7 @@ toggleTeamButton user team =
 syncButton : Msg -> Viewer -> Team -> Maybe (Html Msg)
 syncButton msg viewer team =
     if editor team viewer then
-        if team.enabled then
-            Just (smallButton msg "synchronize" "Synchronize")
-
-        else
-            Nothing
+        Just (smallButton msg "synchronize" "Synchronize")
 
     else
         Nothing
@@ -583,7 +532,7 @@ viewSyncErrors team =
         _ ->
             div [ class "card error" ]
                 [ h2 [] [ text "Synchronization error" ]
-                , p [] [ text "Console failed to synchronize team ", strong [] [ text (slugstr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
+                , p [] [ text "Console failed to synchronize team ", strong [] [ text (slugStr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
                 , p [] [ text "If errors are caused by network outage, they will resolve automatically. If they persist for more than a few hours, please contact NAIS support." ]
                 , viewSyncSuccess team
                 , h3 [] [ text "Error messages" ]
@@ -591,107 +540,11 @@ viewSyncErrors team =
                 ]
 
 
-syncStateRows : TeamSyncState -> List (Html msg)
-syncStateRows state =
-    let
-        gitHub =
-            case state.githubTeamSlug of
-                Nothing ->
-                    []
-
-                Just slug ->
-                    [ tr []
-                        [ td [] [ text "GitHub team slug" ]
-                        , td [] [ text <| slugstr slug ]
-                        ]
-                    ]
-
-        googleWorkspaceGroupEmail =
-            case state.googleWorkspaceGroupEmail of
-                Nothing ->
-                    []
-
-                Just email ->
-                    [ tr []
-                        [ td [] [ text "Google Workspace group email" ]
-                        , td [] [ text email ]
-                        ]
-                    ]
-
-        azureADGroupID =
-            case state.azureADGroupID of
-                Nothing ->
-                    []
-
-                Just (Uuid id) ->
-                    [ tr []
-                        [ td [] [ text "Azure AD group ID" ]
-                        , td [] [ text id ]
-                        ]
-                    ]
-
-        gcpProjects =
-            List.map
-                (\project ->
-                    tr []
-                        [ td [] [ text <| "GCP project for '" ++ project.environment ++ "'" ]
-                        , td [] [ text project.projectID ]
-                        ]
-                )
-                state.gcpProjects
-
-        naisNamespaces =
-            List.map
-                (\namespace ->
-                    tr []
-                        [ td [] [ text <| "NAIS namespace in '" ++ namespace.environment ++ "' cluster" ]
-                        , td [] [ text <| slugstr namespace.namespace ]
-                        ]
-                )
-                state.naisNamespaces
-    in
-    gitHub ++ googleWorkspaceGroupEmail ++ gcpProjects ++ naisNamespaces ++ azureADGroupID
-
-
-viewStateTable : Team -> Html msg
-viewStateTable team =
-    let
-        metaRows =
-            List.map metadataRow team.metadata
-
-        stateRows =
-            case team.syncState of
-                Nothing ->
-                    []
-
-                Just syncState ->
-                    syncStateRows syncState
-
-        rows =
-            metaRows ++ stateRows
-    in
-    table []
-        [ thead []
-            [ tr []
-                [ th [] [ text "Description" ]
-                , th [] [ text "Value" ]
-                ]
-            ]
-        , tbody []
-            (if List.length rows == 0 then
-                [ tr [] [ td [ colspan 2 ] [ text "Console has not created any resources yet" ] ] ]
-
-             else
-                rows
-            )
-        ]
-
-
 viewTeamState : Team -> Html Msg
 viewTeamState team =
     div [ class "card" ]
         [ h2 [] [ text "Managed resources" ]
-        , viewStateTable team
+        , ResourceTable.view team.syncState team.metadata
         ]
 
 
@@ -714,8 +567,8 @@ viewTeamOverview : Viewer -> Team -> Html Msg
 viewTeamOverview viewer team =
     div [ class "card" ]
         [ div [ class "title" ]
-            ([ h2 [] [ text <| "Team " ++ slugstr team.slug ] ]
-                |> concatMaybe (toggleTeamButton viewer team)
+            ([ h2 [] [ text <| "Team " ++ slugStr team.slug ] ]
+                |> concatMaybe (deleteTeamButton viewer team)
                 |> concatMaybe (syncButton ClickedSynchronize viewer team)
                 |> concatMaybe (editorButton ClickedEditMain viewer team)
             )
@@ -733,9 +586,11 @@ viewTeamOverview viewer team =
 viewSlackAlertsChannel : String -> SlackAlertsChannel -> List (Html Msg)
 viewSlackAlertsChannel placeholder entry =
     let
+        inputID : String
         inputID =
             "slack-alerts-channel" ++ entry.environment
 
+        val : String
         val =
             Maybe.withDefault "" entry.channelName
     in
@@ -747,6 +602,7 @@ viewSlackAlertsChannel placeholder entry =
 viewEditTeamOverview : Team -> Maybe (Graphql.Http.Error Team) -> Html Msg
 viewEditTeamOverview team error =
     let
+        errorMessage : Html msg
         errorMessage =
             case error of
                 Nothing ->
@@ -756,7 +612,7 @@ viewEditTeamOverview team error =
                     div [ class "error" ] [ text <| Api.Error.errorToString err ]
     in
     div [ class "card" ]
-        ([ h2 [] [ text ("Team " ++ slugstr team.slug) ]
+        ([ h2 [] [ text ("Team " ++ slugStr team.slug) ]
          , label [] [ text "Purpose" ]
          , input [ type_ "text", Html.Attributes.placeholder "Describe team's purpose", onInput PurposeChanged, value team.purpose ] []
          , label [] [ text "Slack channel" ]
@@ -810,6 +666,7 @@ addUserCandidateOption user =
 editMemberRow : MemberChange -> Html Msg
 editMemberRow member =
     let
+        role : TeamRole
         role =
             case member of
                 Unchanged m ->
@@ -824,9 +681,11 @@ editMemberRow member =
                 Remove m ->
                     m.role
 
+        roleSelector : Bool -> Html Msg
         roleSelector =
             viewRoleSelector role (RoleDropDownClicked member)
 
+        viewButton : String -> String -> String -> msg -> Html msg
         viewButton cls svg txt msg =
             button [ class <| "button small " ++ cls, onClick msg ]
                 [ div [ class <| "icon " ++ svg ] []
@@ -866,7 +725,7 @@ editMemberRow member =
 viewRoleSelector : TeamRole -> (String -> Msg) -> Bool -> Html Msg
 viewRoleSelector currentRole action disable =
     select
-        [ value (roleString currentRole)
+        [ value (roleStr currentRole)
         , onInput action
         , disabled disable
         ]
@@ -877,9 +736,9 @@ roleOption : TeamRole -> TeamRole -> Html Msg
 roleOption currentRole role =
     option
         [ selected (role == currentRole)
-        , value (roleString role)
+        , value (roleStr role)
         ]
-        [ text (roleString role) ]
+        [ text (roleStr role) ]
 
 
 viewEditMembers : Model -> Team -> Maybe EditError -> Html Msg
@@ -956,6 +815,7 @@ viewLogs team =
 viewCards : Model -> Team -> Html Msg
 viewCards model team =
     let
+        user : Viewer
         user =
             Session.viewer model.session
     in
@@ -999,7 +859,7 @@ viewGitHubRepositories team =
         ([ h2 [] [ text "Repositories" ]
          , p []
             [ text "These are repositories that "
-            , strong [] [ text (slugstr team.slug) ]
+            , strong [] [ text (slugStr team.slug) ]
             , text " has access to. If it has the "
             , strong [] [ text "push" ]
             , text " permission it will be able to push images to this teams artifact registry."

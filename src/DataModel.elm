@@ -1,4 +1,4 @@
-module DataModel exposing (AuditLog, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, KeyValue, NaisNamespace, ReconcilerConfigData, ReconcilerData, Role, SlackAlertsChannel, SyncError, Team, TeamMember, TeamMembership, TeamSlug, TeamSync, TeamSyncState, User)
+module DataModel exposing (AuditLog, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, KeyValue, NaisNamespace, ReconcilerConfigData, ReconcilerData, Role, SlackAlertsChannel, SyncError, Team, TeamDeleteConfirmed, TeamDeleteKey, TeamMember, TeamMembership, TeamSlug, TeamSync, TeamSyncState, User, expandableAll)
 
 import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.Scalar exposing (AuditAction, ReconcilerName, RoleName, Slug, Uuid)
@@ -8,6 +8,16 @@ import ISO8601
 type Expandable a
     = Preview a
     | Expanded a
+
+
+expandableAll : Expandable (List a) -> List a
+expandableAll e =
+    case e of
+        Preview i ->
+            i
+
+        Expanded i ->
+            i
 
 
 type alias AuditLog =
@@ -101,7 +111,19 @@ type alias Team =
     , lastSuccessfulSync : Maybe ISO8601.Time
     , syncState : Maybe TeamSyncState
     , repositories : Expandable (List GitHubRepository)
-    , enabled : Bool
+    }
+
+
+type alias TeamDeleteKey =
+    { key : Uuid
+    , expires : ISO8601.Time
+    , team : Team
+    , createdBy : User
+    }
+
+
+type alias TeamDeleteConfirmed =
+    { correlationID : Uuid
     }
 
 
@@ -130,6 +152,7 @@ type alias TeamSyncState =
     , gcpProjects : List GCPProject
     , naisNamespaces : List NaisNamespace
     , azureADGroupID : Maybe Uuid
+    , garRepository : Maybe String
     }
 
 

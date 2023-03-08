@@ -8,7 +8,7 @@ import Backend.Object.User as BOUser
 import Backend.Query as Query
 import Backend.Union
 import Backend.Union.AuthenticatedUser
-import DataModel exposing (..)
+import DataModel exposing (Role, TeamMembership, TeamSlug, User)
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 

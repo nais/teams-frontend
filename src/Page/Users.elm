@@ -4,7 +4,7 @@ import Api.Do
 import Api.Error
 import Api.User
 import Backend.Scalar exposing (RoleName(..), Slug(..))
-import DataModel exposing (..)
+import DataModel exposing (Role, User)
 import Graphql.Http
 import Html exposing (Html, p, table, tbody, td, text, th, thead, tr)
 import RemoteData exposing (RemoteData(..))

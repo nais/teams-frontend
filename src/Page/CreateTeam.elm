@@ -4,7 +4,7 @@ import Api.Do
 import Api.Error exposing (errorToString)
 import Api.Team exposing (createTeam)
 import Backend.Scalar
-import DataModel exposing (..)
+import DataModel exposing (Team)
 import Graphql.Http
 import Html exposing (Html, button, div, form, h2, input, label, li, p, text, ul)
 import Html.Attributes exposing (class, for, type_)

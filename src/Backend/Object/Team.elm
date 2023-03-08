@@ -69,13 +69,6 @@ syncErrors object____ =
     Object.selectionForCompositeField "syncErrors" [] object____ (Basics.identity >> Decode.list)
 
 
-{-| Whether or not the team is enabled.
--}
-enabled : SelectionSet Bool Backend.Object.Team
-enabled =
-    Object.selectionForField "Bool" "enabled" [] Decode.bool
-
-
 {-| Timestamp of the last successful synchronization of the team.
 -}
 lastSuccessfulSync : SelectionSet (Maybe Backend.ScalarCodecs.Time) Backend.Object.Team

@@ -1,7 +1,7 @@
-module Api.Team exposing (addMemberToTeam, addOwnerToTeam, createTeam, disableTeam, enableTeam, getTeam, getTeams, removeMemberFromTeam, roleString, setTeamMemberRole, teamSyncSelection, updateTeam)
+module Api.Team exposing (addMemberToTeam, addOwnerToTeam, createTeam, getTeam, getTeams, removeMemberFromTeam, setTeamMemberRole, teamFullSelection, teamSyncSelection, updateTeam)
 
 import Api.User
-import Backend.Enum.TeamRole exposing (TeamRole(..))
+import Backend.Enum.TeamRole
 import Backend.InputObject exposing (CreateTeamInput, UpdateTeamInput)
 import Backend.Mutation as Mutation
 import Backend.Object
@@ -19,7 +19,7 @@ import Backend.Object.TeamMetadata as BOTeamMetadata
 import Backend.Object.TeamSync as BOTeamSync
 import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug)
-import DataModel exposing (..)
+import DataModel exposing (AuditLog, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, KeyValue, NaisNamespace, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, TeamSyncState, User)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet, with)
 import ISO8601
@@ -82,16 +82,6 @@ setTeamMemberRole team member role =
         teamFullSelection
 
 
-enableTeam : Team -> SelectionSet Team RootMutation
-enableTeam team =
-    Mutation.enableTeam { slug = team.slug } teamFullSelection
-
-
-disableTeam : Team -> SelectionSet Team RootMutation
-disableTeam team =
-    Mutation.disableTeam { slug = team.slug } teamFullSelection
-
-
 teamSelection : SelectionSet Team Backend.Object.Team
 teamSelection =
     Graphql.SelectionSet.succeed Team
@@ -106,7 +96,6 @@ teamSelection =
         |> Graphql.SelectionSet.hardcoded Nothing
         |> Graphql.SelectionSet.hardcoded Nothing
         |> Graphql.SelectionSet.hardcoded (Preview [])
-        |> with BOTeam.enabled
 
 
 teamFullSelection : SelectionSet Team Backend.Object.Team
@@ -123,7 +112,6 @@ teamFullSelection =
         |> with (BOTeam.lastSuccessfulSync |> mapToMaybeDateTime)
         |> with (Graphql.SelectionSet.map Just (BOTeam.reconcilerState syncStateSelection))
         |> with (Graphql.SelectionSet.map Preview (BOTeam.gitHubRepositories gitHubRepositorySelection))
-        |> with BOTeam.enabled
 
 
 gitHubRepositorySelection : SelectionSet GitHubRepository Backend.Object.GitHubRepository
@@ -186,12 +174,14 @@ keyValueSelection =
 
 syncStateSelection : SelectionSet TeamSyncState Backend.Object.ReconcilerState
 syncStateSelection =
-    Graphql.SelectionSet.succeed TeamSyncState
-        |> with BOReconcilerState.gitHubTeamSlug
-        |> with BOReconcilerState.googleWorkspaceGroupEmail
-        |> with (BOReconcilerState.gcpProjects gcpProjectSelection)
-        |> with (BOReconcilerState.naisNamespaces naisNamespaceSelection)
-        |> with BOReconcilerState.azureADGroupId
+    Graphql.SelectionSet.map6
+        TeamSyncState
+        BOReconcilerState.gitHubTeamSlug
+        BOReconcilerState.googleWorkspaceGroupEmail
+        (BOReconcilerState.gcpProjects gcpProjectSelection)
+        (BOReconcilerState.naisNamespaces naisNamespaceSelection)
+        BOReconcilerState.azureADGroupId
+        BOReconcilerState.garRepositoryName
 
 
 gcpProjectSelection : SelectionSet GCPProject Backend.Object.GcpProject
@@ -229,13 +219,3 @@ mapToDateTime =
             ISO8601.fromString value
                 |> Result.mapError (\_ -> "Failed to parse " ++ value ++ " as ISO8601 timestamp.")
         )
-
-
-roleString : TeamRole -> String
-roleString teamRole =
-    case teamRole of
-        Member ->
-            "Member"
-
-        Owner ->
-            "Owner"

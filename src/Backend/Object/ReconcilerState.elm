@@ -63,3 +63,10 @@ naisNamespaces object____ =
 naisDeployKeyProvisioned : SelectionSet (Maybe Backend.ScalarCodecs.Time) Backend.Object.ReconcilerState
 naisDeployKeyProvisioned =
     Object.selectionForField "(Maybe ScalarCodecs.Time)" "naisDeployKeyProvisioned" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecTime |> .decoder |> Decode.nullable)
+
+
+{-| Name of the GAR repository for the team.
+-}
+garRepositoryName : SelectionSet (Maybe String) Backend.Object.ReconcilerState
+garRepositoryName =
+    Object.selectionForField "(Maybe String)" "garRepositoryName" [] (Decode.string |> Decode.nullable)
