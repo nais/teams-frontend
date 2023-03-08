@@ -2,12 +2,11 @@ module Api.DeleteTeam exposing (confirmTeamDeletion, getTeamDeleteKey, requestTe
 
 import Api.Team
 import Api.User
-import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
 import Backend.Object
 import Backend.Object.TeamDeleteKey as BOTeamDeleteKey
 import Backend.Query as Query
-import Backend.Scalar as Scalar exposing (ReconcilerName(..), Uuid)
+import Backend.Scalar as Scalar exposing (Uuid)
 import DataModel exposing (..)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)

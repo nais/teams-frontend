@@ -1,6 +1,4 @@
-module Page.DeleteTeam exposing (Model, Msg(..), confirmTeamDeletion, requestTeamDeletion, update, view)
-import Url
-import Url
+module Page.DeleteTeam exposing (Flow, Model, Msg(..), confirmTeamDeletion, requestTeamDeletion, update, view)
 
 import Api.DeleteTeam
 import Api.Do
@@ -8,26 +6,27 @@ import Api.Error exposing (errorToString)
 import Api.Str exposing (slugStr, uuidStr)
 import Api.Team
 import Backend.Enum.TeamRole exposing (TeamRole(..))
-import Backend.Query exposing (team)
-import Backend.Scalar exposing (Slug(..), Uuid(..))
+import Backend.Scalar exposing (Slug(..), Uuid)
 import Component.ResourceTable as ResourceTable
-import DataModel exposing (Expandable(..), Team, TeamDeleteConfirmed, TeamDeleteKey, expandableAll)
+import DataModel exposing (Team, TeamDeleteConfirmed, TeamDeleteKey, expandableAll)
 import Graphql.Http
-import Html exposing (Html, button, div, h2, li, p, text, ul)
-import Html.Attributes exposing (class)
+import Html exposing (Html, button, div, h2, input, li, p, text, ul)
+import Html.Attributes exposing (class, type_, value)
 import Html.Events exposing (onClick)
+import ISO8601
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session)
-import Html.Attributes exposing (value)
-import Html exposing (input)
-import Html.Attributes exposing (type_)
+import Task
+import Time
+import Url
 
 
 type alias Model =
     { session : Session
     , slug : Slug
     , state : Flow
+    , now : Time.Posix
     }
 
 
@@ -51,6 +50,7 @@ type Confirm
 
 type Msg
     = ClickRequestDelete Team
+    | TimeNow Time.Posix
     | ClickConfirmDelete TeamDeleteKey
     | GotTeam (RemoteData (Graphql.Http.Error Team) Team)
     | GotTeamDeleteKey (RemoteData (Graphql.Http.Error TeamDeleteKey) TeamDeleteKey)
@@ -61,6 +61,7 @@ requestTeamDeletion : Session -> Slug -> ( Model, Cmd Msg )
 requestTeamDeletion session slug =
     ( { session = session
       , slug = slug
+      , now = Time.millisToPosix 0
       , state = RequestDelete RequestInit
       }
     , Api.Do.queryRD (Api.Team.getTeam slug) GotTeam
@@ -71,15 +72,19 @@ confirmTeamDeletion : Session -> Uuid -> ( Model, Cmd Msg )
 confirmTeamDeletion session teamDeleteKey =
     ( { session = session
       , slug = Slug ""
+      , now = Time.millisToPosix 0
       , state = ConfirmDelete ConfirmInit
       }
-    , Api.Do.queryRD (Api.DeleteTeam.getTeamDeleteKey teamDeleteKey) GotTeamDeleteKey
+    , Cmd.batch
+        [ Api.Do.queryRD (Api.DeleteTeam.getTeamDeleteKey teamDeleteKey) GotTeamDeleteKey
+        , Task.perform TimeNow Time.now
+        ]
     )
 
 
-viewState : Session -> Flow -> Html Msg
-viewState session flow =
-    case flow of
+viewState : Model -> Html Msg
+viewState model =
+    case model.state of
         RequestDelete f ->
             case f of
                 RequestInit ->
@@ -89,7 +94,7 @@ viewState session flow =
                     viewRequest t
 
                 RequestDone tdk ->
-                    viewRequestDone session tdk
+                    viewRequestDone model.session tdk
 
         ConfirmDelete f ->
             case f of
@@ -97,7 +102,7 @@ viewState session flow =
                     div [ class "card" ] [ text "loading delete request" ]
 
                 ConfirmView tdk ->
-                    viewConfirmDelete tdk
+                    viewConfirmDelete model.session tdk model.now
 
                 ConfirmDone tdk tdc ->
                     viewConfirmDone tdk tdc
@@ -108,7 +113,7 @@ viewState session flow =
 
 card : String -> List (Html msg) -> Html msg
 card title elements =
-    div [ class "card" ] ((h2 [] [ text title ]) :: elements)
+    div [ class "card" ] (h2 [] [ text title ] :: elements)
 
 
 viewRequest : Team -> Html Msg
@@ -133,19 +138,24 @@ baseUrl session =
     let
         url =
             Session.url session
+
         protocol =
             case url.protocol of
                 Url.Http ->
                     "http://"
+
                 Url.Https ->
                     "https://"
+
         port_ =
             case url.port_ of
                 Just p ->
-                     ":"++String.fromInt p
-                Nothing -> ""
+                    ":" ++ String.fromInt p
+
+                Nothing ->
+                    ""
     in
-    String.join "" [protocol, url.host, port_]
+    String.concat [ protocol, url.host, port_ ]
 
 
 viewRequestDone : Session -> TeamDeleteKey -> Html Msg
@@ -153,32 +163,64 @@ viewRequestDone session tdk =
     card "Team delete requested"
         [ p []
             [ text ("Deletion of team " ++ slugStr tdk.team.slug ++ " has been requested. To finalize the deletion send this link to another team owner and let them confirm the deletion.")
-                ]
-            , input [class "deleteLink", type_ "text", Html.Attributes.disabled True, value (baseUrl session ++ Route.routeToString (Route.DeleteTeamConfirm tdk.key))] []
-            , p [] [text "Current owners are listed below"]
-            , ul []
-                (expandableAll tdk.team.members
-                    |> List.filter (\m -> m.role == Owner)
-                    |> List.map (\m -> li [] [ text m.user.email ])
-                )
+            ]
+        , input [ type_ "text", Html.Attributes.disabled True, value (baseUrl session ++ Route.routeToString (Route.DeleteTeamConfirm tdk.key)) ] []
+        , p [] [ text "Current owners are listed below" ]
+        , ul []
+            (expandableAll tdk.team.members
+                |> List.filter (\m -> m.role == Owner)
+                |> List.map (\m -> li [] [ text m.user.email ])
+            )
         ]
 
 
-viewConfirmDelete : TeamDeleteKey -> Html Msg
-viewConfirmDelete tdk =
-    card "Confirm team deletion"
-        [ div [ class "row" ]
-            [ p []
-                [ text "Please confirm that you want to delete the following resources, and all resources they contain. Applications in the namespace, databases in the google project, etc will be irreversibly deleted." ]
-            ]
-        , ResourceTable.view tdk.team.syncState tdk.team.metadata
-        , div [ class "row" ]
-            [ button [ class "button small" ]
-                [ Route.link (Route.Team tdk.team.slug) [ class "nostyle" ] [ text "no" ]
+confirmOwnDeleteRequest : Session -> TeamDeleteKey -> Bool
+confirmOwnDeleteRequest session tdk =
+    case Session.user (Session.viewer session) of
+        Just u ->
+            u.email == tdk.createdBy.email
+
+        Nothing ->
+            False
+
+
+expired : ISO8601.Time -> Time.Posix -> Bool
+expired expiry now =
+    ISO8601.toTime expiry < Time.posixToMillis now
+
+
+viewConfirmDelete : Session -> TeamDeleteKey -> Time.Posix -> Html Msg
+viewConfirmDelete session tdk now =
+    if expired tdk.expires now then
+        card "Confirm team deletion"
+            [ div [ class "row" ]
+                [ p []
+                    [ text "Delete key expired" ]
                 ]
-            , button [ class "button small", onClick (ClickConfirmDelete tdk) ] [ text "yes" ]
             ]
-        ]
+
+    else if confirmOwnDeleteRequest session tdk then
+        card "Confirm team deletion"
+            [ div [ class "row" ]
+                [ p []
+                    [ text "You can not confirm your own delete request." ]
+                ]
+            ]
+
+    else
+        card "Confirm team deletion"
+            [ div [ class "row" ]
+                [ p []
+                    [ text "Please confirm that you want to delete the following resources, and all resources they contain. Applications in the namespace, databases in the google project, etc will be irreversibly deleted." ]
+                ]
+            , ResourceTable.view tdk.team.syncState tdk.team.metadata
+            , div [ class "row" ]
+                [ button [ class "button small" ]
+                    [ Route.link (Route.Team tdk.team.slug) [ class "nostyle" ] [ text "no" ]
+                    ]
+                , button [ class "button small", onClick (ClickConfirmDelete tdk) ] [ text "yes" ]
+                ]
+            ]
 
 
 viewConfirmDone : TeamDeleteKey -> TeamDeleteConfirmed -> Html Msg
@@ -193,7 +235,7 @@ viewConfirmDone tdk tdc =
 view : Model -> Html Msg
 view model =
     div [ class "cards" ]
-        [ viewState model.session model.state
+        [ viewState model
         ]
 
 
@@ -256,3 +298,6 @@ update msg model =
 
                 _ ->
                     ( model, Cmd.none )
+
+        TimeNow t ->
+            ( { model | now = t }, Cmd.none )
