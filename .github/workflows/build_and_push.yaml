@@ -7,7 +7,7 @@ on:
       - "charts/**"
 jobs:
   build_and_push:
-    runs-on: ubuntu-2204
+    runs-on: ubuntu-22.04
     permissions:
       contents: "read"
       id-token: "write"
