@@ -1,5 +1,5 @@
 {
-  "name": "console-frontend-elm",
+  "name": "console-frontend",
   "version": "1.0.0",
   "description": "frontend for https://github.com/nais/console",
   "scripts": {
