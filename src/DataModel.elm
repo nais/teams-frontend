@@ -10,7 +10,7 @@ type Expandable a
     | Expanded a
 
 
-expandableAll : Expandable (List a) -> List a
+expandableAll : Expandable a -> a
 expandableAll e =
     case e of
         Preview i ->

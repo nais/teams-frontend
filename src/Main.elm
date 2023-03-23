@@ -162,7 +162,7 @@ update msg model =
             DeleteTeam.update subMsg subModel |> updateWith DeleteTeam GotDeleteTeamMsg
 
         _ ->
-            Error.init (toSession model) "Main.update: no case added for this (msg, model) combination" |> updateWith Error (\_ -> NoOp)
+            ( model, Cmd.none )
 
 
 
