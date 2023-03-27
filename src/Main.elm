@@ -45,7 +45,7 @@ type Model
 
 type Msg
     = NoOp
-    | GotMeResponse Url.Url (Result (Graphql.Http.Error (Maybe User)) (Maybe User))
+    | GotMeResponse (Maybe Route) (Result (Graphql.Http.Error (Maybe User)) (Maybe User))
     | GotHomeMsg Home.Msg
     | GotAdminMsg ReconcilerAdmin.Msg
     | GotTeamMsg Team.Msg
@@ -59,11 +59,11 @@ type Msg
 
 init : a -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url nk =
-    ( Home (Home.init (Session.init nk url) (Route.fromUrl url)), getMe url )
+    changeRouteTo (Route.fromUrl url) (Session.init nk url)
 
 
 
--- just use the home model's init in main (should be route based later on)
+--
 
 
 updateWith : (subModel -> Model) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
@@ -74,15 +74,15 @@ updateWith toModel toMsg ( subModel, subCmd ) =
 
 
 changeRouteTo : Maybe Route -> Session -> ( Model, Cmd Msg )
-changeRouteTo maybeRoute session =
+changeRouteTo r session =
     case Session.viewer session of
         Anonymous ->
-            ( Home (Home.init session maybeRoute), Cmd.none )
+            ( Home (Home.init session r), getMe r )
 
         LoggedIn _ ->
-            case maybeRoute of
+            case r of
                 Just Route.Home ->
-                    ( Home (Home.init session maybeRoute)
+                    ( Home (Home.init session r)
                     , Nav.pushUrl (Session.navKey session) (Route.routeToString Route.MyTeams)
                     )
 
@@ -152,8 +152,8 @@ update msg model =
         ( GotCreateTeamMsg subMsg, CreateTeam subModel ) ->
             CreateTeam.update subMsg subModel |> updateWith CreateTeam GotCreateTeamMsg
 
-        ( GotMeResponse url r, _ ) ->
-            handleMeResponse (toSession model) url r
+        ( GotMeResponse route resp, _ ) ->
+            handleMeResponse (toSession model) route resp
 
         ( GotUsersMsg subMsg, Users subModel ) ->
             Users.update subMsg subModel |> updateWith Users GotUsersMsg
@@ -385,21 +385,21 @@ toSession model =
             m.session
 
 
-getMe : Url.Url -> Cmd Msg
-getMe url =
-    query Api.User.getMe (GotMeResponse url)
+getMe : Maybe Route -> Cmd Msg
+getMe r =
+    query Api.User.getMe (GotMeResponse r)
 
 
-handleMeResponse : Session -> Url.Url -> Result (Graphql.Http.Error (Maybe User)) (Maybe User) -> ( Model, Cmd Msg )
-handleMeResponse session url result =
+handleMeResponse : Session -> Maybe Route -> Result (Graphql.Http.Error (Maybe User)) (Maybe User) -> ( Model, Cmd Msg )
+handleMeResponse session route result =
     case result of
         Ok maybeU ->
             case maybeU of
                 Just u ->
-                    changeRouteTo (Route.fromUrl url) (Session.mapViewer (Session.LoggedIn u) session)
+                    changeRouteTo route (Session.mapViewer (Session.LoggedIn u) session)
 
                 Nothing ->
-                    changeRouteTo (Route.fromUrl url) (Session.mapViewer Session.Anonymous session)
+                    changeRouteTo route (Session.mapViewer Session.Anonymous session)
 
         Err _ ->
-            changeRouteTo (Route.fromUrl url) (Session.mapViewer Session.Anonymous session)
+            changeRouteTo route (Session.mapViewer Session.Anonymous session)
