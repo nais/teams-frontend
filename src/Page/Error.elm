@@ -10,13 +10,11 @@ type alias Model =
     }
 
 
-init : Session -> String -> ( Model, Cmd msg )
+init : Session -> String -> Model
 init session error =
-    ( { error = error
-      , session = session
-      }
-    , Cmd.none
-    )
+    { error = error
+    , session = session
+    }
 
 
 view : Model -> Html msg

@@ -3,7 +3,6 @@ module Component.Navigation exposing (view)
 import Api.Str exposing (slugStr)
 import Html exposing (Html, li, nav, text, ul)
 import Html.Attributes exposing (classList)
-import RemoteData exposing (RemoteData(..))
 import Route exposing (Route(..), link)
 import Session exposing (Session, Viewer(..))
 
@@ -15,13 +14,13 @@ view route session =
             let
                 teamsButton : List (Html msg)
                 teamsButton =
-                    [ menuItem Route.MyTeams False "Teams" ]
+                    [ menuItem route Route.MyTeams False "Teams" ]
 
                 adminButtons : List (Html msg)
                 adminButtons =
                     if Session.isGlobalAdmin (Session.viewer session) then
-                        [ menuItem Route.ReconcilerAdmin False "Synchronizers"
-                        , menuItem Route.Users False "Users"
+                        [ menuItem route Route.ReconcilerAdmin False "Synchronizers"
+                        , menuItem route Route.Users False "Users"
                         ]
 
                     else
@@ -31,13 +30,13 @@ view route session =
                 ephemeralButtons =
                     case route of
                         Team slug ->
-                            [ menuItem route True (slugStr slug) ]
+                            [ menuItem route route True (slugStr slug) ]
 
                         DeleteTeam _ ->
-                            [ menuItem route True "Delete team" ]
+                            [ menuItem route route True "Delete team" ]
 
                         CreateTeam ->
-                            [ menuItem route True "Create team"
+                            [ menuItem route route True "Create team"
                             ]
 
                         _ ->
@@ -49,13 +48,13 @@ view route session =
             nav [] []
 
 
-menuItem : Route -> Bool -> String -> Html.Html msg
-menuItem target indent title =
+menuItem : Route -> Route -> Bool -> String -> Html.Html msg
+menuItem currentRoute targetRoute indent title =
     let
         classes : List ( String, Bool )
         classes =
-            [ ( "active", False )
+            [ ( "active", currentRoute == targetRoute )
             , ( "indent", indent )
             ]
     in
-    li [ classList classes ] [ link target [ Html.Attributes.title title ] [ text title ] ]
+    li [ classList classes ] [ link targetRoute [ Html.Attributes.title title ] [ text title ] ]
