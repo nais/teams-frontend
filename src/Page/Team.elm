@@ -48,6 +48,7 @@ type ExpandableList
 
 type alias Model =
     { team : RemoteData (Graphql.Http.Error Team) Team
+    , slug : Slug
     , edit : EditMode
     , userList : RemoteData (Graphql.Http.Error (List User)) (List User)
     , memberChanges : List MemberChange
@@ -85,6 +86,7 @@ type Msg
 init : Session -> Backend.Scalar.Slug -> ( Model, Cmd Msg )
 init session slug =
     ( { team = NotAsked
+      , slug = slug
       , session = session
       , edit = View
       , userList = NotAsked

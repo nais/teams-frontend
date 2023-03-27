@@ -1,14 +1,13 @@
 module Main exposing (Model(..), Msg(..), main)
 
 import Api.Do exposing (query)
-import Api.Str exposing (slugStr)
 import Api.User
 import Browser exposing (Document)
 import Browser.Navigation as Nav
+import Component.Layout
 import DataModel exposing (User)
 import Graphql.Http
-import Html exposing (Html, a, div, h1, header, li, main_, nav, p, text, ul)
-import Html.Attributes exposing (class, classList, href, id)
+import Html exposing (Html)
 import Page.CreateTeam as CreateTeam
 import Page.DeleteTeam as DeleteTeam
 import Page.Error as Error
@@ -18,10 +17,9 @@ import Page.Team as Team
 import Page.Teams as Teams
 import Page.Users as Users
 import RemoteData exposing (RemoteData(..))
-import Route exposing (Route, link)
+import Route exposing (Route)
 import Session exposing (Session, Viewer(..))
 import Url
-import Url.Builder
 
 
 
@@ -77,7 +75,7 @@ changeRouteTo : Maybe Route -> Session -> ( Model, Cmd Msg )
 changeRouteTo r session =
     case Session.viewer session of
         Anonymous ->
-            ( Home (Home.init session r), getMe r )
+            ( Home (Home.init session r), query Api.User.getMe (GotMeResponse r) )
 
         LoggedIn _ ->
             case r of
@@ -201,144 +199,10 @@ view model =
 
                 Error subModel ->
                     Error.view subModel |> Html.map (\_ -> NoOp)
-
-        user : Viewer
-        user =
-            Session.viewer (toSession model)
-
-        auth : Html msg
-        auth =
-            case user of
-                LoggedIn loggedInUser ->
-                    let
-                        logoutURL : String
-                        logoutURL =
-                            Url.Builder.absolute [ "oauth2", "logout" ] []
-                    in
-                    div [ class "user-info" ]
-                        [ p [] [ text loggedInUser.name ]
-                        , a [ href logoutURL, class "button small" ] [ text "Logout" ]
-                        ]
-
-                _ ->
-                    let
-                        loginURL : String
-                        loginURL =
-                            Url.Builder.absolute [ "oauth2", "login" ] []
-                    in
-                    a [ href loginURL, class "button small" ] [ text "Login" ]
     in
     { title = "NAIS console"
-    , body =
-        [ header []
-            [ div [ class "content" ]
-                [ div []
-                    [ div [ id "logo" ] []
-                    , h1 []
-                        [ link Route.Home [] [ text "Console" ]
-                        ]
-                    ]
-                , auth
-                ]
-            ]
-        , div [ id "layout" ]
-            [ viewNav model
-            , main_ []
-                [ html ]
-            , div [] []
-            ]
-        ]
+    , body = Component.Layout.view (toRoute model) (toSession model) html
     }
-
-
-viewNav : Model -> Html msg
-viewNav model =
-    case Session.viewer (toSession model) of
-        LoggedIn _ ->
-            let
-                teamsButton : List (Html msg)
-                teamsButton =
-                    [ menuItem model Route.MyTeams False "Teams" ]
-
-                adminButtons : List (Html msg)
-                adminButtons =
-                    if Session.isGlobalAdmin (Session.viewer (toSession model)) then
-                        [ menuItem model Route.ReconcilerAdmin False "Synchronizers"
-                        , menuItem model Route.Users False "Users"
-                        ]
-
-                    else
-                        []
-
-                ephemeralButtons : List (Html msg)
-                ephemeralButtons =
-                    case model of
-                        Team teamPage ->
-                            case teamPage.team of
-                                Success team ->
-                                    [ menuItem model (Route.Team team.slug) True (slugStr team.slug) ]
-
-                                _ ->
-                                    []
-
-                        DeleteTeam deletePage ->
-                            [ menuItem model (Route.DeleteTeam deletePage.slug) True "Delete team"
-                            ]
-
-                        CreateTeam _ ->
-                            [ menuItem model Route.CreateTeam True "Create team"
-                            ]
-
-                        _ ->
-                            []
-            in
-            nav [] [ ul [] (teamsButton ++ ephemeralButtons ++ adminButtons) ]
-
-        _ ->
-            nav [] []
-
-
-isActiveRoute : Model -> Route -> Bool
-isActiveRoute model target =
-    case ( model, target ) of
-        ( Home _, Route.Home ) ->
-            True
-
-        ( Teams _, Route.MyTeams ) ->
-            True
-
-        ( CreateTeam _, Route.CreateTeam ) ->
-            True
-
-        ( Team _, Route.Team _ ) ->
-            True
-
-        ( Admin _, Route.ReconcilerAdmin ) ->
-            True
-
-        ( Users _, Route.Users ) ->
-            True
-
-        ( DeleteTeam _, Route.DeleteTeam _ ) ->
-            True
-
-        ( DeleteTeam _, Route.DeleteTeamConfirm _ ) ->
-            True
-
-        _ ->
-            False
-
-
-menuItem : Model -> Route -> Bool -> String -> Html.Html msg
-menuItem model target indent title =
-    let
-        classes : List ( String, Bool )
-        classes =
-            [ ( "active", isActiveRoute model target ) -- Remember to update isActiveRoute with model/route combo
-            , ( "indent", indent ) -- Remember to update isActiveRoute with model/route combo
-            ]
-    in
-    li [ classList classes ] [ link target [ Html.Attributes.title title ] [ text title ] ]
 
 
 
@@ -385,9 +249,32 @@ toSession model =
             m.session
 
 
-getMe : Maybe Route -> Cmd Msg
-getMe r =
-    query Api.User.getMe (GotMeResponse r)
+toRoute : Model -> Route
+toRoute model =
+    case model of
+        Home _ ->
+            Route.Home
+
+        Teams _ ->
+            Route.MyTeams
+
+        CreateTeam _ ->
+            Route.CreateTeam
+
+        Team m ->
+            Route.Team m.slug
+
+        Admin _ ->
+            Route.ReconcilerAdmin
+
+        Users _ ->
+            Route.Users
+
+        DeleteTeam m ->
+            Route.DeleteTeam m.slug
+
+        Error _ ->
+            Route.Home
 
 
 handleMeResponse : Session -> Maybe Route -> Result (Graphql.Http.Error (Maybe User)) (Maybe User) -> ( Model, Cmd Msg )
