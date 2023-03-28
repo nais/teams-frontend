@@ -1,141 +1,123 @@
 module Pages exposing (Msg(..), Page(..), changeRouteTo, toSession, update, view)
 
-import Api.Do exposing (query)
-import Api.User
 import Browser.Navigation as Nav
 import Component.Layout
-import DataModel exposing (User)
-import Graphql.Http
 import Html exposing (Html)
+import Page.Admin as Admin
 import Page.CreateTeam as CreateTeam
 import Page.DeleteTeam as DeleteTeam
 import Page.Error as Error
 import Page.Home as Home
-import Page.ReconcilerAdmin as ReconcilerAdmin
 import Page.Team as Team
 import Page.Teams as Teams
 import Page.Users as Users
-import Route exposing (Route)
+import Route exposing (Route, ViewMode(..))
 import Session exposing (Session, Viewer(..))
 
 
 type Page
-    = Home Home.Model
-    | Admin ReconcilerAdmin.Model
-    | Team Team.Model
-    | Teams Teams.Model
-    | CreateTeam CreateTeam.Model
-    | Users Users.Model
-    | DeleteTeam DeleteTeam.Model
-    | Error Error.Model
+    = AdminModel Admin.Model
+    | CreateTeamModel CreateTeam.Model
+    | DeleteTeamModel DeleteTeam.Model
+    | ErrorModel Error.Model
+    | HomeModel Home.Model
+    | TeamModel Team.Model
+    | TeamsModel Teams.Model
+    | UsersModel Users.Model
 
 
 type Msg
-    = GotHomeMsg Home.Msg
-    | GotAdminMsg ReconcilerAdmin.Msg
-    | GotTeamMsg Team.Msg
-    | GotTeamsMsg Teams.Msg
-    | GotCreateTeamMsg CreateTeam.Msg
-    | GotUsersMsg Users.Msg
-    | GotDeleteTeamMsg DeleteTeam.Msg
-    | GotMeResponse (Maybe Route) (Result (Graphql.Http.Error (Maybe User)) (Maybe User))
+    = AdminMsg Admin.Msg
+    | CreateTeamMsg CreateTeam.Msg
+    | DeleteTeamMsg DeleteTeam.Msg
+    | HomeMsg Home.Msg
+    | TeamMsg Team.Msg
+    | TeamsMsg Teams.Msg
+    | UsersMsg Users.Msg
 
 
 toSession : Page -> Session
 toSession model =
     case model of
-        Home m ->
+        AdminModel m ->
             m.session
 
-        Admin m ->
+        CreateTeamModel m ->
             m.session
 
-        Error m ->
+        DeleteTeamModel m ->
             m.session
 
-        Team m ->
+        ErrorModel m ->
             m.session
 
-        Teams m ->
+        HomeModel m ->
             m.session
 
-        Users m ->
+        TeamModel m ->
             m.session
 
-        DeleteTeam m ->
+        TeamsModel m ->
             m.session
 
-        CreateTeam m ->
+        UsersModel m ->
             m.session
 
 
 toRoute : Page -> Route
 toRoute model =
     case model of
-        Home _ ->
-            Route.Home
+        AdminModel _ ->
+            Route.Admin
 
-        Teams _ ->
-            Route.MyTeams
-
-        CreateTeam _ ->
+        CreateTeamModel _ ->
             Route.CreateTeam
 
-        Team m ->
-            Route.Team m.slug
-
-        Admin _ ->
-            Route.ReconcilerAdmin
-
-        Users _ ->
-            Route.Users
-
-        DeleteTeam m ->
+        DeleteTeamModel m ->
             Route.DeleteTeam m.slug
 
-        Error _ ->
+        ErrorModel _ ->
             Route.Home
+
+        HomeModel _ ->
+            Route.Home
+
+        TeamModel m ->
+            Route.Team m.slug
+
+        TeamsModel m ->
+            Route.Teams m.viewMode
+
+        UsersModel _ ->
+            Route.Users
 
 
 update : Msg -> Page -> ( Page, Cmd Msg )
 update msg page =
     case ( msg, page ) of
-        ( GotHomeMsg subMsg, Home subModel ) ->
-            Home.update subMsg subModel |> updateWith Home GotHomeMsg
+        ( AdminMsg subMsg, AdminModel subModel ) ->
+            Admin.update subMsg subModel |> updateWith AdminModel AdminMsg
 
-        ( GotAdminMsg subMsg, Admin subModel ) ->
-            ReconcilerAdmin.update subMsg subModel |> updateWith Admin GotAdminMsg
-
-        ( GotTeamMsg subMsg, Team subModel ) ->
-            Team.update subMsg subModel |> updateWith Team GotTeamMsg
-
-        ( GotTeamsMsg subMsg, Teams subModel ) ->
-            Teams.update subMsg subModel |> updateWith Teams GotTeamsMsg
-
-        ( GotCreateTeamMsg (CreateTeam.GotTeamCreatedResponse (Ok team)), CreateTeam subModel ) ->
+        ( CreateTeamMsg (CreateTeam.GotTeamCreatedResponse (Ok team)), CreateTeamModel subModel ) ->
             ( page, Nav.pushUrl (Session.navKey subModel.session) (Route.routeToString (Route.Team team.slug)) )
 
-        ( GotCreateTeamMsg subMsg, CreateTeam subModel ) ->
-            CreateTeam.update subMsg subModel |> updateWith CreateTeam GotCreateTeamMsg
+        ( CreateTeamMsg subMsg, CreateTeamModel subModel ) ->
+            CreateTeam.update subMsg subModel |> updateWith CreateTeamModel CreateTeamMsg
 
-        ( GotUsersMsg subMsg, Users subModel ) ->
-            Users.update subMsg subModel |> updateWith Users GotUsersMsg
+        ( DeleteTeamMsg subMsg, DeleteTeamModel subModel ) ->
+            DeleteTeam.update subMsg subModel |> updateWith DeleteTeamModel DeleteTeamMsg
 
-        ( GotDeleteTeamMsg subMsg, DeleteTeam subModel ) ->
-            DeleteTeam.update subMsg subModel |> updateWith DeleteTeam GotDeleteTeamMsg
+        ( HomeMsg subMsg, HomeModel subModel ) ->
+            Home.update subMsg subModel |> updateWith HomeModel HomeMsg
 
-        ( GotMeResponse route resp, _ ) ->
-            case resp of
-                Ok maybeU ->
-                    case maybeU of
-                        Just u ->
-                            changeRouteTo route (Session.mapViewer (Session.LoggedIn u) (toSession page))
+        ( TeamMsg subMsg, TeamModel subModel ) ->
+            Team.update subMsg subModel |> updateWith TeamModel TeamMsg
 
-                        Nothing ->
-                            changeRouteTo route (Session.mapViewer Session.Anonymous (toSession page))
+        ( TeamsMsg subMsg, TeamsModel subModel ) ->
+            Teams.update subMsg subModel |> updateWith TeamsModel TeamsMsg
 
-                Err _ ->
-                    changeRouteTo route (Session.mapViewer Session.Anonymous (toSession page))
+        ( UsersMsg subMsg, UsersModel subModel ) ->
+            Users.update subMsg subModel |> updateWith UsersModel UsersMsg
 
         _ ->
             -- Debug.log "got update from invalid location" -- use this when developing new module
@@ -153,41 +135,38 @@ changeRouteTo : Maybe Route -> Session -> ( Page, Cmd Msg )
 changeRouteTo r session =
     case Session.viewer session of
         Anonymous ->
-            ( Home (Home.init session r), query Api.User.getMe (GotMeResponse r) )
+            ( HomeModel (Home.init session r), Cmd.none )
 
         LoggedIn _ ->
             case r of
+                Just Route.Admin ->
+                    Admin.init session |> updateWith AdminModel AdminMsg
+
                 Just Route.Home ->
-                    ( Home (Home.init session r)
-                    , Nav.pushUrl (Session.navKey session) (Route.routeToString Route.MyTeams)
+                    ( HomeModel (Home.init session r)
+                    , Nav.pushUrl (Session.navKey session) (Route.routeToString (Route.Teams MyTeams))
                     )
 
-                Just Route.ReconcilerAdmin ->
-                    ReconcilerAdmin.init session |> updateWith Admin GotAdminMsg
-
                 Just Route.CreateTeam ->
-                    CreateTeam.init session |> updateWith CreateTeam GotCreateTeamMsg
+                    CreateTeam.init session |> updateWith CreateTeamModel CreateTeamMsg
 
-                Just Route.AllTeams ->
-                    Teams.init session Teams.AllTeams |> updateWith Teams GotTeamsMsg
+                Just (Route.Teams mode) ->
+                    Teams.init session mode |> updateWith TeamsModel TeamsMsg
 
-                Just Route.MyTeams ->
-                    Teams.init session Teams.MyTeams |> updateWith Teams GotTeamsMsg
-
-                Just (Route.Team id) ->
-                    Team.init session id |> updateWith Team GotTeamMsg
+                Just (Route.Team slug) ->
+                    Team.init session slug |> updateWith TeamModel TeamMsg
 
                 Just Route.Users ->
-                    Users.init session |> updateWith Users GotUsersMsg
+                    Users.init session |> updateWith UsersModel UsersMsg
 
                 Just (Route.DeleteTeam slug) ->
-                    DeleteTeam.requestTeamDeletion session slug |> updateWith DeleteTeam GotDeleteTeamMsg
+                    DeleteTeam.requestTeamDeletion session slug |> updateWith DeleteTeamModel DeleteTeamMsg
 
                 Just (Route.DeleteTeamConfirm key) ->
-                    DeleteTeam.confirmTeamDeletion session key |> updateWith DeleteTeam GotDeleteTeamMsg
+                    DeleteTeam.confirmTeamDeletion session key |> updateWith DeleteTeamModel DeleteTeamMsg
 
                 Nothing ->
-                    ( Error (Error.init session "changeRouteTo: no route found"), Cmd.none )
+                    ( ErrorModel (Error.init session "changeRouteTo: no route found"), Cmd.none )
 
 
 view : Page -> List (Html Msg)
@@ -196,27 +175,27 @@ view page =
         (toRoute page)
         (toSession page)
         (case page of
-            Home subModel ->
-                Home.view subModel |> Html.map GotHomeMsg
+            HomeModel subModel ->
+                Home.view subModel |> Html.map HomeMsg
 
-            Admin subModel ->
-                ReconcilerAdmin.view subModel |> Html.map GotAdminMsg
+            AdminModel subModel ->
+                Admin.view subModel |> Html.map AdminMsg
 
-            Team subModel ->
-                Team.view subModel |> Html.map GotTeamMsg
+            TeamModel subModel ->
+                Team.view subModel |> Html.map TeamMsg
 
-            Teams subModel ->
-                Teams.view subModel |> Html.map GotTeamsMsg
+            TeamsModel subModel ->
+                Teams.view subModel |> Html.map TeamsMsg
 
-            CreateTeam subModel ->
-                CreateTeam.view subModel |> Html.map GotCreateTeamMsg
+            CreateTeamModel subModel ->
+                CreateTeam.view subModel |> Html.map CreateTeamMsg
 
-            Users subModel ->
-                Users.view subModel |> Html.map GotUsersMsg
+            UsersModel subModel ->
+                Users.view subModel |> Html.map UsersMsg
 
-            DeleteTeam subModel ->
-                DeleteTeam.view subModel |> Html.map GotDeleteTeamMsg
+            DeleteTeamModel subModel ->
+                DeleteTeam.view subModel |> Html.map DeleteTeamMsg
 
-            Error subModel ->
+            ErrorModel subModel ->
                 Error.view subModel
         )

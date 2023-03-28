@@ -1,11 +1,15 @@
 module Main exposing (Model(..), Msg(..), main)
 
+import Api.Do exposing (query)
+import Api.User
 import Browser exposing (Document)
 import Browser.Navigation as Nav
+import DataModel exposing (User)
+import Graphql.Http
 import Html
 import Page.CreateTeam exposing (Model)
 import Pages exposing (Page, changeRouteTo, toSession)
-import Route
+import Route exposing (Route)
 import Session
 import Url
 
@@ -18,11 +22,24 @@ type Msg
     = GotPageMsg Pages.Msg
     | LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
+    | GotMeResponse (Maybe Route) (Result (Graphql.Http.Error (Maybe User)) (Maybe User))
 
 
 init : a -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url nk =
-    changeRouteTo (Route.fromUrl url) (Session.init nk url) |> fromPage
+    let
+        r =
+            Route.fromUrl url
+
+        ( page, cmd ) =
+            changeRouteTo r (Session.init nk url)
+    in
+    ( Model page
+    , Cmd.batch
+        [ Cmd.map GotPageMsg cmd
+        , query Api.User.getMe (GotMeResponse r)
+        ]
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -46,6 +63,19 @@ update msg (Model page) =
 
         UrlChanged url ->
             changeRouteTo (Route.fromUrl url) (toSession page) |> fromPage
+
+        GotMeResponse route resp ->
+            case resp of
+                Ok maybeU ->
+                    case maybeU of
+                        Just u ->
+                            changeRouteTo route (Session.mapViewer (Session.LoggedIn u) (toSession page)) |> fromPage
+
+                        Nothing ->
+                            changeRouteTo route (Session.mapViewer Session.Anonymous (toSession page)) |> fromPage
+
+                Err _ ->
+                    changeRouteTo route (Session.mapViewer Session.Anonymous (toSession page)) |> fromPage
 
 
 view : Model -> Document Msg

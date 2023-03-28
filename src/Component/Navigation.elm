@@ -3,7 +3,7 @@ module Component.Navigation exposing (view)
 import Api.Str exposing (slugStr)
 import Html exposing (Html, li, nav, text, ul)
 import Html.Attributes exposing (classList)
-import Route exposing (Route(..), link)
+import Route exposing (Route(..), ViewMode(..), link)
 import Session exposing (Session, Viewer(..))
 
 
@@ -14,12 +14,12 @@ view route session =
             let
                 teamsButton : List (Html msg)
                 teamsButton =
-                    [ menuItem route Route.MyTeams False "Teams" ]
+                    [ menuItem route (Route.Teams MyTeams) False "Teams" ]
 
                 adminButtons : List (Html msg)
                 adminButtons =
                     if Session.isGlobalAdmin (Session.viewer session) then
-                        [ menuItem route Route.ReconcilerAdmin False "Synchronizers"
+                        [ menuItem route Route.Admin False "Synchronizers"
                         , menuItem route Route.Users False "Users"
                         ]
 

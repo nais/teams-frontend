@@ -1,4 +1,4 @@
-module Page.Teams exposing (Model, Msg(..), ViewMode(..), init, update, view)
+module Page.Teams exposing (Model, Msg(..), init, update, view)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
@@ -10,13 +10,8 @@ import Html exposing (Html, div, h2, p, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class)
 import List exposing (filter, map, member)
 import RemoteData exposing (RemoteData(..))
-import Route exposing (link)
+import Route exposing (ViewMode(..), link)
 import Session exposing (Session, Viewer(..))
-
-
-type ViewMode
-    = AllTeams
-    | MyTeams
 
 
 type alias Model =
@@ -106,10 +101,10 @@ view model =
         switcher =
             case model.viewMode of
                 AllTeams ->
-                    link Route.MyTeams [] [ text "Show only my teams" ]
+                    link (Route.Teams MyTeams) [] [ text "Show only my teams" ]
 
                 MyTeams ->
-                    link Route.AllTeams [] [ text "Show all teams" ]
+                    link (Route.Teams AllTeams) [] [ text "Show all teams" ]
     in
     div [ class "card" ]
         [ div [ class "title" ]

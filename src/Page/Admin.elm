@@ -1,4 +1,4 @@
-module Page.ReconcilerAdmin exposing (Model, Msg(..), init, update, view)
+module Page.Admin exposing (Model, Msg(..), init, update, view)
 
 import Api.Do exposing (mutate, query)
 import Api.Error
