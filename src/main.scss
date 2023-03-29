@@ -238,10 +238,25 @@ main {
 
 }
 
+.card .column {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
 .card .row {
   display: flex;
   flex-direction: row;
   gap: 1em;
+}
+
+.wide {
+  flex-grow: 1;
+  align-items: flex-start;
+}
+
+input.deploykey {
+  width: 27rem;
 }
 
 .card .title {
@@ -431,6 +446,10 @@ button .icon,
 
 .icon.add {
   background-image: url("../public/icons/add.svg");
+}
+
+.icon.copy {
+  background-image: url("../public/icons/copy.svg");
 }
 
 .icon.cancel {

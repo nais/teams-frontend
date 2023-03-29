@@ -1,15 +1,15 @@
-module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), MemberChange(..), Model, Msg(..), init, update, view)
+port module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), MemberChange(..), Model, Msg(..), init, update, view)
 
-import Api.Do exposing (query)
+import Api.Do exposing (query, queryRD)
 import Api.Error exposing (errorToString)
-import Api.Str exposing (auditActionStr, roleStr, slugStr)
+import Api.Str exposing (auditActionStr, deployKeyStr, roleStr, slugStr)
 import Api.Team exposing (addMemberToTeam, addOwnerToTeam, getTeam, removeMemberFromTeam, setTeamMemberRole, teamSyncSelection, updateTeam)
 import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
 import Backend.Scalar exposing (Slug)
 import Component.ResourceTable as ResourceTable
-import DataModel exposing (AuditLog, Expandable(..), GitHubRepository, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, User, expandableAll)
+import DataModel exposing (AuditLog, DeployKey, Expandable(..), GitHubRepository, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, User, expandableAll)
 import Graphql.Http
 import Graphql.OptionalArgument
 import Html exposing (Html, a, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
@@ -20,6 +20,9 @@ import List
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session, Viewer)
+
+
+port copy : String -> Cmd msg
 
 
 type EditError
@@ -51,6 +54,7 @@ type alias Model =
     , slug : Slug
     , edit : EditMode
     , userList : RemoteData (Graphql.Http.Error (List User)) (List User)
+    , deployKey : RemoteData (Graphql.Http.Error DeployKey) DeployKey
     , memberChanges : List MemberChange
     , session : Session
     , addMemberQuery : String
@@ -70,6 +74,7 @@ type Msg
     | ClickedCancelEditMembers
     | ClickedCancelEditOverview
     | ClickedSynchronize
+    | ClickedGetDeployKeys Slug
     | PurposeChanged String
     | SlackChannelChanged String
     | SlackAlertsChannelChanged String String
@@ -79,8 +84,10 @@ type Msg
     | RoleDropDownClicked MemberChange String
     | AddMemberRoleDropDownClicked String
     | GotUserListResponse (RemoteData (Graphql.Http.Error (List User)) (List User))
+    | GotDeployKey (RemoteData (Graphql.Http.Error DeployKey) DeployKey)
     | OnSubmitAddMember
     | ToggleExpandableList ExpandableList
+    | Copy String
 
 
 init : Session -> Backend.Scalar.Slug -> ( Model, Cmd Msg )
@@ -90,6 +97,7 @@ init session slug =
       , session = session
       , edit = View
       , userList = NotAsked
+      , deployKey = NotAsked
       , memberChanges = []
       , addMemberQuery = ""
       , addMemberRole = Backend.Enum.TeamRole.Member
@@ -246,6 +254,15 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        ClickedGetDeployKeys slug ->
+            ( { model | deployKey = Loading }, queryRD (Api.Team.getDeployKey slug) GotDeployKey )
+
+        GotDeployKey r ->
+            ( { model | deployKey = r }, Cmd.none )
+
+        Copy s ->
+            ( model, copy s )
+
 
 flipExpanded : Expandable a -> Expandable a
 flipExpanded e =
@@ -320,8 +337,8 @@ removeMember member members =
     List.filter (\m -> not (member.user.email == (memberData m).user.email)) members
 
 
-isMember : List MemberChange -> TeamMember -> Bool
-isMember members member =
+changeIsMember : List MemberChange -> TeamMember -> Bool
+changeIsMember members member =
     List.filter (\m -> member.user.email == (memberData m).user.email) members
         |> List.isEmpty
         |> not
@@ -334,7 +351,7 @@ addUserToTeam user role members =
         member =
             { user = user, role = role }
     in
-    if not (isMember members member) then
+    if not (changeIsMember members member) then
         Add role member :: members
 
     else
@@ -830,6 +847,7 @@ viewCards model team =
                 , viewTeamState team
                 , viewGitHubRepositories team
                 , viewLogs team
+                , viewDeployKey user team model.deployKey
                 ]
 
             EditMain err ->
@@ -838,6 +856,7 @@ viewCards model team =
                 , viewMembers user team
                 , viewTeamState team
                 , viewLogs team
+                , viewDeployKey user team model.deployKey
                 ]
 
             EditMembers err ->
@@ -846,8 +865,40 @@ viewCards model team =
                 , viewEditMembers model team err
                 , viewTeamState team
                 , viewLogs team
+                , viewDeployKey user team model.deployKey
                 ]
         )
+
+
+viewDeployKey : Viewer -> Team -> RemoteData (Graphql.Http.Error DeployKey) DeployKey -> Html Msg
+viewDeployKey viewer team deployKey =
+    if not (isMember team viewer) then
+        div [] []
+
+    else
+        div [ class "card" ]
+            [ div [ class "title" ] [ h2 [] [ text "Deploy key" ] ]
+            , div [ class "row" ]
+                [ div [ class "column wide" ]
+                    [ p [] [ text "This is the api key used to communicate with nais deploy." ]
+                    , case deployKey of
+                        NotAsked ->
+                            smallButton (ClickedGetDeployKeys team.slug) "synchronize" "get deploy key"
+
+                        Loading ->
+                            text "loading"
+
+                        Success d ->
+                            div [ class "row" ]
+                                [ input [ type_ "text", class "deploykey", disabled True, value (deployKeyStr d.key) ] []
+                                , smallButton (Copy (deployKeyStr d.key)) "copy" "copy"
+                                ]
+
+                        Failure e ->
+                            text (Api.Error.errorToString e)
+                    ]
+                ]
+            ]
 
 
 numberOfPreviewElements : Int
@@ -954,6 +1005,13 @@ teamRoleForViewer members viewer =
             (\u ->
                 List.filter (\m -> m.user.id == u.id) members |> List.head |> Maybe.map (\m -> m.role)
             )
+
+
+isMember : Team -> Viewer -> Bool
+isMember team viewer =
+    List.any (\b -> b)
+        [ teamRoleForViewer (expandableAll team.members) viewer == Just Member
+        ]
 
 
 editor : Team -> Viewer -> Bool

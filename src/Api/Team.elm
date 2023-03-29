@@ -1,4 +1,4 @@
-module Api.Team exposing (addMemberToTeam, addOwnerToTeam, createTeam, getTeam, getTeams, removeMemberFromTeam, setTeamMemberRole, teamFullSelection, teamSyncSelection, updateTeam)
+module Api.Team exposing (addMemberToTeam, addOwnerToTeam, createTeam, getDeployKey, getTeam, getTeams, removeMemberFromTeam, setTeamMemberRole, teamFullSelection, teamSyncSelection, updateTeam)
 
 import Api.User
 import Backend.Enum.TeamRole
@@ -19,7 +19,7 @@ import Backend.Object.TeamMetadata as BOTeamMetadata
 import Backend.Object.TeamSync as BOTeamSync
 import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug)
-import DataModel exposing (AuditLog, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, KeyValue, NaisNamespace, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, TeamSyncState, User)
+import DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, KeyValue, NaisNamespace, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, TeamSyncState, User)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet, with)
 import ISO8601
@@ -33,6 +33,12 @@ getTeams =
 getTeam : Scalar.Slug -> SelectionSet Team RootQuery
 getTeam slug =
     Query.team { slug = slug } teamFullSelection
+
+
+getDeployKey : Scalar.Slug -> SelectionSet DeployKey RootQuery
+getDeployKey slug =
+    Query.deployKey { slug = slug }
+        |> Graphql.SelectionSet.map DeployKey
 
 
 createTeam : CreateTeamInput -> SelectionSet Team RootMutation
