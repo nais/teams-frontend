@@ -883,7 +883,7 @@ viewDeployKey viewer team deployKey =
                     [ p [] [ text "This is the api key used to communicate with nais deploy." ]
                     , case deployKey of
                         NotAsked ->
-                            smallButton (ClickedGetDeployKeys team.slug) "synchronize" "get deploy key"
+                            smallButton (ClickedGetDeployKeys team.slug) "download" "get deploy key"
 
                         Loading ->
                             text "loading"
