@@ -872,7 +872,7 @@ viewCards model team =
 
 viewDeployKey : Viewer -> Team -> RemoteData (Graphql.Http.Error DeployKey) DeployKey -> Html Msg
 viewDeployKey viewer team deployKey =
-    if not (isMember team viewer) then
+    if not (isMemberOrOwner team viewer) then
         div [] []
 
     else
@@ -1007,10 +1007,11 @@ teamRoleForViewer members viewer =
             )
 
 
-isMember : Team -> Viewer -> Bool
-isMember team viewer =
+isMemberOrOwner : Team -> Viewer -> Bool
+isMemberOrOwner team viewer =
     List.any (\b -> b)
         [ teamRoleForViewer (expandableAll team.members) viewer == Just Member
+        , teamRoleForViewer (expandableAll team.members) viewer == Just Owner
         ]
 
 
