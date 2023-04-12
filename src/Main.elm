@@ -65,17 +65,22 @@ update msg (Model page) =
             changeRouteTo (Route.fromUrl url) (toSession page) |> fromPage
 
         GotMeResponse route resp ->
-            case resp of
-                Ok maybeU ->
-                    case maybeU of
-                        Just u ->
-                            changeRouteTo route (Session.mapViewer (Session.LoggedIn u) (toSession page)) |> fromPage
+            let
+                v : Session.Viewer
+                v =
+                    case resp of
+                        Ok maybeU ->
+                            case maybeU of
+                                Just u ->
+                                    Session.LoggedIn u
 
-                        Nothing ->
-                            changeRouteTo route (Session.mapViewer Session.Anonymous (toSession page)) |> fromPage
+                                Nothing ->
+                                    Session.Anonymous
 
-                Err _ ->
-                    changeRouteTo route (Session.mapViewer Session.Anonymous (toSession page)) |> fromPage
+                        Err _ ->
+                            Session.Anonymous
+            in
+            changeRouteTo route (Session.mapViewer v (toSession page)) |> fromPage
 
 
 view : Model -> Document Msg
