@@ -8,6 +8,7 @@ import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
 import Backend.Scalar exposing (Slug)
+import Component.Buttons exposing (smallButton)
 import Component.ResourceTable as ResourceTable
 import DataModel exposing (AuditLog, DeployKey, Expandable(..), GitHubRepository, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, User, expandableAll)
 import Graphql.Http
@@ -307,14 +308,6 @@ auditLogLine log =
                     s
     in
     logLine log.createdAt actor log.message
-
-
-smallButton : Msg -> String -> String -> Html Msg
-smallButton msg iconClass title =
-    div [ class "small button", onClick msg ]
-        [ div [ class "icon", class iconClass ] []
-        , text title
-        ]
 
 
 editorButton : Msg -> Viewer -> Team -> Maybe (Html Msg)

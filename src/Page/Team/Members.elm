@@ -1,6 +1,6 @@
 module Page.Team.Members exposing (..)
 
-import Api.Do exposing (mutate, mutateRD)
+import Api.Do exposing (mutateRD)
 import Api.Str exposing (roleStr)
 import Api.Team exposing (addMemberToTeam, addOwnerToTeam, removeMemberFromTeam, setTeamMemberRole)
 import Backend.Enum.TeamRole as TeamRole exposing (TeamRole(..))

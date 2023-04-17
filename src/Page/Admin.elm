@@ -4,6 +4,7 @@ import Api.Do exposing (mutate, query)
 import Api.Error
 import Api.Reconciler exposing (disableReconciler, enableReconciler, getReconcilers, synchronizeAllTeams, synchronizeUsers, updateReconcilerConfig)
 import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
+import Component.Buttons exposing (smallButton)
 import DataModel exposing (ReconcilerConfigData, ReconcilerData)
 import Graphql.Http
 import Html exposing (Html, a, button, div, form, h2, input, label, li, p, text, textarea, ul)
@@ -383,14 +384,6 @@ viewAdminActions =
             , smallButton OnSynchronizeUsers "synchronize" "Synchronize users"
             , smallButton OnSynchronizeAllTeams "synchronize" "Synchronize teams"
             ]
-        ]
-
-
-smallButton : Msg -> String -> String -> Html Msg
-smallButton msg iconClass title =
-    div [ class "small button", onClick msg ]
-        [ div [ class "icon", class iconClass ] []
-        , text title
         ]
 
 

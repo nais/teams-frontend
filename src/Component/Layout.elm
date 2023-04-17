@@ -1,7 +1,7 @@
 module Component.Layout exposing (view)
 
 import Component.Navigation
-import Html exposing (Html, a, div, h1, header, main_, p, text)
+import Html exposing (Html, a, button, div, h1, header, main_, p, text)
 import Html.Attributes exposing (class, href, id)
 import Route exposing (link)
 import Session exposing (Viewer(..))
@@ -26,7 +26,7 @@ view route session html =
                     in
                     div [ class "user-info" ]
                         [ p [] [ text loggedInUser.name ]
-                        , a [ href logoutURL, class "button small" ] [ text "Logout" ]
+                        , a [ href logoutURL ] [ button [ class "button small" ] [ text "Logout" ] ]
                         ]
 
                 _ ->
