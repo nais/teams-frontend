@@ -1,9 +1,9 @@
-port module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), MemberChange(..), Model, Msg(..), init, update, view)
+port module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), Model, Msg(..), init, update, view)
 
 import Api.Do exposing (query, queryRD)
 import Api.Error exposing (errorToString)
-import Api.Str exposing (auditActionStr, deployKeyStr, roleStr, slugStr)
-import Api.Team exposing (addMemberToTeam, addOwnerToTeam, getTeam, removeMemberFromTeam, setTeamMemberRole, teamSyncSelection, updateTeam)
+import Api.Str exposing (auditActionStr, deployKeyStr, slugStr)
+import Api.Team exposing (getTeam, teamSyncSelection, updateTeam)
 import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
@@ -12,11 +12,12 @@ import Component.ResourceTable as ResourceTable
 import DataModel exposing (AuditLog, DeployKey, Expandable(..), GitHubRepository, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, User, expandableAll)
 import Graphql.Http
 import Graphql.OptionalArgument
-import Html exposing (Html, a, button, datalist, dd, div, dl, dt, em, form, h2, h3, input, label, li, option, p, select, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, classList, colspan, disabled, for, href, id, list, selected, type_, value)
-import Html.Events exposing (onClick, onInput, onSubmit)
+import Html exposing (Html, a, button, dd, div, dl, dt, em, h2, h3, input, label, li, p, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, disabled, for, href, id, list, type_, value)
+import Html.Events exposing (onClick, onInput)
 import ISO8601
 import List
+import Page.Team.Members as Members
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session, Viewer)
@@ -36,17 +37,15 @@ type EditMode
     | EditMembers (Maybe EditError)
 
 
-type MemberChange
-    = Unchanged TeamMember
-    | Remove TeamMember
-    | Add TeamRole TeamMember
-    | ChangeRole TeamRole TeamMember
-
-
 type ExpandableList
     = Members
     | Repositories
     | AuditLogs
+
+
+type SubModel
+    = NotInitialized
+    | MembersModel Members.Model
 
 
 type alias Model =
@@ -55,37 +54,26 @@ type alias Model =
     , edit : EditMode
     , userList : RemoteData (Graphql.Http.Error (List User)) (List User)
     , deployKey : RemoteData (Graphql.Http.Error DeployKey) DeployKey
-    , memberChanges : List MemberChange
     , session : Session
-    , addMemberQuery : String
-    , addMemberRole : TeamRole
+    , membersModel : SubModel
     }
 
 
 type Msg
     = GotTeamResponse (RemoteData (Graphql.Http.Error Team) Team)
+    | GotUserListResponse (RemoteData (Graphql.Http.Error (List User)) (List User))
+    | GotDeployKey (RemoteData (Graphql.Http.Error DeployKey) DeployKey)
     | GotSaveOverviewResponse (RemoteData (Graphql.Http.Error Team) Team)
-    | GotSaveTeamMembersResponse (RemoteData (Graphql.Http.Error Team) Team)
     | GotSynchronizeResponse (RemoteData (Graphql.Http.Error TeamSync) TeamSync)
+    | GotMembersMsg Members.Msg
     | ClickedEditMain
-    | ClickedEditMembers
     | ClickedSaveOverview Team
-    | ClickedSaveTeamMembers Team (List MemberChange)
-    | ClickedCancelEditMembers
     | ClickedCancelEditOverview
     | ClickedSynchronize
     | ClickedGetDeployKeys Slug
     | PurposeChanged String
     | SlackChannelChanged String
     | SlackAlertsChannelChanged String String
-    | AddMemberQueryChanged String
-    | RemoveMember MemberChange
-    | Undo MemberChange
-    | RoleDropDownClicked MemberChange String
-    | AddMemberRoleDropDownClicked String
-    | GotUserListResponse (RemoteData (Graphql.Http.Error (List User)) (List User))
-    | GotDeployKey (RemoteData (Graphql.Http.Error DeployKey) DeployKey)
-    | OnSubmitAddMember
     | ToggleExpandableList ExpandableList
     | Copy String
 
@@ -98,19 +86,39 @@ init session slug =
       , edit = View
       , userList = NotAsked
       , deployKey = NotAsked
-      , memberChanges = []
-      , addMemberQuery = ""
-      , addMemberRole = Backend.Enum.TeamRole.Member
+      , membersModel = NotInitialized
       }
     , Cmd.batch [ fetchTeam slug, getUserList ]
     )
+
+
+initSubModels : Model -> Model
+initSubModels model =
+    let
+        t =
+            RemoteData.mapError errorToString model.team
+
+        u =
+            RemoteData.mapError errorToString model.userList
+    in
+    case RemoteData.append t u of
+        Success ( team, allUsers ) ->
+            { model
+                | membersModel = MembersModel (Members.init team allUsers (editor team (Session.viewer model.session)))
+            }
+
+        _ ->
+            model
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotTeamResponse r ->
-            ( { model | team = r }, Cmd.none )
+            ( { model | team = r } |> initSubModels, Cmd.none )
+
+        GotUserListResponse r ->
+            ( { model | userList = r } |> initSubModels, Cmd.none )
 
         GotSaveOverviewResponse r ->
             case r of
@@ -126,9 +134,6 @@ update msg model =
         ClickedEditMain ->
             ( { model | edit = EditMain Nothing }, Cmd.none )
 
-        ClickedEditMembers ->
-            ( { model | edit = EditMembers Nothing, memberChanges = initMembers model.team }, Cmd.none )
-
         PurposeChanged s ->
             ( mapTeam (\team -> { team | purpose = s }) model, Cmd.none )
 
@@ -141,67 +146,6 @@ update msg model =
         ClickedSaveOverview team ->
             ( model, saveOverview team )
 
-        AddMemberQueryChanged s ->
-            ( { model | addMemberQuery = s }, Cmd.none )
-
-        RemoveMember m ->
-            ( { model | memberChanges = List.map (mapMember Remove (memberData m)) model.memberChanges }, Cmd.none )
-
-        Undo m ->
-            ( { model
-                | memberChanges =
-                    case m of
-                        Add _ _ ->
-                            removeMember (memberData m) model.memberChanges
-
-                        _ ->
-                            List.map (mapMember Unchanged (memberData m)) model.memberChanges
-              }
-            , Cmd.none
-            )
-
-        RoleDropDownClicked member roleStr ->
-            let
-                role : TeamRole
-                role =
-                    teamRoleFromString roleStr
-
-                op : TeamMember -> MemberChange
-                op =
-                    case member of
-                        Add _ _ ->
-                            Add role
-
-                        Remove _ ->
-                            Remove
-
-                        Unchanged _ ->
-                            ChangeRole role
-
-                        ChangeRole _ _ ->
-                            ChangeRole role
-            in
-            ( { model | memberChanges = List.map (mapMember op (memberData member)) model.memberChanges }, Cmd.none )
-
-        GotUserListResponse r ->
-            ( { model | userList = r }, Cmd.none )
-
-        OnSubmitAddMember ->
-            case model.userList of
-                Success userList ->
-                    case queryUserList model.addMemberQuery userList of
-                        Just u ->
-                            ( { model | addMemberQuery = "", memberChanges = addUserToTeam u model.addMemberRole model.memberChanges, addMemberRole = Member }, Cmd.none )
-
-                        Nothing ->
-                            ( { model | edit = EditMembers (Just (ErrString "no user found in userlist")) }, Cmd.none )
-
-                _ ->
-                    ( { model | edit = EditMembers (Just (ErrString "failed to fetch userlist")) }, Cmd.none )
-
-        ClickedCancelEditMembers ->
-            ( { model | edit = View }, Cmd.none )
-
         ClickedCancelEditOverview ->
             case model.team of
                 Success team ->
@@ -209,23 +153,6 @@ update msg model =
 
                 _ ->
                     ( { model | edit = View }, Cmd.none )
-
-        ClickedSaveTeamMembers team changes ->
-            ( model, Cmd.batch (List.concatMap (mapMemberChangeToCmds team) changes) )
-
-        GotSaveTeamMembersResponse r ->
-            case r of
-                Success _ ->
-                    ( { model | team = r, edit = View }, Cmd.none )
-
-                Failure error ->
-                    ( { model | edit = EditMembers (Just (ErrGraphql error)) }, Cmd.none )
-
-                _ ->
-                    ( model, Cmd.none )
-
-        AddMemberRoleDropDownClicked r ->
-            ( { model | addMemberRole = teamRoleFromString r }, Cmd.none )
 
         ClickedSynchronize ->
             case model.team of
@@ -263,6 +190,17 @@ update msg model =
         Copy s ->
             ( model, copy s )
 
+        GotMembersMsg subMsg ->
+            case model.membersModel of
+                MembersModel subModel ->
+                    Members.update subMsg subModel
+                        |> subUpdate MembersModel GotMembersMsg
+                        |> into model
+
+                _ ->
+                    -- TODO: render error somewhere, as this should not happen
+                    ( model, Cmd.none )
+
 
 flipExpanded : Expandable a -> Expandable a
 flipExpanded e =
@@ -272,114 +210,6 @@ flipExpanded e =
 
         Expanded i ->
             Preview i
-
-
-teamRoleFromString : String -> TeamRole
-teamRoleFromString s =
-    Maybe.withDefault Backend.Enum.TeamRole.Member <| Backend.Enum.TeamRole.fromString (String.toUpper s)
-
-
-mapMemberChangeToCmds : Team -> MemberChange -> List (Cmd Msg)
-mapMemberChangeToCmds team change =
-    case change of
-        Add r m ->
-            case r of
-                Backend.Enum.TeamRole.Member ->
-                    [ Api.Do.mutate (addMemberToTeam team m.user) (RemoteData.fromResult >> GotSaveTeamMembersResponse) ]
-
-                Backend.Enum.TeamRole.Owner ->
-                    [ Api.Do.mutate (addOwnerToTeam team m.user) (RemoteData.fromResult >> GotSaveTeamMembersResponse) ]
-
-        Remove m ->
-            [ Api.Do.mutate (removeMemberFromTeam team m.user) (RemoteData.fromResult >> GotSaveTeamMembersResponse) ]
-
-        ChangeRole r m ->
-            [ Api.Do.mutate (setTeamMemberRole team m r) (RemoteData.fromResult >> GotSaveTeamMembersResponse) ]
-
-        Unchanged _ ->
-            []
-
-
-initMembers : RemoteData (Graphql.Http.Error Team) Team -> List MemberChange
-initMembers response =
-    case response of
-        Success t ->
-            List.map Unchanged (expandableAll t.members)
-
-        _ ->
-            []
-
-
-queryUserList : String -> List User -> Maybe User
-queryUserList query userList =
-    List.filter (\u -> u.email == query) userList
-        |> List.head
-
-
-memberData : MemberChange -> TeamMember
-memberData member =
-    case member of
-        Unchanged m ->
-            m
-
-        ChangeRole _ m ->
-            m
-
-        Add _ m ->
-            m
-
-        Remove m ->
-            m
-
-
-removeMember : TeamMember -> List MemberChange -> List MemberChange
-removeMember member members =
-    List.filter (\m -> not (member.user.email == (memberData m).user.email)) members
-
-
-changeIsMember : List MemberChange -> TeamMember -> Bool
-changeIsMember members member =
-    List.filter (\m -> member.user.email == (memberData m).user.email) members
-        |> List.isEmpty
-        |> not
-
-
-addUserToTeam : User -> TeamRole -> List MemberChange -> List MemberChange
-addUserToTeam user role members =
-    let
-        member : { user : User, role : TeamRole }
-        member =
-            { user = user, role = role }
-    in
-    if not (changeIsMember members member) then
-        Add role member :: members
-
-    else
-        members
-
-
-mapMember : (TeamMember -> MemberChange) -> TeamMember -> MemberChange -> MemberChange
-mapMember typ memberToChange m =
-    if (memberData m).user.email == memberToChange.user.email then
-        typ (memberData m)
-
-    else
-        m
-
-
-noMemberChanges : List MemberChange -> Bool
-noMemberChanges changes =
-    List.filter
-        (\c ->
-            case c of
-                Unchanged _ ->
-                    False
-
-                _ ->
-                    True
-        )
-        changes
-        |> List.isEmpty
 
 
 mapSlackAlertsChannel : String -> String -> SlackAlertsChannel -> SlackAlertsChannel
@@ -446,14 +276,6 @@ mapTeam fn model =
 fetchTeam : Slug -> Cmd Msg
 fetchTeam slug =
     query (getTeam slug) (RemoteData.fromResult >> GotTeamResponse)
-
-
-memberRow : TeamMember -> Html Msg
-memberRow member =
-    tr []
-        [ td [] [ text member.user.email ]
-        , td [ classList [ ( "team-owner", member.role == Owner ) ] ] [ text <| roleStr member.role ]
-        ]
 
 
 logLine : ISO8601.Time -> String -> String -> Html msg
@@ -650,167 +472,6 @@ viewEditTeamOverview team error =
         )
 
 
-viewMembers : Viewer -> Team -> Html Msg
-viewMembers viewer team =
-    div [ class "card" ]
-        ([ div [ class "title" ]
-            ([ h2 [] [ text "Members" ] ]
-                |> concatMaybe (editorButton ClickedEditMembers viewer team)
-            )
-         , table []
-            [ thead []
-                [ tr []
-                    [ th [] [ text "Email" ]
-                    , th [] [ text "Role" ]
-                    ]
-                ]
-            , tbody []
-                (if List.length (unexpand team.members) == 0 then
-                    [ tr [] [ td [ colspan 2 ] [ text "This team has no members" ] ] ]
-
-                 else
-                    List.map memberRow (unexpand team.members)
-                )
-            ]
-         ]
-            |> concatMaybe (showMoreButton team.members numberOfPreviewElements (ToggleExpandableList Members))
-        )
-
-
-addUserCandidateOption : User -> Html msg
-addUserCandidateOption user =
-    option [] [ text user.email ]
-
-
-editMemberRow : MemberChange -> Html Msg
-editMemberRow member =
-    let
-        role : TeamRole
-        role =
-            case member of
-                Unchanged m ->
-                    m.role
-
-                Add r _ ->
-                    r
-
-                ChangeRole r _ ->
-                    r
-
-                Remove m ->
-                    m.role
-
-        roleSelector : Bool -> Html Msg
-        roleSelector =
-            viewRoleSelector role (RoleDropDownClicked member)
-
-        viewButton : String -> String -> String -> msg -> Html msg
-        viewButton cls svg txt msg =
-            button [ class <| "button small " ++ cls, onClick msg ]
-                [ div [ class <| "icon " ++ svg ] []
-                , text txt
-                ]
-    in
-    case member of
-        Unchanged m ->
-            tr []
-                [ td [] [ text m.user.email ]
-                , td [] [ roleSelector False ]
-                , td [] [ viewButton "" "delete" "Remove" (RemoveMember member) ]
-                ]
-
-        Remove m ->
-            tr []
-                [ td [ class "strikethrough" ] [ text m.user.email ]
-                , td [] [ roleSelector True ]
-                , td [] [ viewButton "transparent" "cancel" "Undo" (Undo member) ]
-                ]
-
-        Add _ m ->
-            tr []
-                [ td [] [ text m.user.email ]
-                , td [] [ roleSelector False ]
-                , td [] [ viewButton "transparent" "cancel" "Undo" (Undo member) ]
-                ]
-
-        ChangeRole _ m ->
-            tr []
-                [ td [] [ text m.user.email ]
-                , td [] [ roleSelector False, text " *" ]
-                , td [] [ viewButton "transparent" "cancel" "Undo" (Undo member) ]
-                ]
-
-
-viewRoleSelector : TeamRole -> (String -> Msg) -> Bool -> Html Msg
-viewRoleSelector currentRole action disable =
-    select
-        [ value (roleStr currentRole)
-        , onInput action
-        , disabled disable
-        ]
-        (Backend.Enum.TeamRole.list |> List.map (roleOption currentRole))
-
-
-roleOption : TeamRole -> TeamRole -> Html Msg
-roleOption currentRole role =
-    option
-        [ selected (role == currentRole)
-        , value (roleStr role)
-        ]
-        [ text (roleStr role) ]
-
-
-viewEditMembers : Model -> Team -> Maybe EditError -> Html Msg
-viewEditMembers model team _ =
-    div [ class "card" ]
-        (case model.userList of
-            NotAsked ->
-                [ text "userlist not asked for" ]
-
-            Failure _ ->
-                [ text "failed" ]
-
-            Loading ->
-                [ text "loading" ]
-
-            Success userList ->
-                [ h2 [] [ text "Members" ]
-                , form [ id "addMemberForm", onSubmit OnSubmitAddMember ] []
-                , table []
-                    [ thead []
-                        [ tr []
-                            [ th [] [ text "Email" ]
-                            , th [] [ text "Role" ]
-                            , th [] [ text "" ]
-                            ]
-                        ]
-                    , tbody []
-                        (tr []
-                            [ td []
-                                [ input [ list "userCandidates", Html.Attributes.form "addMemberForm", type_ "text", value model.addMemberQuery, onInput AddMemberQueryChanged ] []
-                                , datalist [ id "userCandidates" ] (List.map addUserCandidateOption userList)
-                                ]
-
-                            --
-                            , td [] [ viewRoleSelector model.addMemberRole AddMemberRoleDropDownClicked False ]
-                            , td [ colspan 2 ]
-                                [ button [ type_ "submit", class "small button", Html.Attributes.form "addMemberForm", disabled (queryUserList model.addMemberQuery userList == Nothing) ]
-                                    [ div [ class "icon add" ] []
-                                    , text "Add"
-                                    ]
-                                ]
-                            ]
-                            :: List.map editMemberRow model.memberChanges
-                        )
-                    ]
-                , div [ class "button-row" ]
-                    [ button [ disabled (noMemberChanges model.memberChanges || not (model.addMemberQuery == "")), onClick (ClickedSaveTeamMembers team model.memberChanges) ] [ text "Save members" ]
-                    , button [ class "transparent", onClick ClickedCancelEditMembers ] [ text "Cancel changes" ]
-                    ]
-                ]
-        )
-
-
 unexpand : Expandable (List a) -> List a
 unexpand l =
     case l of
@@ -843,7 +504,7 @@ viewCards model team =
             View ->
                 [ viewTeamOverview user team
                 , viewSyncErrors team
-                , viewMembers user team
+                , viewSubModel model.membersModel
                 , viewTeamState team
                 , viewGitHubRepositories team
                 , viewLogs team
@@ -853,16 +514,16 @@ viewCards model team =
             EditMain err ->
                 [ viewEditTeamOverview team err
                 , viewSyncErrors team
-                , viewMembers user team
+                , viewSubModel model.membersModel
                 , viewTeamState team
                 , viewLogs team
                 , viewDeployKey user team model.deployKey
                 ]
 
-            EditMembers err ->
+            EditMembers _ ->
                 [ viewTeamOverview user team
                 , viewSyncErrors team
-                , viewEditMembers model team err
+                , viewSubModel model.membersModel
                 , viewTeamState team
                 , viewLogs team
                 , viewDeployKey user team model.deployKey
@@ -1034,7 +695,38 @@ concatMaybe : Maybe a -> List a -> List a
 concatMaybe maybe list =
     case maybe of
         Just toConcat ->
-            list ++ [ toConcat ]
+            list ++ List.singleton toConcat
 
         Nothing ->
             list
+
+
+
+-- SubModel stuff
+
+
+viewSubModel : SubModel -> Html Msg
+viewSubModel subModel =
+    case subModel of
+        MembersModel m ->
+            Members.view m |> Html.map GotMembersMsg
+
+        NotInitialized ->
+            div [ class "card" ] [ text "not initialized" ]
+
+
+into : Model -> ( SubModel, Cmd Msg ) -> ( Model, Cmd Msg )
+into model ( subModel, cmd ) =
+    case subModel of
+        MembersModel m ->
+            ( { model | membersModel = MembersModel m }, cmd )
+
+        NotInitialized ->
+            ( model, cmd )
+
+
+subUpdate : (subModel -> SubModel) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( SubModel, Cmd Msg )
+subUpdate toSubModel toMsg ( subModel, subMsg ) =
+    ( toSubModel subModel
+    , Cmd.map toMsg subMsg
+    )

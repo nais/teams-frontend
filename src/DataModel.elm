@@ -1,4 +1,4 @@
-module DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, KeyValue, NaisNamespace, ReconcilerConfigData, ReconcilerData, Role, SlackAlertsChannel, SyncError, Team, TeamDeleteConfirmed, TeamDeleteKey, TeamMember, TeamMembership, TeamSlug, TeamSync, TeamSyncState, User, expandableAll)
+module DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, KeyValue, NaisNamespace, ReconcilerConfigData, ReconcilerData, Role, SlackAlertsChannel, SyncError, Team, TeamDeleteConfirmed, TeamDeleteKey, TeamMember, TeamMembership, TeamSlug, TeamSync, TeamSyncState, User, expandableAll, expandableTake, flipExpanded)
 
 import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.Scalar exposing (AuditAction, ReconcilerName, RoleName, Slug, Uuid)
@@ -10,6 +10,16 @@ type Expandable a
     | Expanded a
 
 
+expandableTake : Int -> Expandable (List a) -> List a
+expandableTake n l =
+    case l of
+        Preview p ->
+            List.take n p
+
+        Expanded e ->
+            e
+
+
 expandableAll : Expandable a -> a
 expandableAll e =
     case e of
@@ -18,6 +28,16 @@ expandableAll e =
 
         Expanded i ->
             i
+
+
+flipExpanded : Expandable a -> Expandable a
+flipExpanded e =
+    case e of
+        Preview i ->
+            Expanded i
+
+        Expanded i ->
+            Preview i
 
 
 type alias AuditLog =
