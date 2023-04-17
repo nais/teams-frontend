@@ -1,16 +1,16 @@
-FROM node as builder
+FROM cgr.dev/chainguard/node as builder
 
 WORKDIR /src
-COPY package.json package-lock.json elm.json ./
+COPY --chown=node:node package.json package-lock.json elm.json ./
 RUN npm install
 
-COPY vite.config.js index.html ./
-COPY ./public ./public
-COPY ./src ./src
+COPY --chown=node:node vite.config.js index.html ./
+COPY --chown=node:node ./public ./public
+COPY --chown=node:node ./src ./src
 RUN ls -l
 RUN npm run build
 
-FROM nginxinc/nginx-unprivileged:stable-alpine
+FROM cgr.dev/chainguard/nginx:latest
 COPY --from=builder /src/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080
