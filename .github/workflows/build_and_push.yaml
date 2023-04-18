@@ -18,7 +18,7 @@ jobs:
           node-version: 16
       - name: "Generate SBOM"
         run: |
-          npm ci
+          npm i
           npm run build
           npm run generate-sbom
       - uses: nais/platform-build-push-sign@main
