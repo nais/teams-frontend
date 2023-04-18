@@ -4,10 +4,12 @@ import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
 import Api.Team exposing (getTeams)
 import Backend.Scalar
+import Browser.Navigation exposing (pushUrl)
 import DataModel exposing (Team)
 import Graphql.Http
-import Html exposing (Html, div, h2, p, table, tbody, td, text, th, thead, tr)
+import Html exposing (Html, button, div, h2, p, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class)
+import Html.Events exposing (onClick)
 import List exposing (filter, map, member)
 import RemoteData exposing (RemoteData(..))
 import Route exposing (ViewMode(..), link)
@@ -23,6 +25,7 @@ type alias Model =
 
 type Msg
     = GotTeamsResponse (RemoteData (Graphql.Http.Error (List Team)) (List Team))
+    | ClickedTeamSelection ViewMode
 
 
 init : Session -> ViewMode -> ( Model, Cmd Msg )
@@ -55,6 +58,9 @@ update msg model =
     case msg of
         GotTeamsResponse r ->
             ( { model | teams = r }, Cmd.none )
+
+        ClickedTeamSelection selection ->
+            ( { model | viewMode = selection }, pushUrl (Session.navKey model.session) (Route.routeToString (Route.Teams selection)) )
 
 
 slugstr : Backend.Scalar.Slug -> String
@@ -97,21 +103,21 @@ view model =
                 MyTeams ->
                     "My teams"
 
-        switcher : Html msg
+        switcher : Html Msg
         switcher =
             case model.viewMode of
                 AllTeams ->
-                    link (Route.Teams MyTeams) [] [ text "Show only my teams" ]
+                    button [ class "text", onClick (ClickedTeamSelection MyTeams) ] [ text "Show only my teams" ]
 
                 MyTeams ->
-                    link (Route.Teams AllTeams) [] [ text "Show all teams" ]
+                    button [ class "text", onClick (ClickedTeamSelection AllTeams) ] [ text "Show all teams" ]
     in
     div [ class "card" ]
         [ div [ class "title" ]
             [ h2 [] [ text title ]
             , link Route.CreateTeam [ class "button small" ] [ text "Create" ]
             ]
-        , p []
+        , div []
             [ switcher
             ]
         , div []
