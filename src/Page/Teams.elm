@@ -7,7 +7,7 @@ import Backend.Scalar
 import Browser.Navigation exposing (pushUrl)
 import DataModel exposing (Team)
 import Graphql.Http
-import Html exposing (Html, button, div, h2, p, table, tbody, td, text, th, thead, tr)
+import Html exposing (Html, button, div, h2, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import List exposing (filter, map, member)

@@ -1,4 +1,4 @@
-port module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), Model, Msg(..), init, update, view)
+port module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), Model, Msg(..), SubModel, init, update, view)
 
 import Api.Do exposing (query, queryRD)
 import Api.Error exposing (errorToString)
@@ -14,7 +14,7 @@ import DataModel exposing (AuditLog, DeployKey, Expandable(..), GitHubRepository
 import Graphql.Http
 import Graphql.OptionalArgument
 import Html exposing (Html, a, button, dd, div, dl, dt, em, h2, h3, input, label, li, p, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, disabled, for, href, id, list, type_, value)
+import Html.Attributes exposing (class, disabled, for, href, id, type_, value)
 import Html.Events exposing (onClick, onInput)
 import ISO8601
 import List
@@ -29,18 +29,15 @@ port copy : String -> Cmd msg
 
 type EditError
     = ErrString String
-    | ErrGraphql (Graphql.Http.Error Team)
 
 
 type EditMode
     = View
     | EditMain (Maybe (Graphql.Http.Error Team))
-    | EditMembers (Maybe EditError)
 
 
 type ExpandableList
-    = Members
-    | Repositories
+    = Repositories
     | AuditLogs
 
 
@@ -172,9 +169,6 @@ update msg model =
                     case l of
                         Repositories ->
                             ( mapTeam (\t -> { t | repositories = flipExpanded team.repositories }) model, Cmd.none )
-
-                        Members ->
-                            ( mapTeam (\t -> { t | members = flipExpanded team.members }) model, Cmd.none )
 
                         AuditLogs ->
                             ( mapTeam (\t -> { t | auditLogs = flipExpanded team.auditLogs }) model, Cmd.none )
@@ -506,15 +500,6 @@ viewCards model team =
 
             EditMain err ->
                 [ viewEditTeamOverview team err
-                , viewSyncErrors team
-                , viewSubModel model.membersModel
-                , viewTeamState team
-                , viewLogs team
-                , viewDeployKey user team model.deployKey
-                ]
-
-            EditMembers _ ->
-                [ viewTeamOverview user team
                 , viewSyncErrors team
                 , viewSubModel model.membersModel
                 , viewTeamState team

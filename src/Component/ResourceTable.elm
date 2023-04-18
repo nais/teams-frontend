@@ -1,7 +1,7 @@
 module Component.ResourceTable exposing (view)
 
 import Api.Str exposing (slugStr, uuidStr)
-import DataModel exposing (GCPProject, KeyValue, NaisNamespace, TeamSyncState)
+import DataModel exposing (GCPProject, NaisNamespace, TeamSyncState)
 import Html exposing (Html, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (colspan)
 
@@ -13,11 +13,6 @@ simpleRow title description =
         , td [] [ text description ]
         ]
     ]
-
-
-keyValueRow : KeyValue -> List (Html msg)
-keyValueRow kv =
-    simpleRow kv.key (kv.value |> Maybe.withDefault "")
 
 
 namespaceRow : NaisNamespace -> List (Html msg)

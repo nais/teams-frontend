@@ -1,4 +1,4 @@
-module DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, KeyValue, NaisNamespace, ReconcilerConfigData, ReconcilerData, Role, SlackAlertsChannel, SyncError, Team, TeamDeleteConfirmed, TeamDeleteKey, TeamMember, TeamMembership, TeamSlug, TeamSync, TeamSyncState, User, expandableAll, expandableTake, flipExpanded)
+module DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, NaisNamespace, ReconcilerConfigData, ReconcilerData, Role, SlackAlertsChannel, SyncError, Team, TeamDeleteConfirmed, TeamDeleteKey, TeamMember, TeamMembership, TeamSlug, TeamSync, TeamSyncState, User, expandableAll, expandableTake, flipExpanded)
 
 import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.Scalar exposing (AuditAction, ReconcilerName, RoleName, Slug, Uuid)
@@ -63,12 +63,6 @@ type alias GitHubRepository =
 type alias GitHubRepositoryPermission =
     { name : String
     , granted : Bool
-    }
-
-
-type alias KeyValue =
-    { key : String
-    , value : Maybe String
     }
 
 

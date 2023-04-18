@@ -1,4 +1,4 @@
-module Page.Team.Members exposing (..)
+module Page.Team.Members exposing (AddMember, MemberChange(..), Mode(..), Model, Msg(..), init, update, view)
 
 import Api.Do exposing (mutateRD)
 import Api.Str exposing (roleStr)
