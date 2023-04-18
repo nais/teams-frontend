@@ -33,15 +33,6 @@ purpose =
     Object.selectionForField "String" "purpose" [] Decode.string
 
 
-{-| Metadata attached to the team.
--}
-metadata :
-    SelectionSet decodesTo Backend.Object.TeamMetadata
-    -> SelectionSet (List decodesTo) Backend.Object.Team
-metadata object____ =
-    Object.selectionForCompositeField "metadata" [] object____ (Basics.identity >> Decode.list)
-
-
 {-| Audit logs for this team.
 -}
 auditLogs :

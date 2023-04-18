@@ -42,25 +42,17 @@ syncStateRows state =
         ++ List.concatMap namespaceRow state.naisNamespaces
 
 
-view : Maybe TeamSyncState -> List KeyValue -> Html msg
-view syncState metadata =
+view : Maybe TeamSyncState -> Html msg
+view syncState =
     let
-        metaRows : List (Html msg)
-        metaRows =
-            List.concatMap keyValueRow metadata
-
-        stateRows : List (Html msg)
-        stateRows =
+        rows : List (Html msg)
+        rows =
             case syncState of
                 Nothing ->
                     []
 
                 Just s ->
                     syncStateRows s
-
-        rows : List (Html msg)
-        rows =
-            metaRows ++ stateRows
     in
     table []
         [ thead []

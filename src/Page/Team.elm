@@ -378,7 +378,7 @@ viewTeamState : Team -> Html Msg
 viewTeamState team =
     div [ class "card" ]
         [ h2 [] [ text "Managed resources" ]
-        , ResourceTable.view team.syncState team.metadata
+        , ResourceTable.view team.syncState
         ]
 
 

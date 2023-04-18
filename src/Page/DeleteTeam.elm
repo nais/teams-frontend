@@ -129,7 +129,7 @@ viewRequest team =
         [ p []
             [ text "The following resources and all resources within them would be deleted. Applications in the namespace, databases in the google project, etc will be irreversibly deleted."
             ]
-        , ResourceTable.view team.syncState team.metadata
+        , ResourceTable.view team.syncState
         ]
     , card "Danger zone"
         [ p [] [ text "When you request deletion a delete key will be generated for this team. It is valid for 5 minutes. Another team-owner will have to confirm the deletion by using a generated link before the team is irreversibly deleted." ]
@@ -234,7 +234,7 @@ viewConfirmDelete session tdk now =
                 [ card "Resources that will be deleted"
                     [ p []
                         [ text "The following resources and all resources within them would be deleted. Applications in the namespace, databases in the google project, etc will be irreversibly deleted." ]
-                    , ResourceTable.view tdk.team.syncState tdk.team.metadata
+                    , ResourceTable.view tdk.team.syncState
                     ]
                 , card "Danger zone"
                     [ p [] [ text "When you click delete team there is now way back." ]

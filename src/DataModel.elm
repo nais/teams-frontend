@@ -126,7 +126,6 @@ type alias Team =
     , slackAlertsChannels : List SlackAlertsChannel
     , members : Expandable (List TeamMember)
     , auditLogs : Expandable (List AuditLog)
-    , metadata : List KeyValue
     , syncErrors : List SyncError
     , lastSuccessfulSync : Maybe ISO8601.Time
     , syncState : Maybe TeamSyncState

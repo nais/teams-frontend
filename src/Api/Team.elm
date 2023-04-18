@@ -15,11 +15,10 @@ import Backend.Object.SlackAlertsChannel as BOSlackAlertsChannel
 import Backend.Object.SyncError as BOSyncError
 import Backend.Object.Team as BOTeam
 import Backend.Object.TeamMember as BOTeamMember
-import Backend.Object.TeamMetadata as BOTeamMetadata
 import Backend.Object.TeamSync as BOTeamSync
 import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug)
-import DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, KeyValue, NaisNamespace, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, TeamSyncState, User)
+import DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, NaisNamespace, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, TeamSyncState, User)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet, with)
 import ISO8601
@@ -98,7 +97,6 @@ teamSelection =
         |> Graphql.SelectionSet.hardcoded (Preview [])
         |> Graphql.SelectionSet.hardcoded (Preview [])
         |> Graphql.SelectionSet.hardcoded []
-        |> Graphql.SelectionSet.hardcoded []
         |> Graphql.SelectionSet.hardcoded Nothing
         |> Graphql.SelectionSet.hardcoded Nothing
         |> Graphql.SelectionSet.hardcoded (Preview [])
@@ -113,7 +111,6 @@ teamFullSelection =
         |> with (BOTeam.slackAlertsChannels slackAlertsChannelsSelection)
         |> with (Graphql.SelectionSet.map Preview (BOTeam.members teamMemberSelection))
         |> with (Graphql.SelectionSet.map Preview (BOTeam.auditLogs auditLogSelection))
-        |> with (BOTeam.metadata keyValueSelection)
         |> with (BOTeam.syncErrors syncErrorSelection)
         |> with (BOTeam.lastSuccessfulSync |> mapToMaybeDateTime)
         |> with (Graphql.SelectionSet.map Just (BOTeam.reconcilerState syncStateSelection))
@@ -169,13 +166,6 @@ teamSyncSelection =
 
 
 -- teamToggleSelection :
-
-
-keyValueSelection : SelectionSet KeyValue Backend.Object.TeamMetadata
-keyValueSelection =
-    Graphql.SelectionSet.map2 KeyValue
-        BOTeamMetadata.key
-        BOTeamMetadata.value
 
 
 syncStateSelection : SelectionSet TeamSyncState Backend.Object.ReconcilerState
