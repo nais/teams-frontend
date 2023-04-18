@@ -1,6 +1,5 @@
 FROM cgr.dev/chainguard/node as builder
 
-WORKDIR /src
 COPY --chown=node:node package.json package-lock.json elm.json ./
 RUN npm install
 
@@ -11,6 +10,5 @@ RUN ls -l
 RUN npm run build
 
 FROM cgr.dev/chainguard/nginx:latest
-COPY --from=builder /src/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 8080
+COPY --from=builder /app/dist /var/lib/nginx/html/
+EXPOSE 80
