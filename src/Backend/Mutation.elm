@@ -425,8 +425,8 @@ confirmTeamDeletion requiredArgs____ =
 
 {-| Trigger a user synchronization
 
-This mutation will trigger a full user synchronization with the connected Google Workspace. The action is
-asynchronous.
+This mutation will trigger a full user synchronization with the connected Google Workspace, and return a correlation
+ID that can later be matched to the log entries. The user synchronization itself is asynchronous.
 
 -}
 synchronizeUsers : SelectionSet Backend.ScalarCodecs.Uuid RootMutation

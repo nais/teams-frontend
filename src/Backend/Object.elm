@@ -75,3 +75,7 @@ type TeamSync
 
 type User
     = User
+
+
+type UserSyncRun
+    = UserSyncRun

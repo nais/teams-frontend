@@ -144,3 +144,12 @@ userByEmail :
     -> SelectionSet decodesTo RootQuery
 userByEmail requiredArgs____ object____ =
     Object.selectionForCompositeField "userByEmail" [ Argument.required "email" requiredArgs____.email Encode.string ] object____ Basics.identity
+
+
+{-| Get user sync status and logs.
+-}
+userSync :
+    SelectionSet decodesTo Backend.Object.UserSyncRun
+    -> SelectionSet (List decodesTo) RootQuery
+userSync object____ =
+    Object.selectionForCompositeField "userSync" [] object____ (Basics.identity >> Decode.list)
