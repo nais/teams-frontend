@@ -255,7 +255,8 @@ main {
   align-items: flex-start;
 }
 
-input.deploykey {
+input.deploykey,
+input.synchronizeUsersCorrelationID {
   width: 27rem;
 }
 

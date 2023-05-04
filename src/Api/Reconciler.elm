@@ -1,4 +1,4 @@
-module Api.Reconciler exposing (disableReconciler, enableReconciler, getReconcilers, synchronizeAllTeams, synchronizeUsers, updateReconcilerConfig)
+module Api.Reconciler exposing (disableReconciler, enableReconciler, getReconcilers, synchronizeAllTeams, updateReconcilerConfig)
 
 import Backend.InputObject exposing (ReconcilerConfigInput)
 import Backend.Mutation as Mutation
@@ -6,7 +6,7 @@ import Backend.Object
 import Backend.Object.Reconciler as Reconciler
 import Backend.Object.ReconcilerConfig as ReconcilerConfig
 import Backend.Query as Query
-import Backend.Scalar exposing (ReconcilerName)
+import Backend.Scalar exposing (ReconcilerName, Uuid(..))
 import DataModel exposing (ReconcilerConfigData, ReconcilerData)
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)
@@ -53,11 +53,6 @@ reconcilerConfigDataSelection =
         |> Graphql.SelectionSet.with ReconcilerConfig.key
         |> Graphql.SelectionSet.with ReconcilerConfig.value
         |> Graphql.SelectionSet.with ReconcilerConfig.secret
-
-
-synchronizeUsers : SelectionSet () Graphql.Operation.RootMutation
-synchronizeUsers =
-    Mutation.synchronizeUsers emptyDataSelection
 
 
 synchronizeAllTeams : SelectionSet () Graphql.Operation.RootMutation

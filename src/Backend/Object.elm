@@ -75,7 +75,3 @@ type TeamSync
 
 type User
     = User
-
-
-type UserSync
-    = UserSync

@@ -429,8 +429,6 @@ This mutation will trigger a full user synchronization with the connected Google
 asynchronous.
 
 -}
-synchronizeUsers :
-    SelectionSet decodesTo Backend.Object.UserSync
-    -> SelectionSet decodesTo RootMutation
-synchronizeUsers object____ =
-    Object.selectionForCompositeField "synchronizeUsers" [] object____ Basics.identity
+synchronizeUsers : SelectionSet Backend.ScalarCodecs.Uuid RootMutation
+synchronizeUsers =
+    Object.selectionForField "ScalarCodecs.Uuid" "synchronizeUsers" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecUuid |> .decoder)

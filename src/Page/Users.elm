@@ -1,12 +1,19 @@
 module Page.Users exposing (Model, Msg(..), init, update, view)
 
-import Api.Do
+import Api.Do exposing (mutateRD)
 import Api.Error
+import Api.Str exposing (uuidStr)
 import Api.User
-import Backend.Scalar exposing (RoleName(..), Slug(..))
+import Backend.Mutation as Mutation
+import Backend.Scalar exposing (RoleName(..), Slug(..), Uuid)
+import Component.Buttons exposing (smallButton)
 import DataModel exposing (Role, User)
 import Graphql.Http
-import Html exposing (Html, p, table, tbody, td, text, th, thead, tr)
+import Graphql.Operation exposing (RootMutation)
+import Graphql.SelectionSet exposing (SelectionSet)
+import Html exposing (Html, div, h2, input, p, table, tbody, td, text, th, thead, tr)
+import Html.Attributes exposing (class, disabled, type_, value)
+import Page.Team exposing (copy)
 import RemoteData exposing (RemoteData(..))
 import Session exposing (Session)
 
@@ -15,11 +22,15 @@ type alias Model =
     { session : Session
     , error : Maybe String
     , users : RemoteData (Graphql.Http.Error (List User)) (List User)
+    , synchronizeUsersCorrelationID : RemoteData (Graphql.Http.Error Uuid) Uuid
     }
 
 
 type Msg
     = GotUsers (RemoteData (Graphql.Http.Error (List User)) (List User))
+    | Copy String
+    | GotSynchronizeUsersResponse (RemoteData (Graphql.Http.Error Uuid) Uuid)
+    | SynchronizeUsersClicked
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -27,6 +38,7 @@ init session =
     ( { session = session
       , error = Nothing
       , users = Loading
+      , synchronizeUsersCorrelationID = NotAsked
       }
     , getUsers
     )
@@ -44,16 +56,24 @@ view model =
             p [] [ text "loading" ]
 
         Success users ->
-            table []
-                [ thead []
-                    [ tr []
-                        [ th [] [ text "name" ]
-                        , th [] [ text "email" ]
-                        , th [] [ text "external id" ]
-                        , th [] [ text "more" ]
+            div [ class "cards" ]
+                [ viewAdminActions model.synchronizeUsersCorrelationID
+                , div [ class "card" ]
+                    [ div [ class "title" ]
+                        [ h2 [] [ text "Users" ]
+                        ]
+                    , table []
+                        [ thead []
+                            [ tr []
+                                [ th [] [ text "Full name" ]
+                                , th [] [ text "Email" ]
+                                , th [] [ text "External ID" ]
+                                , th [] [ text "Roles" ]
+                                ]
+                            ]
+                        , tbody [] (List.map viewUser users)
                         ]
                     ]
-                , tbody [] (List.map viewUser users)
                 ]
 
         NotAsked ->
@@ -61,6 +81,27 @@ view model =
 
         Failure f ->
             p [] [ text (f |> Api.Error.errorToString) ]
+
+
+viewAdminActions : RemoteData (Graphql.Http.Error Uuid) Uuid -> Html Msg
+viewAdminActions synchronizeUsersCorrelationID =
+    div [ class "card" ]
+        [ div [ class "title" ]
+            [ h2 [] [ text "Admin actions" ]
+            , smallButton SynchronizeUsersClicked "synchronize" "Synchronize users"
+            ]
+        , div []
+            (case synchronizeUsersCorrelationID of
+                Success uuid ->
+                    [ text "User sync triggered. Correlation ID: "
+                    , input [ type_ "text", class "synchronizeUsersCorrelationID", disabled True, value (uuidStr uuid) ] []
+                    , smallButton (Copy (uuidStr uuid)) "copy" "copy"
+                    ]
+
+                _ ->
+                    [ text "" ]
+            )
+        ]
 
 
 viewUser : User -> Html Msg
@@ -114,3 +155,17 @@ update msg model =
     case msg of
         GotUsers r ->
             ( { model | users = r }, Cmd.none )
+
+        GotSynchronizeUsersResponse r ->
+            ( { model | synchronizeUsersCorrelationID = r }, Cmd.none )
+
+        SynchronizeUsersClicked ->
+            ( model, mutateRD synchronizeUsers GotSynchronizeUsersResponse )
+
+        Copy s ->
+            ( model, copy s )
+
+
+synchronizeUsers : SelectionSet Uuid RootMutation
+synchronizeUsers =
+    Mutation.synchronizeUsers

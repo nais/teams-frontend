@@ -1,4 +1,4 @@
-port module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), Model, Msg(..), SubModel, init, update, view)
+port module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), Model, Msg(..), SubModel, copy, init, update, view)
 
 import Api.Do exposing (query, queryRD)
 import Api.Error exposing (errorToString)

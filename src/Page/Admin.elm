@@ -2,7 +2,7 @@ module Page.Admin exposing (Model, Msg(..), init, update, view)
 
 import Api.Do exposing (mutate, query)
 import Api.Error
-import Api.Reconciler exposing (disableReconciler, enableReconciler, getReconcilers, synchronizeAllTeams, synchronizeUsers, updateReconcilerConfig)
+import Api.Reconciler exposing (disableReconciler, enableReconciler, getReconcilers, synchronizeAllTeams, updateReconcilerConfig)
 import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
 import Component.Buttons exposing (smallButton)
 import DataModel exposing (ReconcilerConfigData, ReconcilerData)
@@ -30,7 +30,6 @@ type Msg
     | Submit ReconcilerName
     | OnInput ReconcilerName ReconcilerConfigKey String
     | OnToggle ReconcilerName Bool
-    | OnSynchronizeUsers
     | OnSynchronizeAllTeams
     | AckError
     | Reload
@@ -126,9 +125,6 @@ update msg model =
 
         OnToggle name value ->
             ( { model | reconcilers = mapReconcilers (mapReconcilerEnabled name value) model.reconcilers }, Cmd.none )
-
-        OnSynchronizeUsers ->
-            ( model, mutate synchronizeUsers GotEmptyResponse )
 
         OnSynchronizeAllTeams ->
             ( model, mutate synchronizeAllTeams GotEmptyResponse )
@@ -381,7 +377,6 @@ viewAdminActions =
     div [ class "card" ]
         [ div [ class "title" ]
             [ h2 [] [ text "Admin actions" ]
-            , smallButton OnSynchronizeUsers "synchronize" "Synchronize users"
             , smallButton OnSynchronizeAllTeams "synchronize" "Synchronize teams"
             ]
         ]
