@@ -260,6 +260,10 @@ input.synchronizeUsersCorrelationID {
   flex-grow: 4;
 }
 
+.user-sync-run:not(:first-child) {
+  margin-top: 3rem;
+}
+
 .card.error {
   background: $color-white;
   border: 1px solid $color-error-border;

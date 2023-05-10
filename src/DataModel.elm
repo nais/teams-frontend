@@ -1,6 +1,7 @@
-module DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, NaisNamespace, ReconcilerConfigData, ReconcilerData, Role, SlackAlertsChannel, SyncError, Team, TeamDeleteConfirmed, TeamDeleteKey, TeamMember, TeamMembership, TeamSlug, TeamSync, TeamSyncState, User, expandableAll, expandableTake, flipExpanded)
+module DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, NaisNamespace, ReconcilerConfigData, ReconcilerData, Role, SlackAlertsChannel, SyncError, Team, TeamDeleteConfirmed, TeamDeleteKey, TeamMember, TeamMembership, TeamSlug, TeamSync, TeamSyncState, User, UserSyncRun, expandableAll, expandableTake, flipExpanded)
 
 import Backend.Enum.TeamRole exposing (TeamRole)
+import Backend.Enum.UserSyncRunStatus exposing (UserSyncRunStatus)
 import Backend.Scalar exposing (AuditAction, ReconcilerName, RoleName, Slug, Uuid)
 import ISO8601
 
@@ -181,4 +182,14 @@ type alias User =
 
 type alias DeployKey =
     { key : Backend.Scalar.DeployKey
+    }
+
+
+type alias UserSyncRun =
+    { correlationID : Uuid
+    , startedAt : ISO8601.Time
+    , finishedAt : Maybe ISO8601.Time
+    , status : UserSyncRunStatus
+    , logEntries : List AuditLog
+    , error : Maybe String
     }

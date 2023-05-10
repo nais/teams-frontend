@@ -1,16 +1,20 @@
-module Api.User exposing (getAllUsers, getAllUsersWithRoles, getMe, userSelection)
+module Api.User exposing (getAllUserSyncRuns, getAllUsers, getAllUsersWithRoles, getMe, userSelection)
 
 import Backend.Object
+import Backend.Object.AuditLog as BOAuditLog
 import Backend.Object.Role as BORole
 import Backend.Object.Team as BOTeam
 import Backend.Object.TeamMembership as BOTeamMembership
 import Backend.Object.User as BOUser
+import Backend.Object.UserSyncRun as BOUserSyncRun
 import Backend.Query as Query
+import Backend.Scalar as Scalar
 import Backend.Union
 import Backend.Union.AuthenticatedUser
-import DataModel exposing (Role, TeamMembership, TeamSlug, User)
+import DataModel exposing (AuditLog, Role, TeamMembership, TeamSlug, User, UserSyncRun)
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
+import ISO8601
 
 
 
@@ -30,6 +34,31 @@ getAllUsers =
 getAllUsersWithRoles : SelectionSet (List User) RootQuery
 getAllUsersWithRoles =
     Query.users userWithRoleSelection
+
+
+getAllUserSyncRuns : SelectionSet (List UserSyncRun) RootQuery
+getAllUserSyncRuns =
+    Query.userSync userSyncSelection
+
+
+userSyncSelection : SelectionSet UserSyncRun Backend.Object.UserSyncRun
+userSyncSelection =
+    SelectionSet.map6 UserSyncRun
+        BOUserSyncRun.correlationID
+        (BOUserSyncRun.startedAt |> mapToDateTime)
+        (BOUserSyncRun.finishedAt |> mapToMaybeDateTime)
+        BOUserSyncRun.status
+        (BOUserSyncRun.logEntries auditLogSelection)
+        BOUserSyncRun.error
+
+
+auditLogSelection : SelectionSet AuditLog Backend.Object.AuditLog
+auditLogSelection =
+    SelectionSet.map4 AuditLog
+        BOAuditLog.action
+        BOAuditLog.actor
+        BOAuditLog.message
+        (BOAuditLog.createdAt |> mapToDateTime)
 
 
 userWithRoleSelection : SelectionSet User Backend.Object.User
@@ -80,3 +109,18 @@ meSelection =
         { onUser = SelectionSet.map Just userWithRoleSelection
         , onServiceAccount = SelectionSet.map (\_ -> Nothing) SelectionSet.empty
         }
+
+
+mapToDateTime : SelectionSet Scalar.Time scope -> SelectionSet ISO8601.Time scope
+mapToDateTime =
+    SelectionSet.mapOrFail
+        (\(Scalar.Time value) ->
+            ISO8601.fromString value
+                |> Result.mapError (\_ -> "Failed to parse " ++ value ++ " as ISO8601 timestamp.")
+        )
+
+
+mapToMaybeDateTime : SelectionSet (Maybe Scalar.Time) scope -> SelectionSet (Maybe ISO8601.Time) scope
+mapToMaybeDateTime =
+    SelectionSet.map
+        (Maybe.map (\(Scalar.Time value) -> ISO8601.fromString value) >> Maybe.andThen Result.toMaybe)
