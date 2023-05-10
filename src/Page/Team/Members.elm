@@ -195,7 +195,7 @@ viewMembers members isEditor =
             ([ h2 [] [ text "Members" ] ]
                 |> appendMaybe (smallButton ClickedFormEdit "edit" "Edit mode" |> conditionalElement isEditor)
             )
-         , table []
+         , table [ class "first-column-wide" ]
             [ thead []
                 [ tr []
                     [ th [] [ text "Email" ]
@@ -223,7 +223,7 @@ viewEditMembers model =
             , smallButton ClickedFormCancel "edit" "View mode"
             ]
         , form [ id "addMemberForm", onSubmit ClickedNewMemberAdd ] []
-        , table []
+        , table [ class "first-column-wide" ]
             [ thead []
                 [ tr []
                     [ th [] [ text "Email" ]

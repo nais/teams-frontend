@@ -315,14 +315,16 @@ th {
   min-width: 24px;
 }
 
-td:first-child {
-  width: 100%;
-  padding-left: 0.25rem;
+table.first-column-wide {
+  td:first-child {
+    width: 100%;
+    padding-left: 0.25rem;
+  }
+  td:last-child {
+    padding-right: 0.25rem;
+  }
 }
 
-td:last-child {
-  padding-right: 0.25rem;
-}
 
 th {
   border-bottom: 2px solid $color-border;
