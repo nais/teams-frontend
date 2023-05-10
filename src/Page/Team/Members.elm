@@ -1,14 +1,18 @@
-module Page.Team.Members exposing (AddMember, MemberChange(..), Mode(..), Model, Msg(..), init, update, view)
+module Page.Team.Members exposing (AddMember, Mode(..), Model, Msg(..), Row, RowState, init, update, view)
 
 import Api.Do exposing (mutateRD)
+import Api.Error exposing (errorToString)
 import Api.Str exposing (roleStr)
 import Api.Team exposing (addMemberToTeam, addOwnerToTeam, removeMemberFromTeam, setTeamMemberRole)
 import Backend.Enum.TeamRole as TeamRole exposing (TeamRole(..))
 import Component.Buttons exposing (smallButton)
+import Component.Icons exposing (spinnerDone, spinnerError, spinnerLoading)
 import DataModel exposing (Expandable(..), Team, TeamMember, User, expandableAll, expandableTake, flipExpanded)
 import Graphql.Http
-import Html exposing (Html, button, datalist, div, form, h2, input, option, select, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (class, classList, colspan, disabled, id, list, selected, type_, value)
+import Graphql.Operation exposing (RootMutation)
+import Graphql.SelectionSet exposing (SelectionSet)
+import Html exposing (Html, button, datalist, div, form, h2, input, option, select, span, table, tbody, td, text, th, thead, tr)
+import Html.Attributes exposing (class, classList, colspan, disabled, id, list, selected, title, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import RemoteData exposing (RemoteData(..))
 import Util exposing (appendMaybe, conditionalElement)
@@ -19,11 +23,18 @@ type Mode
     | Edit
 
 
-type MemberChange
-    = Unchanged TeamMember
-    | Remove TeamMember
-    | Add TeamRole TeamMember
-    | ChangeRole TeamRole TeamMember
+type RowState
+    = PendingRemove
+    | PendingChange
+    | Unchanged
+    | Updated
+    | Error String
+
+
+type alias Row =
+    { member : TeamMember
+    , state : RowState
+    }
 
 
 type alias Model =
@@ -32,7 +43,7 @@ type alias Model =
     , isEditor : Bool
     , mode : Mode
     , addMember : AddMember
-    , changes : List MemberChange
+    , members : List Row
     }
 
 
@@ -42,42 +53,41 @@ type alias AddMember =
     }
 
 
-mapAddMember : (a -> a) -> { b | addMember : a } -> { b | addMember : a }
-mapAddMember a b =
-    { b | addMember = a b.addMember }
+mapAddMember : (AddMember -> AddMember) -> Model -> Model
+mapAddMember fn model =
+    { model | addMember = fn model.addMember }
 
 
-setRole : a -> { b | role : a } -> { b | role : a }
-setRole a b =
-    { b | role = a }
+setRole : TeamRole -> AddMember -> AddMember
+setRole role addMember =
+    { addMember | role = role }
 
 
-setEmail : a -> { b | email : a } -> { b | email : a }
-setEmail a b =
-    { b | email = a }
+setEmail : String -> AddMember -> AddMember
+setEmail email addMember =
+    { addMember | email = email }
 
 
-mapChanges : (a -> a) -> { b | changes : a } -> { b | changes : a }
-mapChanges a b =
-    { b | changes = a b.changes }
+mapMembers : (List Row -> List Row) -> Model -> Model
+mapMembers fn model =
+    { model | members = fn model.members }
 
 
-mapTeam : (a -> a) -> { b | team : a } -> { b | team : a }
-mapTeam a b =
-    { b | team = a b.team }
+mapTeam : (Team -> Team) -> Model -> Model
+mapTeam fn model =
+    { model | team = fn model.team }
 
 
 type Msg
-    = ClickedFormSave
-    | ClickedFormEdit
+    = ClickedFormEdit
     | ClickedFormCancel
     | ClickedNewMemberAdd
     | ClickedNewMemberRole String
-    | ClickedMemberRole MemberChange String
-    | ClickedMemberRemove MemberChange
-    | ClickedMemberUndo MemberChange
+    | ClickedMemberRole Row String
+    | ClickedMemberRemove Row
+    | ClickedMemberRemoveConfirm Row
     | ClickedShowMore
-    | GotSaveTeamMembersResponse (RemoteData (Graphql.Http.Error Team) Team)
+    | GotSaveTeamMemberResponse Row (RemoteData (Graphql.Http.Error Team) Team)
     | InputChangedNewMember String
 
 
@@ -88,23 +98,20 @@ init team allUsers isEditor =
     , isEditor = isEditor
     , mode = View
     , addMember = { email = "", role = TeamRole.Member }
-    , changes = mcInit team.members
+    , members = toRows team.members
     }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ClickedFormSave ->
-            ( model, Cmd.batch (List.concatMap (mapMemberChangeToCmds model.team) model.changes) )
-
         ClickedFormEdit ->
             ( { model | mode = Edit }, Cmd.none )
 
         ClickedFormCancel ->
             ( { model
                 | mode = View
-                , changes = mcInit model.team.members
+                , members = toRows model.team.members
               }
             , Cmd.none
             )
@@ -113,28 +120,56 @@ update msg model =
             ( model |> mapAddMember (setRole (teamRoleFromString role)), Cmd.none )
 
         ClickedNewMemberAdd ->
-            ( model
-                |> mapChanges (mcAdd model.addMember model.allUsers)
-                |> mapAddMember (setEmail "")
-            , Cmd.none
-            )
+            case queryUserList model.addMember.email model.allUsers of
+                Just user ->
+                    let
+                        mutation : Team -> User -> SelectionSet Team RootMutation
+                        mutation =
+                            case model.addMember.role of
+                                TeamRole.Owner ->
+                                    addOwnerToTeam
 
-        ClickedMemberRole change roleString ->
-            ( model |> mapChanges (mcChangeRole change roleString), Cmd.none )
+                                TeamRole.Member ->
+                                    addMemberToTeam
 
-        ClickedMemberRemove change ->
-            ( model |> mapChanges (mcRemove change), Cmd.none )
+                        member : TeamMember
+                        member =
+                            TeamMember user model.addMember.role
+                    in
+                    ( model
+                        |> mapMembers (addRow (Row member PendingChange))
+                        |> mapAddMember (setEmail "")
+                    , mutateRD (mutation model.team user) (GotSaveTeamMemberResponse (Row member PendingChange))
+                    )
 
-        ClickedMemberUndo change ->
-            ( model |> mapChanges (mcUndo change), Cmd.none )
+                Nothing ->
+                    -- TODO: render error
+                    ( model, Cmd.none )
+
+        ClickedMemberRole row roleString ->
+            let
+                r : TeamRole
+                r =
+                    teamRoleFromString roleString
+            in
+            ( model |> mapMembers (mapRow (Row row.member PendingChange)), mutateRD (setTeamMemberRole model.team row.member r) (GotSaveTeamMemberResponse row) )
+
+        ClickedMemberRemove row ->
+            ( model |> mapMembers (mapRow (Row row.member PendingRemove)), Cmd.none )
+
+        ClickedMemberRemoveConfirm row ->
+            ( model |> mapMembers (mapRow (Row row.member PendingChange)), mutateRD (removeMemberFromTeam model.team row.member.user) (GotSaveTeamMemberResponse row) )
 
         ClickedShowMore ->
             ( model |> mapTeam (\t -> { t | members = flipExpanded t.members }), Cmd.none )
 
-        GotSaveTeamMembersResponse r ->
-            case r of
+        GotSaveTeamMemberResponse row resp ->
+            case resp of
                 Success team ->
-                    ( { model | mode = View, team = team }, Cmd.none )
+                    ( { model | team = team } |> mapMembers (updateRows team.members), Cmd.none )
+
+                Failure err ->
+                    ( model |> mapMembers (updateRowsError row (errorToString err)), Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -158,7 +193,7 @@ viewMembers members isEditor =
     div [ class "card" ]
         ([ div [ class "title" ]
             ([ h2 [] [ text "Members" ] ]
-                |> appendMaybe (smallButton ClickedFormEdit "edit" "Edit" |> conditionalElement isEditor)
+                |> appendMaybe (smallButton ClickedFormEdit "edit" "Edit mode" |> conditionalElement isEditor)
             )
          , table []
             [ thead []
@@ -172,7 +207,7 @@ viewMembers members isEditor =
                     [ tr [] [ td [ colspan 2 ] [ text "This team has no members" ] ] ]
 
                  else
-                    List.map viewMemberRow (expandableTake 10 members)
+                    List.map viewRow (expandableTake 10 members)
                 )
             ]
          ]
@@ -183,12 +218,16 @@ viewMembers members isEditor =
 viewEditMembers : Model -> Html Msg
 viewEditMembers model =
     div [ class "card" ]
-        [ h2 [] [ text "Members" ]
+        [ div [ class "title" ]
+            [ h2 [] [ text "Members" ]
+            , smallButton ClickedFormCancel "edit" "View mode"
+            ]
         , form [ id "addMemberForm", onSubmit ClickedNewMemberAdd ] []
         , table []
             [ thead []
                 [ tr []
                     [ th [] [ text "Email" ]
+                    , th [] []
                     , th [] [ text "Role" ]
                     , th [] [ text "" ]
                     ]
@@ -204,121 +243,87 @@ viewEditMembers model =
                             , onInput InputChangedNewMember
                             ]
                             []
-                        , datalist [ id "userCandidates" ] (List.map (\u -> option [] [ text u.email ]) model.allUsers)
+                        , datalist [ id "userCandidates" ] (candidates model)
                         ]
-
-                    --
+                    , td [] []
                     , td [] [ viewRoleSelector model.addMember.role ClickedNewMemberRole False ]
-                    , td [ colspan 2 ]
+                    , td []
                         [ button [ type_ "submit", class "small button", Html.Attributes.form "addMemberForm", disabled (queryUserList model.addMember.email model.allUsers == Nothing) ]
                             [ div [ class "icon add" ] []
                             , text "Add"
                             ]
                         ]
                     ]
-                    :: List.map editMemberRow model.changes
+                    :: List.map viewEditRow model.members
                 )
-            ]
-        , div [ class "button-row" ]
-            [ button [ disabled (noMemberChanges model.changes || not (model.addMember.email == "")), onClick ClickedFormSave ] [ text "Save members" ]
-            , button [ class "transparent", onClick ClickedFormCancel ] [ text "Cancel changes" ]
             ]
         ]
 
 
-mapMemberChangeToCmds : Team -> MemberChange -> List (Cmd Msg)
-mapMemberChangeToCmds team change =
-    case change of
-        Add r m ->
-            case r of
-                TeamRole.Member ->
-                    [ mutateRD (addMemberToTeam team m.user) GotSaveTeamMembersResponse ]
-
-                TeamRole.Owner ->
-                    [ mutateRD (addOwnerToTeam team m.user) GotSaveTeamMembersResponse ]
-
-        Remove m ->
-            [ mutateRD (removeMemberFromTeam team m.user) GotSaveTeamMembersResponse ]
-
-        ChangeRole r m ->
-            [ mutateRD (setTeamMemberRole team m r) GotSaveTeamMembersResponse ]
-
-        Unchanged _ ->
-            []
-
-
-noMemberChanges : List MemberChange -> Bool
-noMemberChanges changes =
-    List.filter
-        (\c ->
-            case c of
-                Unchanged _ ->
-                    False
-
-                _ ->
-                    True
-        )
-        changes
-        |> List.isEmpty
-
-
-editMemberRow : MemberChange -> Html Msg
-editMemberRow member =
+candidates : Model -> List (Html Msg)
+candidates model =
     let
-        role : TeamRole
-        role =
-            case member of
-                Unchanged m ->
-                    m.role
-
-                Add r _ ->
-                    r
-
-                ChangeRole r _ ->
-                    r
-
-                Remove m ->
-                    m.role
-
-        roleSelector : Bool -> Html Msg
-        roleSelector =
-            viewRoleSelector role (ClickedMemberRole member)
-
-        viewButton : String -> String -> String -> msg -> Html msg
-        viewButton cls svg txt msg =
-            button [ class <| "button small " ++ cls, onClick msg ]
-                [ div [ class <| "icon " ++ svg ] []
-                , text txt
-                ]
+        memberEmails : List String
+        memberEmails =
+            model.team.members
+                |> expandableAll
+                |> List.map (\m -> m.user.email)
     in
-    case member of
-        Unchanged m ->
-            tr []
-                [ td [] [ text m.user.email ]
-                , td [] [ roleSelector False ]
-                , td [] [ viewButton "" "delete" "Remove" (ClickedMemberRemove member) ]
-                ]
+    model.allUsers
+        |> List.map (\u -> u.email)
+        |> List.filter (\email -> not (List.member email memberEmails))
+        |> List.map (\email -> option [] [ text email ])
 
-        Remove m ->
-            tr []
-                [ td [ class "strikethrough" ] [ text m.user.email ]
-                , td [] [ roleSelector True ]
-                , td [] [ viewButton "transparent" "cancel" "Undo" (ClickedMemberUndo member) ]
-                ]
 
-        Add _ m ->
-            tr []
-                [ td [] [ text m.user.email ]
-                , td [] [ roleSelector False ]
-                , td [] [ viewButton "transparent" "cancel" "Undo" (ClickedMemberUndo member) ]
-                ]
+viewEditRow : Row -> Html Msg
+viewEditRow row =
+    let
+        roleSelector : Html Msg
+        roleSelector =
+            viewRoleSelector row.member.role (ClickedMemberRole row) (row.state == PendingChange)
 
-        ChangeRole _ m ->
-            tr []
-                [ td [] [ text m.user.email ]
-                , td [] [ roleSelector False, text " *" ]
-                , td [] [ viewButton "transparent" "cancel" "Undo" (ClickedMemberUndo member) ]
-                ]
+        phase : Html msg
+        phase =
+            case row.state of
+                PendingChange ->
+                    span [ title "Updating" ] [ spinnerLoading ]
+
+                PendingRemove ->
+                    span [ title "Are you sure you want to remove this user from the team?" ] [ text "😱" ]
+
+                Unchanged ->
+                    text ""
+
+                Updated ->
+                    span [ title "Saved" ] [ spinnerDone ]
+
+                Error err ->
+                    span [ title err ] [ spinnerError ]
+
+        btn : Html Msg
+        btn =
+            case row.state of
+                PendingChange ->
+                    button [ class "small button", disabled True ] [ div [ class "icon delete" ] [], text "Remove" ]
+
+                PendingRemove ->
+                    smallButton (ClickedMemberRemoveConfirm row) "delete" "Confirm"
+
+                Unchanged ->
+                    smallButton (ClickedMemberRemove row) "delete" "Remove"
+
+                Updated ->
+                    smallButton (ClickedMemberRemove row) "delete" "Remove"
+
+                Error _ ->
+                    smallButton (ClickedMemberRemove row) "delete" "Remove"
+    in
+    tr []
+        [ td [] [ text row.member.user.email ]
+        , td [] [ phase ]
+        , td [] [ roleSelector ]
+        , td [] [ btn ]
+        ]
 
 
 viewRoleSelector : TeamRole -> (String -> Msg) -> Bool -> Html Msg
@@ -346,8 +351,8 @@ queryUserList query userList =
         |> List.head
 
 
-viewMemberRow : TeamMember -> Html Msg
-viewMemberRow member =
+viewRow : TeamMember -> Html Msg
+viewRow member =
     tr []
         [ td [] [ text member.user.email ]
         , td [ classList [ ( "team-owner", member.role == Owner ) ] ] [ text <| roleStr member.role ]
@@ -386,87 +391,94 @@ showMoreButton expandable previewSize msg =
             |> Just
 
 
-mcGetTeamMember : MemberChange -> TeamMember
-mcGetTeamMember change =
-    case change of
-        Unchanged m ->
-            m
-
-        Remove m ->
-            m
-
-        Add _ m ->
-            m
-
-        ChangeRole _ m ->
-            m
-
-
-mcMapChange : MemberChange -> MemberChange -> MemberChange
-mcMapChange new existing =
-    if (mcGetTeamMember new).user.email == (mcGetTeamMember existing).user.email then
+mapMember : Row -> Row -> Row
+mapMember new existing =
+    if new.member.user.email == existing.member.user.email then
         new
 
     else
         existing
 
 
-mcUndo : MemberChange -> List MemberChange -> List MemberChange
-mcUndo change changes =
-    changes
-        |> (case change of
-                Add _ _ ->
-                    List.filter (\c -> not (mcGetTeamMember c == mcGetTeamMember change))
+mapRow : Row -> List Row -> List Row
+mapRow new existing =
+    List.map (mapMember new) existing
+
+
+addRow : Row -> List Row -> List Row
+addRow new list =
+    case list of
+        [] ->
+            [ new ]
+
+        [ row ] ->
+            if sortRows new row then
+                [ new, row ]
+
+            else
+                [ row, new ]
+
+        row :: tail ->
+            if sortRows new row then
+                new :: row :: tail
+
+            else
+                row :: addRow new tail
+
+
+toRows : Expandable (List TeamMember) -> List Row
+toRows members =
+    List.map (\m -> Row m Unchanged) (expandableAll members)
+
+
+sortRows : Row -> Row -> Bool
+sortRows r1 r2 =
+    r1.member.user.email < r2.member.user.email
+
+
+updateRowsError : Row -> String -> List Row -> List Row
+updateRowsError row error allRows =
+    mapRow (Row row.member (Error error)) allRows
+
+
+updateRows : Expandable (List TeamMember) -> List Row -> List Row
+updateRows expandableMembers allRows =
+    let
+        findMember : String -> List TeamMember -> Maybe TeamMember
+        findMember email members =
+            members
+                |> List.filter (\m -> m.user.email == email)
+                |> List.head
+
+        updateRowState : Row -> TeamMember -> Row
+        updateRowState row member =
+            case row.state of
+                PendingChange ->
+                    Row member Updated
 
                 _ ->
-                    List.map (mcMapChange (Unchanged (mcGetTeamMember change)))
-           )
+                    row
 
+        rec : List TeamMember -> List Row -> List Row
+        rec members rows =
+            case rows of
+                [] ->
+                    []
 
-mcRemove : MemberChange -> List MemberChange -> List MemberChange
-mcRemove change changes =
-    List.map (mcMapChange (Remove (mcGetTeamMember change))) changes
+                [ row ] ->
+                    case findMember row.member.user.email members of
+                        Just member ->
+                            [ updateRowState row member ]
 
+                        Nothing ->
+                            []
 
-mcChangeRole : MemberChange -> String -> List MemberChange -> List MemberChange
-mcChangeRole change roleStr changes =
-    let
-        role : TeamRole
-        role =
-            teamRoleFromString roleStr
+                row :: tail ->
+                    case findMember row.member.user.email members of
+                        Just member ->
+                            updateRowState row member :: rec members tail
 
-        new : MemberChange
-        new =
-            case change of
-                Add _ m ->
-                    Add role m
-
-                Remove m ->
-                    Remove m
-
-                Unchanged m ->
-                    ChangeRole role m
-
-                ChangeRole _ m ->
-                    ChangeRole role m
+                        Nothing ->
+                            rec members tail
     in
-    List.map (mcMapChange new) changes
-
-
-mcAdd : AddMember -> List User -> List MemberChange -> List MemberChange
-mcAdd new allUsers changes =
-    if (changes |> List.filter (\c -> (mcGetTeamMember c).user.email == new.email) |> List.length) > 0 then
-        changes
-
-    else
-        case queryUserList new.email allUsers of
-            Just u ->
-                Add new.role (TeamMember u new.role) :: changes
-
-            Nothing ->
-                changes
-
-
-mcInit : Expandable (List TeamMember) -> List MemberChange
-mcInit members =
-    List.map Unchanged (expandableAll members)
+    rec (expandableAll expandableMembers) allRows

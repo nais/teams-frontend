@@ -28,6 +28,7 @@ type Msg
 init : a -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url nk =
     let
+        r : Maybe Route
         r =
             Route.fromUrl url
 

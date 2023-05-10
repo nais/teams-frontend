@@ -6,7 +6,7 @@ import Backend.Object
 import Backend.Object.Reconciler as Reconciler
 import Backend.Object.ReconcilerConfig as ReconcilerConfig
 import Backend.Query as Query
-import Backend.Scalar exposing (ReconcilerName, Uuid(..))
+import Backend.Scalar exposing (ReconcilerName)
 import DataModel exposing (ReconcilerConfigData, ReconcilerData)
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet exposing (SelectionSet)

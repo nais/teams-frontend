@@ -1,5 +1,6 @@
 import './main.scss';
-import { Elm } from './Main.elm'
+
+import { Elm } from '../src/Main.elm'
 
 const app = Elm.Main.init();
 

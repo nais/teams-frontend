@@ -5,26 +5,13 @@
   More context in the issue:
     https://github.com/halfzebra/create-elm-app/issues/320
 */
+
+@import 'vars', 'icons';
+
 [data-elm-hot="true"] {
   height: inherit;
 }
 
-$color-black: #262626;
-$color-blue: #00374f;
-$color-white: white;
-$color-row-gray: #f7f7f7;
-$color-red: #a32a17;
-$color-error-background: #fde8e6;
-$color-error-border: #ba3a26;
-$color-light-gray: #f5f5f5;
-$color-border: #a0a0a0;
-$color-gray: #d1d1d1;
-$color-off-gray: #78706a;
-$color-green: darkgreen;
-$color-link: #0067c5;
-$content-width: 60vw;
-$gutter-width: 14vw;
-$layout-gap: 4vw;
 
 body {
   margin: 0;
@@ -44,6 +31,7 @@ select {
 
 button:disabled {
   cursor: not-allowed !important;
+  opacity: 50%;
 }
 
 button.text {
@@ -321,9 +309,19 @@ table.repolist td {
 td,
 th {
   text-align: left;
-  padding: 0.75rem 0.25rem;
+  padding: 0.75rem 0.5rem;
   margin: 0;
   border-bottom: 1px solid $color-border;
+  min-width: 24px;
+}
+
+td:first-child {
+  width: 100%;
+  padding-left: 0.25rem;
+}
+
+td:last-child {
+  padding-right: 0.25rem;
 }
 
 th {
@@ -398,6 +396,8 @@ tbody.meta tr {
 
 select:disabled {
   color: $color-gray;
+  cursor: not-allowed;
+  opacity: 50%;
 }
 
 select {

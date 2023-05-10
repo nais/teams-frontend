@@ -1,4 +1,4 @@
-port module Page.Team exposing (EditError(..), EditMode(..), ExpandableList(..), Model, Msg(..), SubModel, copy, init, update, view)
+port module Page.Team exposing (EditMode(..), ExpandableList(..), Model, Msg(..), SubModel, copy, init, update, view)
 
 import Api.Do exposing (query, queryRD)
 import Api.Error exposing (errorToString)
@@ -27,10 +27,6 @@ import Session exposing (Session, Viewer)
 port copy : String -> Cmd msg
 
 
-type EditError
-    = ErrString String
-
-
 type EditMode
     = View
     | EditMain (Maybe (Graphql.Http.Error Team))
@@ -54,6 +50,7 @@ type alias Model =
     , deployKey : RemoteData (Graphql.Http.Error DeployKey) DeployKey
     , session : Session
     , membersModel : SubModel
+    , error : String -- TODO RENDER
     }
 
 
@@ -85,6 +82,7 @@ init session slug =
       , userList = NotAsked
       , deployKey = NotAsked
       , membersModel = NotInitialized
+      , error = ""
       }
     , Cmd.batch [ fetchTeam slug, getUserList ]
     )
@@ -93,9 +91,11 @@ init session slug =
 initSubModels : Model -> Model
 initSubModels model =
     let
+        t : RemoteData String Team
         t =
             RemoteData.mapError errorToString model.team
 
+        u : RemoteData String (List User)
         u =
             RemoteData.mapError errorToString model.userList
     in
@@ -160,8 +160,13 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        GotSynchronizeResponse _ ->
-            ( model, Cmd.none )
+        GotSynchronizeResponse r ->
+            case r of
+                Failure e ->
+                    ( { model | error = Api.Error.errorToString e }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
 
         ToggleExpandableList l ->
             case model.team of
