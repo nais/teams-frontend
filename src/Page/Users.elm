@@ -13,7 +13,7 @@ import Graphql.Http
 import Graphql.Operation exposing (RootMutation)
 import Graphql.SelectionSet exposing (SelectionSet)
 import Html exposing (Html, b, dd, div, dl, dt, h2, i, input, p, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (class, disabled, type_, value)
+import Html.Attributes exposing (class, disabled, rowspan, type_, value)
 import ISO8601
 import Page.Team exposing (copy)
 import RemoteData exposing (RemoteData(..))
@@ -73,16 +73,17 @@ view model =
                     [ div [ class "title" ]
                         [ h2 [] [ text "Users" ]
                         ]
-                    , table []
+                    , table [ class "disable-alternate-background-color" ]
                         [ thead []
                             [ tr []
                                 [ th [] [ text "Full name" ]
                                 , th [] [ text "Email" ]
                                 , th [] [ text "External ID" ]
-                                , th [] [ text "Roles" ]
+                                , th [] [ text "Role name" ]
+                                , th [] [ text "Role target" ]
                                 ]
                             ]
-                        , tbody [] (List.map viewUser users)
+                        , tbody [] (List.concatMap viewUser users)
                         ]
                     ]
                 ]
@@ -142,14 +143,21 @@ viewUserSyncRuns userSyncRuns =
         ]
 
 
-viewUser : User -> Html Msg
+viewUser : User -> List (Html Msg)
 viewUser user =
+    let
+        roleRows =
+            List.map viewRoleData user.roles
+
+        rs =
+            1 + List.length roleRows
+    in
     tr []
-        [ td [] [ text user.name ]
-        , td [] [ text user.email ]
-        , td [] [ text user.externalId ]
-        , td [] [ viewRoleDatas user.roles ]
+        [ td [ rowspan rs ] [ text user.name ]
+        , td [ rowspan rs ] [ text user.email ]
+        , td [ rowspan rs ] [ text user.externalId ]
         ]
+        :: roleRows
 
 
 viewUserSyncRun : UserSyncRun -> Html Msg
@@ -260,11 +268,6 @@ viewRoleData r =
                 )
             ]
         ]
-
-
-viewRoleDatas : List Role -> Html Msg
-viewRoleDatas roleDatas =
-    table [] [ tbody [] (List.map viewRoleData roleDatas) ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

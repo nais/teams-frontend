@@ -386,14 +386,14 @@ thead {
   border-bottom: 2px solid $color-light-gray;
 }
 
-tbody tr:nth-child(even),
-ul.logs li:nth-child(even) {
-  background: $color-row-gray;
-}
+table:not(.disable-alternate-background-color) {
+  tbody tr:nth-child(even) {
+    background: $color-row-gray;
+  }
 
-tbody tr:nth-child(odd),
-ul.logs li:nth-child(even) {
-  background: $color-white;
+  tbody tr:nth-child(odd) {
+    background: $color-white;
+  }
 }
 
 tbody.meta tr {
