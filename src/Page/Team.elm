@@ -216,13 +216,7 @@ mapSlackAlertsChannel : String -> String -> SlackAlertsChannel -> SlackAlertsCha
 mapSlackAlertsChannel environment channelName channel =
     if environment == channel.environment then
         { channel
-            | channelName =
-                case channelName of
-                    "" ->
-                        Nothing
-
-                    _ ->
-                        Just channelName
+            | channelName = channelName
         }
 
     else
@@ -253,7 +247,12 @@ saveOverview team =
                     (List.map
                         (\s ->
                             { environment = s.environment
-                            , channelName = Graphql.OptionalArgument.fromMaybe s.channelName
+                            , channelName =
+                                if s.channelName == team.slackChannel then
+                                    Graphql.OptionalArgument.Absent
+
+                                else
+                                    Graphql.OptionalArgument.Present s.channelName
                             }
                         )
                         team.slackAlertsChannels
@@ -381,11 +380,11 @@ viewTeamState team =
         ]
 
 
-viewSlackChannel : String -> SlackAlertsChannel -> List (Html msg)
-viewSlackChannel defaultSlackChannel channel =
+viewSlackChannel : SlackAlertsChannel -> List (Html msg)
+viewSlackChannel channel =
     [ dt [] [ text channel.environment ]
     , dd []
-        [ text (Maybe.withDefault defaultSlackChannel channel.channelName)
+        [ text channel.channelName
         ]
     ]
 
@@ -393,7 +392,7 @@ viewSlackChannel defaultSlackChannel channel =
 viewSlackChannels : Team -> Html msg
 viewSlackChannels team =
     dl []
-        (List.concatMap (viewSlackChannel team.slackChannel) team.slackAlertsChannels)
+        (List.concatMap viewSlackChannel team.slackAlertsChannels)
 
 
 viewTeamOverview : Viewer -> Team -> Html Msg
@@ -422,13 +421,9 @@ viewSlackAlertsChannel placeholder entry =
         inputID : String
         inputID =
             "slack-alerts-channel" ++ entry.environment
-
-        val : String
-        val =
-            Maybe.withDefault "" entry.channelName
     in
     [ label [ for inputID ] [ entry.environment |> text ]
-    , input [ id inputID, type_ "text", value val, Html.Attributes.placeholder placeholder, onInput (SlackAlertsChannelChanged entry.environment) ] []
+    , input [ id inputID, type_ "text", value entry.channelName, Html.Attributes.placeholder placeholder, onInput (SlackAlertsChannelChanged entry.environment) ] []
     ]
 
 

@@ -28,6 +28,6 @@ environment =
 
 {-| The name of the Slack channel.
 -}
-channelName : SelectionSet (Maybe String) Backend.Object.SlackAlertsChannel
+channelName : SelectionSet String Backend.Object.SlackAlertsChannel
 channelName =
-    Object.selectionForField "(Maybe String)" "channelName" [] (Decode.string |> Decode.nullable)
+    Object.selectionForField "String" "channelName" [] Decode.string

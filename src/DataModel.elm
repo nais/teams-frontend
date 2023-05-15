@@ -103,7 +103,7 @@ type alias Role =
 
 type alias SlackAlertsChannel =
     { environment : String
-    , channelName : Maybe String
+    , channelName : String
     }
 
 
