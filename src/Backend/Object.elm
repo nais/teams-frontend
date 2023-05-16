@@ -65,6 +65,10 @@ type TeamMember
     = TeamMember
 
 
+type TeamMemberReconciler
+    = TeamMemberReconciler
+
+
 type TeamMembership
     = TeamMembership
 

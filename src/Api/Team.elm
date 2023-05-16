@@ -1,7 +1,7 @@
-module Api.Team exposing (addMemberToTeam, addOwnerToTeam, createTeam, getDeployKey, getTeam, getTeams, removeMemberFromTeam, setTeamMemberRole, teamFullSelection, teamSyncSelection, updateTeam)
+module Api.Team exposing (addTeamMember, createTeam, getDeployKey, getTeam, getTeams, removeMemberFromTeam, setTeamMemberRole, teamFullSelection, teamSyncSelection, updateTeam)
 
 import Api.User
-import Backend.Enum.TeamRole
+import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.InputObject exposing (CreateTeamInput, UpdateTeamInput)
 import Backend.Mutation as Mutation
 import Backend.Object
@@ -20,6 +20,7 @@ import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug)
 import DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, NaisNamespace, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, TeamSyncState, User)
 import Graphql.Operation exposing (RootMutation, RootQuery)
+import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet, with)
 import ISO8601
 
@@ -50,20 +51,15 @@ updateTeam slug team =
     Mutation.updateTeam { slug = slug, input = team } teamFullSelection
 
 
-addMemberToTeam : Team -> User -> SelectionSet Team RootMutation
-addMemberToTeam team user =
-    Mutation.addTeamMembers
-        { slug = team.slug
-        , userIds = [ user.id ]
-        }
-        teamFullSelection
-
-
-addOwnerToTeam : Team -> User -> SelectionSet Team RootMutation
-addOwnerToTeam team user =
-    Mutation.addTeamOwners
-        { slug = team.slug
-        , userIds = [ user.id ]
+addTeamMember : Team -> User -> TeamRole -> SelectionSet Team RootMutation
+addTeamMember team user role =
+    Mutation.addTeamMember
+        { member =
+            { userId = user.id
+            , role = role
+            , reconcilerOptOuts = Absent
+            }
+        , slug = team.slug
         }
         teamFullSelection
 

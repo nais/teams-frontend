@@ -3,14 +3,12 @@ module Page.Team.Members exposing (AddMember, Mode(..), Model, Msg(..), Row, Row
 import Api.Do exposing (mutateRD)
 import Api.Error exposing (errorToString)
 import Api.Str exposing (roleStr)
-import Api.Team exposing (addMemberToTeam, addOwnerToTeam, removeMemberFromTeam, setTeamMemberRole)
+import Api.Team exposing (addTeamMember, removeMemberFromTeam, setTeamMemberRole)
 import Backend.Enum.TeamRole as TeamRole exposing (TeamRole(..))
 import Component.Buttons exposing (smallButton)
 import Component.Icons exposing (spinnerDone, spinnerError, spinnerLoading)
 import DataModel exposing (Expandable(..), Team, TeamMember, User, expandableAll, expandableTake, flipExpanded)
 import Graphql.Http
-import Graphql.Operation exposing (RootMutation)
-import Graphql.SelectionSet exposing (SelectionSet)
 import Html exposing (Html, button, datalist, div, form, h2, input, option, select, span, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class, classList, colspan, disabled, id, list, selected, title, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
@@ -123,15 +121,6 @@ update msg model =
             case queryUserList model.addMember.email model.allUsers of
                 Just user ->
                     let
-                        mutation : Team -> User -> SelectionSet Team RootMutation
-                        mutation =
-                            case model.addMember.role of
-                                TeamRole.Owner ->
-                                    addOwnerToTeam
-
-                                TeamRole.Member ->
-                                    addMemberToTeam
-
                         member : TeamMember
                         member =
                             TeamMember user model.addMember.role
@@ -139,7 +128,7 @@ update msg model =
                     ( model
                         |> mapMembers (addRow (Row member PendingChange))
                         |> mapAddMember (setEmail "")
-                    , mutateRD (mutation model.team user) (GotSaveTeamMemberResponse (Row member PendingChange))
+                    , mutateRD (addTeamMember model.team user model.addMember.role) (GotSaveTeamMemberResponse (Row member PendingChange))
                     )
 
                 Nothing ->

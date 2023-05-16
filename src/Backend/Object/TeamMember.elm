@@ -34,3 +34,12 @@ user object____ =
 role : SelectionSet Backend.Enum.TeamRole.TeamRole Backend.Object.TeamMember
 role =
     Object.selectionForField "Enum.TeamRole.TeamRole" "role" [] Backend.Enum.TeamRole.decoder
+
+
+{-| Reconcilers for this member.
+-}
+reconcilers :
+    SelectionSet decodesTo Backend.Object.TeamMemberReconciler
+    -> SelectionSet (List decodesTo) Backend.Object.TeamMember
+reconcilers object____ =
+    Object.selectionForCompositeField "reconcilers" [] object____ (Basics.identity >> Decode.list)

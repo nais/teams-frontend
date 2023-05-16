@@ -4,6 +4,7 @@
 
 module Backend.InputObject exposing (..)
 
+import Backend.Enum.TeamRole
 import Backend.Interface
 import Backend.Object
 import Backend.Scalar
@@ -112,6 +113,46 @@ encodeSlackAlertsChannelInput : SlackAlertsChannelInput -> Value
 encodeSlackAlertsChannelInput input____ =
     Encode.maybeObject
         [ ( "environment", Encode.string input____.environment |> Just ), ( "channelName", Encode.string |> Encode.optional input____.channelName ) ]
+
+
+buildTeamMemberInput :
+    TeamMemberInputRequiredFields
+    -> (TeamMemberInputOptionalFields -> TeamMemberInputOptionalFields)
+    -> TeamMemberInput
+buildTeamMemberInput required____ fillOptionals____ =
+    let
+        optionals____ =
+            fillOptionals____
+                { reconcilerOptOuts = Absent }
+    in
+    { userId = required____.userId, role = required____.role, reconcilerOptOuts = optionals____.reconcilerOptOuts }
+
+
+type alias TeamMemberInputRequiredFields =
+    { userId : Backend.ScalarCodecs.Uuid
+    , role : Backend.Enum.TeamRole.TeamRole
+    }
+
+
+type alias TeamMemberInputOptionalFields =
+    { reconcilerOptOuts : OptionalArgument (List Backend.ScalarCodecs.ReconcilerName) }
+
+
+{-| Type for the TeamMemberInput input object.
+-}
+type alias TeamMemberInput =
+    { userId : Backend.ScalarCodecs.Uuid
+    , role : Backend.Enum.TeamRole.TeamRole
+    , reconcilerOptOuts : OptionalArgument (List Backend.ScalarCodecs.ReconcilerName)
+    }
+
+
+{-| Encode a TeamMemberInput into a value that can be used as an argument.
+-}
+encodeTeamMemberInput : TeamMemberInput -> Value
+encodeTeamMemberInput input____ =
+    Encode.maybeObject
+        [ ( "userId", (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) input____.userId |> Just ), ( "role", Encode.enum Backend.Enum.TeamRole.toString input____.role |> Just ), ( "reconcilerOptOuts", ((Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) |> Encode.list) |> Encode.optional input____.reconcilerOptOuts ) ]
 
 
 buildUpdateTeamInput :

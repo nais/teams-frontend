@@ -199,6 +199,50 @@ resetReconciler requiredArgs____ object____ =
     Object.selectionForCompositeField "resetReconciler" [ Argument.required "name" requiredArgs____.name (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
 
 
+type alias AddReconcilerOptOutRequiredArguments =
+    { teamSlug : Backend.ScalarCodecs.Slug
+    , userId : Backend.ScalarCodecs.Uuid
+    , reconciler : Backend.ScalarCodecs.ReconcilerName
+    }
+
+
+{-| Add opt-out of a reconciler for a team member.
+
+  - teamSlug - The team slug.
+  - userId - The user ID of the team member.
+  - reconciler - The name of the reconciler to opt the team member out of.
+
+-}
+addReconcilerOptOut :
+    AddReconcilerOptOutRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.TeamMember
+    -> SelectionSet decodesTo RootMutation
+addReconcilerOptOut requiredArgs____ object____ =
+    Object.selectionForCompositeField "addReconcilerOptOut" [ Argument.required "teamSlug" requiredArgs____.teamSlug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "userId" requiredArgs____.userId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid), Argument.required "reconciler" requiredArgs____.reconciler (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
+
+
+type alias RemoveReconcilerOptOutRequiredArguments =
+    { teamSlug : Backend.ScalarCodecs.Slug
+    , userId : Backend.ScalarCodecs.Uuid
+    , reconciler : Backend.ScalarCodecs.ReconcilerName
+    }
+
+
+{-| Remove opt-out of a reconciler for a team member.
+
+  - teamSlug - The team slug.
+  - userId - The user ID of the team member.
+  - reconciler - The name of the reconciler to clear the opt-out from.
+
+-}
+removeReconcilerOptOut :
+    RemoveReconcilerOptOutRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.TeamMember
+    -> SelectionSet decodesTo RootMutation
+removeReconcilerOptOut requiredArgs____ object____ =
+    Object.selectionForCompositeField "removeReconcilerOptOut" [ Argument.required "teamSlug" requiredArgs____.teamSlug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "userId" requiredArgs____.userId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid), Argument.required "reconciler" requiredArgs____.reconciler (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecReconcilerName) ] object____ Basics.identity
+
+
 type alias CreateTeamRequiredArguments =
     { input : Backend.InputObject.CreateTeamInput }
 
@@ -265,6 +309,28 @@ removeUsersFromTeam :
     -> SelectionSet decodesTo RootMutation
 removeUsersFromTeam requiredArgs____ object____ =
     Object.selectionForCompositeField "removeUsersFromTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "userIds" requiredArgs____.userIds ((Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) ] object____ Basics.identity
+
+
+type alias RemoveUserFromTeamRequiredArguments =
+    { slug : Backend.ScalarCodecs.Slug
+    , userId : Backend.ScalarCodecs.Uuid
+    }
+
+
+{-| Remove a user from a team
+
+The updated team will be returned on success.
+
+  - slug - Team slug that the user should be removed from.
+  - userId - ID of the user that will be removed from the team.
+
+-}
+removeUserFromTeam :
+    RemoveUserFromTeamRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Team
+    -> SelectionSet decodesTo RootMutation
+removeUserFromTeam requiredArgs____ object____ =
+    Object.selectionForCompositeField "removeUserFromTeam" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "userId" requiredArgs____.userId (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
 
 
 type alias SynchronizeTeamRequiredArguments =
@@ -350,6 +416,30 @@ addTeamOwners :
     -> SelectionSet decodesTo RootMutation
 addTeamOwners requiredArgs____ object____ =
     Object.selectionForCompositeField "addTeamOwners" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "userIds" requiredArgs____.userIds ((Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) |> Encode.list) ] object____ Basics.identity
+
+
+type alias AddTeamMemberRequiredArguments =
+    { slug : Backend.ScalarCodecs.Slug
+    , member : Backend.InputObject.TeamMemberInput
+    }
+
+
+{-| Add a user to a team
+
+If the user is already a member or an owner of the team, the mutation will fail.
+
+The updated team will be returned on success.
+
+  - slug - Slug of the team that should receive a new member.
+  - member - The new team member.
+
+-}
+addTeamMember :
+    AddTeamMemberRequiredArguments
+    -> SelectionSet decodesTo Backend.Object.Team
+    -> SelectionSet decodesTo RootMutation
+addTeamMember requiredArgs____ object____ =
+    Object.selectionForCompositeField "addTeamMember" [ Argument.required "slug" requiredArgs____.slug (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecSlug), Argument.required "member" requiredArgs____.member Backend.InputObject.encodeTeamMemberInput ] object____ Basics.identity
 
 
 type alias SetTeamMemberRoleRequiredArguments =
