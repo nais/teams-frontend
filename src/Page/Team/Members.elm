@@ -275,9 +275,9 @@ viewEditMembers model =
     div [ class "card" ]
         [ div [ class "title" ]
             [ h2 [] [ text "Members" ]
+            , viewAddMemberModal model
             , smallButton ClickedFormCancel "edit" "View"
             ]
-        , viewAddMemberModal model
         , table [ class "first-column-wide" ]
             [ thead []
                 [ tr []
