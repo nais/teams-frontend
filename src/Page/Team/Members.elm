@@ -7,6 +7,7 @@ import Api.Team exposing (addTeamMember, removeMemberFromTeam, setTeamMemberRole
 import Backend.Enum.TeamRole as TeamRole exposing (TeamRole(..))
 import Component.Buttons exposing (smallButton)
 import Component.Icons exposing (spinnerDone, spinnerError, spinnerLoading)
+import Component.Modal as Modal
 import DataModel exposing (Expandable(..), Team, TeamMember, User, expandableAll, expandableTake, flipExpanded)
 import Graphql.Http
 import Html exposing (Html, button, datalist, div, form, h2, input, option, select, span, table, tbody, td, text, th, thead, tr)
@@ -51,6 +52,25 @@ type alias AddMember =
     }
 
 
+type Modal
+    = EditMember
+    | AddNewMember
+    | RemoveMember
+
+
+modalId : Modal -> String
+modalId modal =
+    case modal of
+        EditMember ->
+            "modalEditMember"
+
+        RemoveMember ->
+            "modalRemoveMember"
+
+        AddNewMember ->
+            "modalAddMember"
+
+
 mapAddMember : (AddMember -> AddMember) -> Model -> Model
 mapAddMember fn model =
     { model | addMember = fn model.addMember }
@@ -87,6 +107,8 @@ type Msg
     | ClickedShowMore
     | GotSaveTeamMemberResponse Row (RemoteData (Graphql.Http.Error Team) Team)
     | InputChangedNewMember String
+    | CloseModal Modal
+    | ShowModal Modal
 
 
 init : Team -> List User -> Bool -> Model
@@ -128,7 +150,10 @@ update msg model =
                     ( model
                         |> mapMembers (addRow (Row member PendingChange))
                         |> mapAddMember (setEmail "")
-                    , mutateRD (addTeamMember model.team user model.addMember.role) (GotSaveTeamMemberResponse (Row member PendingChange))
+                    , Cmd.batch
+                        [ Modal.close (modalId AddNewMember)
+                        , mutateRD (addTeamMember model.team user model.addMember.role) (GotSaveTeamMemberResponse (Row member PendingChange))
+                        ]
                     )
 
                 Nothing ->
@@ -166,6 +191,12 @@ update msg model =
         InputChangedNewMember email ->
             ( model |> mapAddMember (setEmail email), Cmd.none )
 
+        CloseModal modal ->
+            ( model, Modal.close (modalId modal) )
+
+        ShowModal modal ->
+            ( model, Modal.open (modalId modal) )
+
 
 view : Model -> Html Msg
 view model =
@@ -182,7 +213,7 @@ viewMembers members isEditor =
     div [ class "card" ]
         ([ div [ class "title" ]
             ([ h2 [] [ text "Members" ] ]
-                |> appendMaybe (smallButton ClickedFormEdit "edit" "Edit mode" |> conditionalElement isEditor)
+                |> appendMaybe (smallButton ClickedFormEdit "edit" "Edit" |> conditionalElement isEditor)
             )
          , table [ class "first-column-wide" ]
             [ thead []
@@ -204,14 +235,41 @@ viewMembers members isEditor =
         )
 
 
+viewAddMemberModal : Model -> Html Msg
+viewAddMemberModal model =
+    div []
+        [ smallButton (ShowModal AddNewMember) "add" "Add member"
+        , Modal.view (modalId AddNewMember)
+            [ form [ onSubmit ClickedNewMemberAdd ]
+                [ input
+                    [ list "userCandidates"
+                    , type_ "text"
+                    , value model.addMember.email
+                    , onInput InputChangedNewMember
+                    ]
+                    []
+                , datalist [ id "userCandidates" ] (candidates model)
+                , viewRoleSelector model.addMember.role ClickedNewMemberRole False
+                , div [ class "row" ]
+                    [ button [ onClick (CloseModal AddNewMember), class "small button" ] [ text "Cancel" ]
+                    , button [ type_ "submit", class "small button", disabled (queryUserList model.addMember.email model.allUsers == Nothing) ]
+                        [ div [ class "icon add" ] []
+                        , text "Add"
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+
 viewEditMembers : Model -> Html Msg
 viewEditMembers model =
     div [ class "card" ]
         [ div [ class "title" ]
             [ h2 [] [ text "Members" ]
-            , smallButton ClickedFormCancel "edit" "View mode"
+            , smallButton ClickedFormCancel "edit" "View"
             ]
-        , form [ id "addMemberForm", onSubmit ClickedNewMemberAdd ] []
+        , viewAddMemberModal model
         , table [ class "first-column-wide" ]
             [ thead []
                 [ tr []
@@ -221,30 +279,7 @@ viewEditMembers model =
                     , th [] [ text "" ]
                     ]
                 ]
-            , tbody []
-                (tr []
-                    [ td []
-                        [ input
-                            [ list "userCandidates"
-                            , Html.Attributes.form "addMemberForm"
-                            , type_ "text"
-                            , value model.addMember.email
-                            , onInput InputChangedNewMember
-                            ]
-                            []
-                        , datalist [ id "userCandidates" ] (candidates model)
-                        ]
-                    , td [] []
-                    , td [] [ viewRoleSelector model.addMember.role ClickedNewMemberRole False ]
-                    , td []
-                        [ button [ type_ "submit", class "small button", Html.Attributes.form "addMemberForm", disabled (queryUserList model.addMember.email model.allUsers == Nothing) ]
-                            [ div [ class "icon add" ] []
-                            , text "Add"
-                            ]
-                        ]
-                    ]
-                    :: List.map viewEditRow model.members
-                )
+            , tbody [] (List.map viewEditRow model.members)
             ]
         ]
 
