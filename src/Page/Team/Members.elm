@@ -10,8 +10,8 @@ import Component.Icons exposing (spinnerDone, spinnerError, spinnerLoading)
 import Component.Modal as Modal
 import DataModel exposing (Expandable(..), Team, TeamMember, User, expandableAll, expandableTake, flipExpanded)
 import Graphql.Http
-import Html exposing (Html, button, datalist, div, form, h2, input, option, select, span, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (class, classList, colspan, disabled, id, list, selected, title, type_, value)
+import Html exposing (Html, button, datalist, div, form, h2, input, label, li, option, select, span, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, classList, colspan, disabled, for, id, list, selected, title, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import RemoteData exposing (RemoteData(..))
 import Util exposing (appendMaybe, conditionalElement)
@@ -241,20 +241,28 @@ viewAddMemberModal model =
         [ smallButton (ShowModal AddNewMember) "add" "Add member"
         , Modal.view (modalId AddNewMember)
             [ form [ onSubmit ClickedNewMemberAdd ]
-                [ input
-                    [ list "userCandidates"
-                    , type_ "text"
-                    , value model.addMember.email
-                    , onInput InputChangedNewMember
-                    ]
-                    []
-                , datalist [ id "userCandidates" ] (candidates model)
-                , viewRoleSelector model.addMember.role ClickedNewMemberRole False
-                , div [ class "row" ]
-                    [ button [ onClick (CloseModal AddNewMember), class "small button" ] [ text "Cancel" ]
-                    , button [ type_ "submit", class "small button", disabled (queryUserList model.addMember.email model.allUsers == Nothing) ]
-                        [ div [ class "icon add" ] []
-                        , text "Add"
+                [ ul []
+                    [ label [ for "addUserEmail" ] [ text "Email:" ]
+                    , li []
+                        [ input
+                            [ list "userCandidates"
+                            , type_ "text"
+                            , value model.addMember.email
+                            , onInput InputChangedNewMember
+                            ]
+                            []
+                        , datalist [ id "userCandidates" ] (candidates model)
+                        ]
+                    , label [ for "addUserRole" ] [ text "Role:" ]
+                    , li []
+                        [ viewRoleSelector model.addMember.role ClickedNewMemberRole False
+                        ]
+                    , li [ class "row" ]
+                        [ button [ onClick (CloseModal AddNewMember), class "small button" ] [ text "Cancel" ]
+                        , button [ type_ "submit", class "small button", disabled (queryUserList model.addMember.email model.allUsers == Nothing) ]
+                            [ div [ class "icon add" ] []
+                            , text "Add"
+                            ]
                         ]
                     ]
                 ]
@@ -353,7 +361,8 @@ viewEditRow row =
 viewRoleSelector : TeamRole -> (String -> Msg) -> Bool -> Html Msg
 viewRoleSelector currentRole action disable =
     select
-        [ value (roleStr currentRole)
+        [ id "addUserRole"
+        , value (roleStr currentRole)
         , onInput action
         , disabled disable
         ]

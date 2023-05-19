@@ -337,20 +337,26 @@ th {
 form {
   margin: 0;
   padding: 0;
-}
 
-form ul {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-}
+  ul {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
 
-form ul li {
-  display: flex;
-  flex-grow: 1;
-  flex-direction: column;
-  margin: 0;
+    li {
+      display: flex;
+      flex-grow: 1;
+      flex-direction: column;
+      margin: 0;
+      padding: 0.3rem;
+
+      &.row {
+        flex-direction: row;
+        justify-content: space-between;
+      }
+    }
+  }
 }
 
 label {
