@@ -97,8 +97,8 @@ mapTeam fn model =
 
 
 type Msg
-    = ClickedFormEdit
-    | ClickedFormCancel
+    = ClickedEditMode
+    | ClickedViewMode
     | ClickedNewMemberAdd
     | ClickedNewMemberRole String
     | ClickedMemberRole Row String
@@ -125,10 +125,10 @@ init team allUsers isEditor =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ClickedFormEdit ->
+        ClickedEditMode ->
             ( { model | mode = Edit }, Cmd.none )
 
-        ClickedFormCancel ->
+        ClickedViewMode ->
             ( { model
                 | mode = View
                 , members = toRows model.team.members
@@ -213,7 +213,7 @@ viewMembers members isEditor =
     div [ class "card" ]
         ([ div [ class "title" ]
             ([ h2 [] [ text "Members" ] ]
-                |> appendMaybe (smallButton ClickedFormEdit "edit" "Edit" |> conditionalElement isEditor)
+                |> appendMaybe (smallButton ClickedEditMode "edit" "Edit" |> conditionalElement isEditor)
             )
          , table [ class "first-column-wide" ]
             [ thead []
@@ -276,7 +276,7 @@ viewEditMembers model =
         [ div [ class "title" ]
             [ h2 [] [ text "Members" ]
             , viewAddMemberModal model
-            , smallButton ClickedFormCancel "edit" "View"
+            , smallButton ClickedViewMode "edit" "View"
             ]
         , table [ class "first-column-wide" ]
             [ thead []
