@@ -255,7 +255,7 @@ viewAddMemberModal model =
                         ]
                     , label [ for "addUserRole" ] [ text "Role:" ]
                     , li []
-                        [ viewRoleSelector model.addMember.role ClickedNewMemberRole False
+                        [ viewRoleSelector "addUserRole" model.addMember.role ClickedNewMemberRole False
                         ]
                     , li [ class "row" ]
                         [ button [ onClick (CloseModal AddNewMember), class "small button" ] [ text "Cancel" ]
@@ -312,7 +312,7 @@ viewEditRow row =
     let
         roleSelector : Html Msg
         roleSelector =
-            viewRoleSelector row.member.role (ClickedMemberRole row) (row.state == PendingChange)
+            viewRoleSelector "" row.member.role (ClickedMemberRole row) (row.state == PendingChange)
 
         phase : Html msg
         phase =
@@ -358,10 +358,10 @@ viewEditRow row =
         ]
 
 
-viewRoleSelector : TeamRole -> (String -> Msg) -> Bool -> Html Msg
-viewRoleSelector currentRole action disable =
+viewRoleSelector : String -> TeamRole -> (String -> Msg) -> Bool -> Html Msg
+viewRoleSelector inputId currentRole action disable =
     select
-        [ id "addUserRole"
+        [ id inputId
         , value (roleStr currentRole)
         , onInput action
         , disabled disable
