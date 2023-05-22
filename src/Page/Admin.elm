@@ -376,7 +376,7 @@ viewForm lrd =
 viewAdminActions : Card Msg
 viewAdminActions =
     Card.new "Admin actions"
-        |> Card.withContents [ smallButton OnSynchronizeAllTeams "synchronize" "Synchronize teams" ]
+        |> Card.withButtons [ smallButton OnSynchronizeAllTeams "synchronize" "Synchronize teams" ]
 
 
 onClickStopPropagation : msg -> Html.Attribute msg
