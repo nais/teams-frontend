@@ -1,4 +1,4 @@
-module Util exposing (appendMaybe, conditionalElement)
+module Util exposing (appendMaybe, conditionalElement, flattenMaybe)
 
 
 appendMaybe : Maybe a -> List a -> List a
@@ -18,3 +18,18 @@ conditionalElement condition element =
 
     else
         Nothing
+
+
+maybeToList : Maybe a -> List a
+maybeToList m =
+    case m of
+        Just v ->
+            [ v ]
+
+        Nothing ->
+            []
+
+
+flattenMaybe : List (Maybe a) -> List a
+flattenMaybe l =
+    List.concatMap maybeToList l
