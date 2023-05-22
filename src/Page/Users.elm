@@ -8,6 +8,7 @@ import Backend.Enum.UserSyncRunStatus exposing (UserSyncRunStatus)
 import Backend.Mutation as Mutation
 import Backend.Scalar exposing (RoleName(..), Slug(..), Uuid)
 import Component.Buttons exposing (smallButton)
+import Component.Card as Card exposing (Card)
 import DataModel exposing (AuditLog, Role, User, UserSyncRun)
 import Graphql.Http
 import Graphql.Operation exposing (RootMutation)
@@ -67,26 +68,26 @@ view model =
 
         Success users ->
             div [ class "cards" ]
-                [ viewAdminActions model.synchronizeUsersCorrelationID
-                , viewUserSyncRuns model.userSyncRuns
-                , div [ class "card" ]
-                    [ div [ class "title" ]
-                        [ h2 [] [ text "Users" ]
-                        ]
-                    , table [ class "disable-alternate-background-color" ]
-                        [ thead []
-                            [ tr []
-                                [ th [] [ text "Full name" ]
-                                , th [] [ text "Email" ]
-                                , th [] [ text "External ID" ]
-                                , th [] [ text "Role name" ]
-                                , th [] [ text "Role target" ]
+                ([ viewAdminActions model.synchronizeUsersCorrelationID
+                 , viewUserSyncRuns model.userSyncRuns
+                 , Card.new "Users"
+                    |> Card.withContents
+                        [ table [ class "disable-alternate-background-color" ]
+                            [ thead []
+                                [ tr []
+                                    [ th [] [ text "Full name" ]
+                                    , th [] [ text "Email" ]
+                                    , th [] [ text "External ID" ]
+                                    , th [] [ text "Role name" ]
+                                    , th [] [ text "Role target" ]
+                                    ]
                                 ]
+                            , tbody [] (List.concatMap viewUser users)
                             ]
-                        , tbody [] (List.concatMap viewUser users)
                         ]
-                    ]
-                ]
+                 ]
+                    |> List.map Card.render
+                )
 
         NotAsked ->
             p [] [ text "NotAsked" ]
@@ -95,14 +96,11 @@ view model =
             p [] [ text (f |> Api.Error.errorToString) ]
 
 
-viewAdminActions : RemoteData (Graphql.Http.Error Uuid) Uuid -> Html Msg
+viewAdminActions : RemoteData (Graphql.Http.Error Uuid) Uuid -> Card Msg
 viewAdminActions synchronizeUsersCorrelationID =
-    div [ class "card" ]
-        [ div [ class "title" ]
-            [ h2 [] [ text "Admin actions" ]
-            , smallButton SynchronizeUsersClicked "synchronize" "Synchronize users"
-            ]
-        , div []
+    Card.new "Admin actions"
+        |> Card.withButtons [ smallButton SynchronizeUsersClicked "synchronize" "Synchronize users" ]
+        |> Card.withContents
             (case synchronizeUsersCorrelationID of
                 Success uuid ->
                     [ text "User sync triggered. Correlation ID: "
@@ -113,16 +111,12 @@ viewAdminActions synchronizeUsersCorrelationID =
                 _ ->
                     [ text "" ]
             )
-        ]
 
 
-viewUserSyncRuns : RemoteData (Graphql.Http.Error (List UserSyncRun)) (List UserSyncRun) -> Html Msg
+viewUserSyncRuns : RemoteData (Graphql.Http.Error (List UserSyncRun)) (List UserSyncRun) -> Card Msg
 viewUserSyncRuns userSyncRuns =
-    div [ class "card" ]
-        [ div [ class "title" ]
-            [ h2 [] [ text "User sync logs" ]
-            ]
-        , div []
+    Card.new "User sync logs"
+        |> Card.withContents
             (case userSyncRuns of
                 Success runs ->
                     if List.isEmpty runs then
@@ -140,7 +134,6 @@ viewUserSyncRuns userSyncRuns =
                 Failure f ->
                     [ text (f |> Api.Error.errorToString) ]
             )
-        ]
 
 
 viewUser : User -> List (Html Msg)

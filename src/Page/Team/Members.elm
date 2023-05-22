@@ -211,26 +211,28 @@ view model =
 
 viewMembers : Expandable (List TeamMember) -> Bool -> Html Msg
 viewMembers members isEditor =
-    Card.default "Members"
-        ([ smallButton ClickedEditMode "edit" "Edit" |> conditionalElement isEditor ] |> flattenMaybe)
-        ([ table [ class "first-column-wide" ]
-            [ thead []
-                [ tr []
-                    [ th [] [ text "Email" ]
-                    , th [] [ text "Role" ]
+    Card.new "Members"
+        |> Card.withButtons ([ smallButton ClickedEditMode "edit" "Edit" |> conditionalElement isEditor ] |> flattenMaybe)
+        |> Card.withContents
+            ([ table [ class "first-column-wide" ]
+                [ thead []
+                    [ tr []
+                        [ th [] [ text "Email" ]
+                        , th [] [ text "Role" ]
+                        ]
                     ]
-                ]
-            , tbody []
-                (if List.length (expandableTake 10 members) == 0 then
-                    [ tr [] [ td [ colspan 2 ] [ text "This team has no members" ] ] ]
+                , tbody []
+                    (if List.length (expandableTake 10 members) == 0 then
+                        [ tr [] [ td [ colspan 2 ] [ text "This team has no members" ] ] ]
 
-                 else
-                    List.map viewRow (expandableTake 10 members)
-                )
-            ]
-         ]
-            |> appendMaybe (showMoreButton members 10 ClickedShowMore)
-        )
+                     else
+                        List.map viewRow (expandableTake 10 members)
+                    )
+                ]
+             ]
+                |> appendMaybe (showMoreButton members 10 ClickedShowMore)
+            )
+        |> Card.render
 
 
 viewAddMemberModal : Model -> List (Html Msg)
@@ -269,20 +271,22 @@ viewAddMemberModal model =
 
 viewEditMembers : Model -> Html Msg
 viewEditMembers model =
-    Card.default "Members"
-        (viewAddMemberModal model ++ [ smallButton ClickedViewMode "edit" "View" ])
-        [ table [ class "first-column-wide" ]
-            [ thead []
-                [ tr []
-                    [ th [] [ text "Email" ]
-                    , th [] []
-                    , th [] [ text "Role" ]
-                    , th [] [ text "" ]
+    Card.new "Members"
+        |> Card.withButtons (viewAddMemberModal model ++ [ smallButton ClickedViewMode "edit" "View" ])
+        |> Card.withContents
+            [ table [ class "first-column-wide" ]
+                [ thead []
+                    [ tr []
+                        [ th [] [ text "Email" ]
+                        , th [] []
+                        , th [] [ text "Role" ]
+                        , th [] [ text "" ]
+                        ]
                     ]
+                , tbody [] (List.map viewEditRow model.members)
                 ]
-            , tbody [] (List.map viewEditRow model.members)
             ]
-        ]
+        |> Card.render
 
 
 candidates : Model -> List (Html Msg)

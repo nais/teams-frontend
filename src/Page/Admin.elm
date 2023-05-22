@@ -5,6 +5,7 @@ import Api.Error
 import Api.Reconciler exposing (disableReconciler, enableReconciler, getReconcilers, synchronizeAllTeams, updateReconcilerConfig)
 import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
 import Component.Buttons exposing (smallButton)
+import Component.Card as Card exposing (Card)
 import DataModel exposing (ReconcilerConfigData, ReconcilerData)
 import Graphql.Http
 import Html exposing (Html, a, button, div, form, h2, input, label, li, p, text, textarea, ul)
@@ -344,42 +345,38 @@ reconcilerEnabledId rd =
     reconcilerName rd.name ++ ":enabled"
 
 
-viewReconcilerConfig : ReconcilerData -> Html Msg
+viewReconcilerConfig : ReconcilerData -> Card Msg
 viewReconcilerConfig rd =
-    div [ class "card" ]
-        [ form
-            [ onSubmit (Submit rd.name)
-            , classList
-                [ ( "reconcilerConfigured", rd.configured )
-                , ( "reconcilerNotConfigured", not rd.configured )
+    Card.new rd.displayname
+        |> Card.withContents
+            [ form
+                [ onSubmit (Submit rd.name)
+                , classList
+                    [ ( "reconcilerConfigured", rd.configured )
+                    , ( "reconcilerNotConfigured", not rd.configured )
+                    ]
+                ]
+                [ reconcilerDescription rd
+                , ul []
+                    (toggleReconcilerElement rd
+                        :: List.map (configElement (OnInput rd.name)) rd.config
+                    )
+                , div [ class "button-row" ]
+                    [ button [ type_ "submit" ] [ text "Save" ]
+                    ]
                 ]
             ]
-            [ h2 [] [ text rd.displayname ]
-            , reconcilerDescription rd
-            , ul []
-                (toggleReconcilerElement rd
-                    :: List.map (configElement (OnInput rd.name)) rd.config
-                )
-            , div [ class "button-row" ]
-                [ button [ type_ "submit" ] [ text "Save" ]
-                ]
-            ]
-        ]
 
 
 viewForm : List ReconcilerData -> Html Msg
 viewForm lrd =
-    div [ class "cards" ] (viewAdminActions :: List.map viewReconcilerConfig lrd)
+    div [ class "cards" ] ((viewAdminActions :: List.map viewReconcilerConfig lrd) |> List.map Card.render)
 
 
-viewAdminActions : Html Msg
+viewAdminActions : Card Msg
 viewAdminActions =
-    div [ class "card" ]
-        [ div [ class "title" ]
-            [ h2 [] [ text "Admin actions" ]
-            , smallButton OnSynchronizeAllTeams "synchronize" "Synchronize teams"
-            ]
-        ]
+    Card.new "Admin actions"
+        |> Card.withContents [ smallButton OnSynchronizeAllTeams "synchronize" "Synchronize teams" ]
 
 
 onClickStopPropagation : msg -> Html.Attribute msg

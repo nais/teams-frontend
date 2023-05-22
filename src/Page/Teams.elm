@@ -5,9 +5,10 @@ import Api.Error exposing (errorToString)
 import Api.Team exposing (getTeams)
 import Backend.Scalar
 import Browser.Navigation exposing (pushUrl)
+import Component.Card as Card
 import DataModel exposing (Team)
 import Graphql.Http
-import Html exposing (Html, button, div, h2, table, tbody, td, text, th, thead, tr)
+import Html exposing (Html, button, div, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import List exposing (filter, map, member)
@@ -112,31 +113,30 @@ view model =
                 MyTeams ->
                     button [ class "text", onClick (ClickedTeamSelection AllTeams) ] [ text "Show all teams" ]
     in
-    div [ class "card" ]
-        [ div [ class "title" ]
-            [ h2 [] [ text title ]
-            , link Route.CreateTeam [ class "button small" ] [ text "Create" ]
-            ]
-        , div []
+    (Card.new title
+        |> Card.withButtons
+            [ link Route.CreateTeam [ class "button small" ] [ text "Create" ] ]
+        |> Card.withContents
             [ switcher
+            , div []
+                [ case model.teams of
+                    Success teams ->
+                        case model.viewMode of
+                            AllTeams ->
+                                teamTable teams
+
+                            MyTeams ->
+                                teamTable (myTeams (Session.viewer model.session) teams)
+
+                    Failure err ->
+                        text <| errorToString err
+
+                    Loading ->
+                        text <| "Loading teams..."
+
+                    NotAsked ->
+                        text <| "Data not loaded"
+                ]
             ]
-        , div []
-            [ case model.teams of
-                Success teams ->
-                    case model.viewMode of
-                        AllTeams ->
-                            teamTable teams
-
-                        MyTeams ->
-                            teamTable (myTeams (Session.viewer model.session) teams)
-
-                Failure err ->
-                    text <| errorToString err
-
-                Loading ->
-                    text <| "Loading teams..."
-
-                NotAsked ->
-                    text <| "Data not loaded"
-            ]
-        ]
+    )
+        |> Card.render

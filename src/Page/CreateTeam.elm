@@ -4,9 +4,10 @@ import Api.Do
 import Api.Error exposing (errorToString)
 import Api.Team exposing (createTeam)
 import Backend.Scalar
+import Component.Card as Card
 import DataModel exposing (Team)
 import Graphql.Http
-import Html exposing (Html, button, div, form, h2, input, label, li, p, text, ul)
+import Html exposing (Html, button, div, form, input, label, li, p, text, ul)
 import Html.Attributes exposing (class, for, type_)
 import Html.Events exposing (onInput, onSubmit)
 import Session exposing (Session)
@@ -94,24 +95,25 @@ errorView maybeString =
 
 createTeamForm : Model -> Html Msg
 createTeamForm model =
-    div [ class "card" ]
-        [ h2 [] [ text "Create a new team" ]
-        , p [] [ text "Creating a team in Console will grant access to certain NAIS features, such as Google Cloud projects, Kubernetes namespaces, or your own GitHub team." ]
-        , p [] [ text "After the team is created, you will become the administrator of that team, granting privileges to add and remove team members." ]
-        , p [] [ text "The identifier is the primary key, and will be used across systems so that they are easily recognizable. It is not possible to change the identifier after creation, so choose wisely. Also, the identifier can not start with \"nais\" or \"team\"." ]
-        , form [ onSubmit CreateTeamSubmit ]
-            (ul []
-                [ textbox SlugChanged "slug" "Identifier" "customer-satisfaction"
-                , textbox PurposeChanged "purpose" "Purpose of the team" "Making sure customers have a good user experience"
-                , textbox SlackChannelChanged "team-slack-channel" "Slack channel" "#my-team"
-                ]
-                :: errorView model.error
-                ++ [ div [ class "button-row" ]
-                        [ button [ type_ "submit" ] [ text "Create team" ]
-                        ]
-                   ]
-            )
-        ]
+    Card.new "Create new team"
+        |> Card.withContents
+            [ p [] [ text "Creating a team in Console will grant access to certain NAIS features, such as Google Cloud projects, Kubernetes namespaces, or your own GitHub team." ]
+            , p [] [ text "After the team is created, you will become the administrator of that team, granting privileges to add and remove team members." ]
+            , p [] [ text "The identifier is the primary key, and will be used across systems so that they are easily recognizable. It is not possible to change the identifier after creation, so choose wisely. Also, the identifier can not start with \"nais\" or \"team\"." ]
+            , form [ onSubmit CreateTeamSubmit ]
+                (ul []
+                    [ textbox SlugChanged "slug" "Identifier" "customer-satisfaction"
+                    , textbox PurposeChanged "purpose" "Purpose of the team" "Making sure customers have a good user experience"
+                    , textbox SlackChannelChanged "team-slack-channel" "Slack channel" "#my-team"
+                    ]
+                    :: errorView model.error
+                    ++ [ div [ class "button-row" ]
+                            [ button [ type_ "submit" ] [ text "Create team" ]
+                            ]
+                       ]
+                )
+            ]
+        |> Card.render
 
 
 validateTeamName : String -> Maybe String

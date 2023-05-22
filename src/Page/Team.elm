@@ -9,19 +9,21 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
 import Backend.Scalar exposing (Slug)
 import Component.Buttons exposing (smallButton)
+import Component.Card as Card
 import Component.ResourceTable as ResourceTable
 import DataModel exposing (AuditLog, DeployKey, Expandable(..), GitHubRepository, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, User, expandableAll)
 import Graphql.Http
 import Graphql.OptionalArgument
-import Html exposing (Html, a, button, dd, div, dl, dt, em, h2, h3, input, label, li, p, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html exposing (Html, a, button, dd, div, dl, dt, em, form, h3, input, label, li, p, strong, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, disabled, for, href, id, type_, value)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List
 import Page.Team.Members as Members
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session, Viewer)
+import Util exposing (flattenMaybe)
 
 
 port copy : String -> Cmd msg
@@ -362,22 +364,23 @@ viewSyncErrors team =
             text ""
 
         _ ->
-            div [ class "card error" ]
-                [ h2 [] [ text "Synchronization error" ]
-                , p [] [ text "Console failed to synchronize team ", strong [] [ text (slugStr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
-                , p [] [ text "If errors are caused by network outage, they will resolve automatically. If they persist for more than a few hours, please contact NAIS support." ]
-                , viewSyncSuccess team
-                , h3 [] [ text "Error messages" ]
-                , ul [ class "logs" ] (List.map errorLine team.syncErrors)
-                ]
+            Card.new "Synchronization error"
+                |> Card.withAttributes [ class "error" ]
+                |> Card.withContents
+                    [ p [] [ text "Console failed to synchronize team ", strong [] [ text (slugStr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
+                    , p [] [ text "If errors are caused by network outage, they will resolve automatically. If they persist for more than a few hours, please contact NAIS support." ]
+                    , viewSyncSuccess team
+                    , h3 [] [ text "Error messages" ]
+                    , ul [ class "logs" ] (List.map errorLine team.syncErrors)
+                    ]
+                |> Card.render
 
 
 viewTeamState : Team -> Html Msg
 viewTeamState team =
-    div [ class "card" ]
-        [ h2 [] [ text "Managed resources" ]
-        , ResourceTable.view team.syncState
-        ]
+    Card.new "Managed resources"
+        |> Card.withContents [ ResourceTable.view team.syncState ]
+        |> Card.render
 
 
 viewSlackChannel : SlackAlertsChannel -> List (Html msg)
@@ -397,34 +400,45 @@ viewSlackChannels team =
 
 viewTeamOverview : Viewer -> Team -> Html Msg
 viewTeamOverview viewer team =
-    div [ class "card" ]
-        [ div [ class "title" ]
-            ([ h2 [] [ text <| "Team " ++ slugStr team.slug ] ]
-                |> concatMaybe (deleteTeamButton viewer team)
-                |> concatMaybe (syncButton ClickedSynchronize viewer team)
-                |> concatMaybe (editorButton ClickedEditMain viewer team)
+    Card.new ("Team " ++ slugStr team.slug)
+        |> Card.withButtons
+            ([ deleteTeamButton viewer team
+             , syncButton ClickedSynchronize viewer team
+             , editorButton ClickedEditMain viewer team
+             ]
+                |> flattenMaybe
             )
-        , p [] [ text team.purpose ]
-        , h3 [] [ text "Slack channel" ]
-        , p [] [ text team.slackChannel ]
-        , h3 [] [ text "Slack alert channels" ]
-        , p []
-            [ text "Per-environment slack channels to be used for alerts sent by the platform." ]
-        , viewSlackChannels team
-        , viewSyncSuccess team
-        ]
+        |> Card.withContents
+            [ p [] [ text team.purpose ]
+            , h3 [] [ text "Slack channel" ]
+            , p [] [ text team.slackChannel ]
+            , h3 [] [ text "Slack alert channels" ]
+            , p []
+                [ text "Per-environment slack channels to be used for alerts sent by the platform." ]
+            , viewSlackChannels team
+            , viewSyncSuccess team
+            ]
+        |> Card.render
 
 
-viewSlackAlertsChannel : String -> SlackAlertsChannel -> List (Html Msg)
-viewSlackAlertsChannel placeholder entry =
+viewEditSlackAlertsChannel : String -> SlackAlertsChannel -> Html Msg
+viewEditSlackAlertsChannel placeholder entry =
     let
         inputID : String
         inputID =
             "slack-alerts-channel" ++ entry.environment
     in
-    [ label [ for inputID ] [ entry.environment |> text ]
-    , input [ id inputID, type_ "text", value entry.channelName, Html.Attributes.placeholder placeholder, onInput (SlackAlertsChannelChanged entry.environment) ] []
-    ]
+    li []
+        [ label [ for inputID ] [ text entry.environment ]
+        , input
+            [ id inputID
+            , type_ "text"
+            , value entry.channelName
+            , Html.Attributes.placeholder placeholder
+            , onInput (SlackAlertsChannelChanged entry.environment)
+            ]
+            []
+        ]
 
 
 viewEditTeamOverview : Team -> Maybe (Graphql.Http.Error Team) -> Html Msg
@@ -439,24 +453,35 @@ viewEditTeamOverview team error =
                 Just err ->
                     div [ class "error" ] [ text <| Api.Error.errorToString err ]
     in
-    div [ class "card" ]
-        ([ h2 [] [ text ("Team " ++ slugStr team.slug) ]
-         , label [] [ text "Purpose" ]
-         , input [ type_ "text", Html.Attributes.placeholder "Describe team's purpose", onInput PurposeChanged, value team.purpose ] []
-         , label [] [ text "Slack channel" ]
-         , input [ type_ "text", Html.Attributes.placeholder "#team-slack-channel", onInput SlackChannelChanged, value team.slackChannel ] []
-         , h3 [] [ text "Slack alerts channels" ]
-         , p []
-            [ text "Per-environment slack channels to be used for alerts sent by the platform." ]
-         ]
-            ++ List.concatMap (viewSlackAlertsChannel team.slackChannel) team.slackAlertsChannels
-            ++ [ errorMessage
-               , div [ class "button-row" ]
-                    [ button [ onClick (ClickedSaveOverview team) ] [ text "Save changes" ]
-                    , button [ class "transparent", onClick ClickedCancelEditOverview ] [ text "Cancel changes" ]
-                    ]
-               ]
-        )
+    Card.new ("Team " ++ slugStr team.slug)
+        |> Card.withContents
+            [ form [ onSubmit (ClickedSaveOverview team) ]
+                [ ul []
+                    ([ li []
+                        [ label [] [ text "Purpose" ]
+                        , input [ type_ "text", Html.Attributes.placeholder "Describe team's purpose", onInput PurposeChanged, value team.purpose ] []
+                        ]
+                     , li []
+                        [ label [] [ text "Slack channel" ]
+                        , input [ type_ "text", Html.Attributes.placeholder "#team-slack-channel", onInput SlackChannelChanged, value team.slackChannel ] []
+                        ]
+                     , li []
+                        [ h3 [] [ text "Slack alerts channels" ]
+                        , p []
+                            [ text "Per-environment slack channels to be used for alerts sent by the platform." ]
+                        ]
+                     ]
+                        ++ List.map (viewEditSlackAlertsChannel team.slackChannel) team.slackAlertsChannels
+                        ++ [ errorMessage
+                           , div [ class "button-row" ]
+                                [ input [ type_ "submit", class "button", value "Save changes" ] []
+                                , button [ class "transparent", onClick ClickedCancelEditOverview ] [ text "Cancel changes" ]
+                                ]
+                           ]
+                    )
+                ]
+            ]
+        |> Card.render
 
 
 unexpand : Expandable (List a) -> List a
@@ -471,12 +496,12 @@ unexpand l =
 
 viewLogs : Team -> Html Msg
 viewLogs team =
-    div [ class "card" ]
-        ([ h2 [] [ text "Logs" ]
-         , ul [ class "logs" ] (team.auditLogs |> unexpand |> List.map auditLogLine)
-         ]
-            |> concatMaybe (showMoreButton team.auditLogs numberOfPreviewElements (ToggleExpandableList AuditLogs))
-        )
+    Card.new "Logs"
+        |> Card.withContents
+            ([ ul [ class "logs" ] (team.auditLogs |> unexpand |> List.map auditLogLine) ]
+                |> concatMaybe (showMoreButton team.auditLogs numberOfPreviewElements (ToggleExpandableList AuditLogs))
+            )
+        |> Card.render
 
 
 viewCards : Model -> Team -> Html Msg
@@ -515,29 +540,30 @@ viewDeployKey viewer team deployKey =
         div [] []
 
     else
-        div [ class "card" ]
-            [ div [ class "title" ] [ h2 [] [ text "Deploy key" ] ]
-            , div [ class "row" ]
-                [ div [ class "column wide" ]
-                    [ p [] [ text "This is the api key used to communicate with nais deploy." ]
-                    , case deployKey of
-                        NotAsked ->
-                            smallButton (ClickedGetDeployKeys team.slug) "download" "get deploy key"
+        Card.new "Deploy key"
+            |> Card.withContents
+                [ div [ class "row" ]
+                    [ div [ class "column wide" ]
+                        [ p [] [ text "This is the api key used to communicate with nais deploy." ]
+                        , case deployKey of
+                            NotAsked ->
+                                smallButton (ClickedGetDeployKeys team.slug) "download" "get deploy key"
 
-                        Loading ->
-                            text "loading"
+                            Loading ->
+                                text "loading"
 
-                        Success d ->
-                            div [ class "row" ]
-                                [ input [ type_ "text", class "deploykey", disabled True, value (deployKeyStr d.key) ] []
-                                , smallButton (Copy (deployKeyStr d.key)) "copy" "copy"
-                                ]
+                            Success d ->
+                                div [ class "row" ]
+                                    [ input [ type_ "text", class "deploykey", disabled True, value (deployKeyStr d.key) ] []
+                                    , smallButton (Copy (deployKeyStr d.key)) "copy" "copy"
+                                    ]
 
-                        Failure e ->
-                            text (Api.Error.errorToString e)
+                            Failure e ->
+                                text (Api.Error.errorToString e)
+                        ]
                     ]
                 ]
-            ]
+            |> Card.render
 
 
 numberOfPreviewElements : Int
@@ -547,37 +573,38 @@ numberOfPreviewElements =
 
 viewGitHubRepositories : Team -> Html Msg
 viewGitHubRepositories team =
-    div [ class "card" ]
-        ([ h2 [] [ text "Repositories" ]
-         , p []
-            [ text "These are repositories that "
-            , strong [] [ text (slugStr team.slug) ]
-            , text " has access to. If it has the "
-            , strong [] [ text "push" ]
-            , text " permission it will be able to push images to this teams artifact registry."
-            ]
-         , table [ class "repolist" ]
-            [ thead []
-                [ tr []
-                    [ th [] [ text "Repository" ]
-                    , th [] [ text "Permissions" ]
-                    ]
+    Card.new "Repositories"
+        |> Card.withContents
+            ([ p []
+                [ text "These are repositories that "
+                , strong [] [ text (slugStr team.slug) ]
+                , text " has access to. If it has the "
+                , strong [] [ text "push" ]
+                , text " permission it will be able to push images to this teams artifact registry."
                 ]
-            , tbody []
-                ((case team.repositories of
-                    Preview r ->
-                        List.take numberOfPreviewElements r
+             , table [ class "repolist" ]
+                [ thead []
+                    [ tr []
+                        [ th [] [ text "Repository" ]
+                        , th [] [ text "Permissions" ]
+                        ]
+                    ]
+                , tbody []
+                    ((case team.repositories of
+                        Preview r ->
+                            List.take numberOfPreviewElements r
 
-                    Expanded r ->
-                        r
-                 )
-                    |> List.map viewGitHubRepository
-                )
-            ]
-         ]
-            |> concatMaybe
-                (showMoreButton team.repositories numberOfPreviewElements (ToggleExpandableList Repositories))
-        )
+                        Expanded r ->
+                            r
+                     )
+                        |> List.map viewGitHubRepository
+                    )
+                ]
+             ]
+                |> concatMaybe
+                    (showMoreButton team.repositories numberOfPreviewElements (ToggleExpandableList Repositories))
+            )
+        |> Card.render
 
 
 showMoreButton : Expandable (List a) -> Int -> Msg -> Maybe (Html Msg)
@@ -628,13 +655,20 @@ view model =
             viewCards model team
 
         Failure err ->
-            div [ class "card error" ] [ text <| errorToString err ]
+            Card.new "Loading"
+                |> Card.withContents [ errorToString err |> text ]
+                |> Card.withAttributes [ class "error" ]
+                |> Card.render
 
         Loading ->
-            div [ class "card" ] [ text "Loading data..." ]
+            Card.new "Loading"
+                |> Card.withContents [ text "Loading data..." ]
+                |> Card.render
 
         NotAsked ->
-            div [ class "card" ] [ text "No data loaded" ]
+            Card.new "Loading"
+                |> Card.withContents [ text "No data loaded" ]
+                |> Card.render
 
 
 teamRoleForViewer : List TeamMember -> Viewer -> Maybe TeamRole
@@ -690,7 +724,7 @@ viewSubModel subModel =
             Members.view m |> Html.map GotMembersMsg
 
         NotInitialized ->
-            div [ class "card" ] [ text "not initialized" ]
+            Card.new "not initalized" |> Card.render
 
 
 into : Model -> ( SubModel, Cmd Msg ) -> ( Model, Cmd Msg )

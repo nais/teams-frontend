@@ -223,19 +223,16 @@ main {
   background: $color-white;
   padding: 1rem;
   width: calc(100% - 2rem);
-
 }
 
 .card .column {
   display: flex;
   flex-direction: column;
-  gap: 1em;
 }
 
 .card .row {
   display: flex;
   flex-direction: row;
-  gap: 1em;
 }
 
 .wide {

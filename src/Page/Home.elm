@@ -1,6 +1,7 @@
 module Page.Home exposing (Model, Msg(..), init, update, view)
 
 import Browser.Navigation
+import Component.Card as Card
 import Html exposing (Html, button, div, h2, p, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
@@ -48,10 +49,9 @@ update _ model =
 
 view : Model -> Html Msg
 view _ =
-    div []
-        [ div [ class "card" ]
-            [ h2 [] [ text "Welcome to NAIS console" ]
-            , p [] [ text "This site enables self-service management of teams. Any user in the organization may create a team and assign team members to teams they own." ]
+    Card.new "Welcome to NAIS console"
+        |> Card.withContents
+            [ p [] [ text "This site enables self-service management of teams. Any user in the organization may create a team and assign team members to teams they own." ]
             , p [] [ text "Each team will get a Google group, a GCP project for each environment, a GitHub team, and an Azure AD security group." ]
             , p [] [ text "Console will automatically keep these resources up to date with current team members." ]
             , p [] [ text "Please log in to continue." ]
@@ -59,4 +59,4 @@ view _ =
                 [ button [ onClick LoginClicked ] [ text "Login" ]
                 ]
             ]
-        ]
+        |> Card.render
