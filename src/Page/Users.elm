@@ -13,7 +13,7 @@ import DataModel exposing (AuditLog, Role, User, UserSyncRun)
 import Graphql.Http
 import Graphql.Operation exposing (RootMutation)
 import Graphql.SelectionSet exposing (SelectionSet)
-import Html exposing (Html, b, dd, div, dl, dt, h2, i, input, p, table, tbody, td, text, th, thead, tr)
+import Html exposing (Html, b, dd, div, dl, dt, i, input, p, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class, disabled, rowspan, type_, value)
 import ISO8601
 import Page.Team exposing (copy)

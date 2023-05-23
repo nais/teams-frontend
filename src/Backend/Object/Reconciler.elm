@@ -47,6 +47,13 @@ enabled =
     Object.selectionForField "Bool" "enabled" [] Decode.bool
 
 
+{-| Whether or not the reconciler uses team memberships when syncing.
+-}
+usesTeamMemberships : SelectionSet Bool Backend.Object.Reconciler
+usesTeamMemberships =
+    Object.selectionForField "Bool" "usesTeamMemberships" [] Decode.bool
+
+
 {-| Reconciler configuration keys and descriptions.
 -}
 config :

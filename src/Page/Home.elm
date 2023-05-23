@@ -2,7 +2,7 @@ module Page.Home exposing (Model, Msg(..), init, update, view)
 
 import Browser.Navigation
 import Component.Card as Card
-import Html exposing (Html, button, div, h2, p, text)
+import Html exposing (Html, button, div, p, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Route exposing (Route)

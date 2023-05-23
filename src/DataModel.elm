@@ -1,4 +1,4 @@
-module DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, NaisNamespace, ReconcilerConfigData, ReconcilerData, Role, SlackAlertsChannel, SyncError, Team, TeamDeleteConfirmed, TeamDeleteKey, TeamMember, TeamMembership, TeamSlug, TeamSync, TeamSyncState, User, UserSyncRun, expandableAll, expandableTake, flipExpanded)
+module DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, NaisNamespace, Reconciler, ReconcilerConfig, Role, SlackAlertsChannel, SyncError, Team, TeamDeleteConfirmed, TeamDeleteKey, TeamMember(..), TeamMemberReconciler(..), TeamSlug, TeamSync, TeamSyncState, User, UserSyncRun, expandableAll, expandableTake, flipExpanded, tmReconciler, tmRole, tmTeam, tmUser, tmrEnabled, tmrReconciler)
 
 import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.Enum.UserSyncRunStatus exposing (UserSyncRunStatus)
@@ -73,7 +73,7 @@ type alias NaisNamespace =
     }
 
 
-type alias ReconcilerConfigData =
+type alias ReconcilerConfig =
     { configured : Bool
     , description : String
     , displayName : String
@@ -83,14 +83,15 @@ type alias ReconcilerConfigData =
     }
 
 
-type alias ReconcilerData =
+type alias Reconciler =
     { configured : Bool
     , description : String
     , displayname : String
     , enabled : Bool
     , name : ReconcilerName
     , runorder : Int
-    , config : List ReconcilerConfigData
+    , config : List ReconcilerConfig
+    , users : Bool
     }
 
 
@@ -141,14 +142,8 @@ type alias TeamDeleteConfirmed =
     }
 
 
-type alias TeamMember =
-    { user : User
-    , role : TeamRole
-    }
-
-
-type alias TeamMembership =
-    { team : TeamSlug }
+type TeamMember
+    = TeamMember User Team TeamRole (List TeamMemberReconciler)
 
 
 type alias TeamSlug =
@@ -158,6 +153,10 @@ type alias TeamSlug =
 type alias TeamSync =
     { correlationID : Uuid
     }
+
+
+type TeamMemberReconciler
+    = TeamMemberReconciler Bool Reconciler
 
 
 type alias TeamSyncState =
@@ -175,7 +174,7 @@ type alias User =
     , email : String
     , name : String
     , externalId : String
-    , teamMemberships : List TeamMembership
+    , teamMemberships : List TeamMember
     , roles : List Role
     }
 
@@ -193,3 +192,33 @@ type alias UserSyncRun =
     , logEntries : List AuditLog
     , error : Maybe String
     }
+
+
+tmUser : TeamMember -> User
+tmUser (TeamMember user _ _ _) =
+    user
+
+
+tmTeam : TeamMember -> Team
+tmTeam (TeamMember _ team _ _) =
+    team
+
+
+tmRole : TeamMember -> TeamRole
+tmRole (TeamMember _ _ role _) =
+    role
+
+
+tmReconciler : TeamMember -> List TeamMemberReconciler
+tmReconciler (TeamMember _ _ _ userReconcilers) =
+    userReconcilers
+
+
+tmrEnabled : TeamMemberReconciler -> Bool
+tmrEnabled (TeamMemberReconciler enabled _) =
+    enabled
+
+
+tmrReconciler : TeamMemberReconciler -> Reconciler
+tmrReconciler (TeamMemberReconciler _ reconciler) =
+    reconciler

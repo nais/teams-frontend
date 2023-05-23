@@ -9,7 +9,7 @@ import Component.Buttons exposing (smallButton)
 import Component.Card as Card
 import Component.Icons exposing (spinnerDone, spinnerError, spinnerLoading)
 import Component.Modal as Modal
-import DataModel exposing (Expandable(..), Team, TeamMember, User, expandableAll, expandableTake, flipExpanded)
+import DataModel exposing (Expandable(..), Reconciler, Team, TeamMember(..), User, expandableAll, expandableTake, flipExpanded, tmRole, tmUser)
 import Graphql.Http
 import Html exposing (Html, button, datalist, div, form, input, label, li, option, select, span, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, classList, colspan, disabled, for, id, list, selected, title, type_, value)
@@ -44,6 +44,7 @@ type alias Model =
     , mode : Mode
     , addMember : AddMember
     , members : List Row
+    , reconcilers : List Reconciler
     }
 
 
@@ -57,6 +58,18 @@ type Modal
     = EditMember
     | AddNewMember
     | RemoveMember
+
+
+init : Team -> List User -> Bool -> List Reconciler -> Model
+init team allUsers isEditor reconcilers =
+    { team = team
+    , allUsers = allUsers
+    , isEditor = isEditor
+    , mode = View
+    , addMember = { email = "", role = TeamRole.Member }
+    , members = toRows team.members
+    , reconcilers = reconcilers
+    }
 
 
 modalId : Modal -> String
@@ -112,17 +125,6 @@ type Msg
     | ShowModal Modal
 
 
-init : Team -> List User -> Bool -> Model
-init team allUsers isEditor =
-    { team = team
-    , allUsers = allUsers
-    , isEditor = isEditor
-    , mode = View
-    , addMember = { email = "", role = TeamRole.Member }
-    , members = toRows team.members
-    }
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -145,8 +147,9 @@ update msg model =
                 Just user ->
                     let
                         member : TeamMember
+                        -- TODO add reconcilers
                         member =
-                            TeamMember user model.addMember.role
+                            TeamMember user model.team model.addMember.role []
                     in
                     ( model
                         |> mapMembers (addRow (Row member PendingChange))
@@ -173,7 +176,7 @@ update msg model =
             ( model |> mapMembers (mapRow (Row row.member PendingRemove)), Cmd.none )
 
         ClickedMemberRemoveConfirm row ->
-            ( model |> mapMembers (mapRow (Row row.member PendingChange)), mutateRD (removeMemberFromTeam model.team row.member.user) (GotSaveTeamMemberResponse row) )
+            ( model |> mapMembers (mapRow (Row row.member PendingChange)), mutateRD (removeMemberFromTeam model.team (tmUser row.member)) (GotSaveTeamMemberResponse row) )
 
         ClickedShowMore ->
             ( model |> mapTeam (\t -> { t | members = flipExpanded t.members }), Cmd.none )
@@ -239,32 +242,37 @@ viewAddMemberModal : Model -> List (Html Msg)
 viewAddMemberModal model =
     [ smallButton (ShowModal AddNewMember) "add" "Add member"
     , Modal.view (modalId AddNewMember)
-        [ form [ onSubmit ClickedNewMemberAdd ]
-            [ ul []
-                [ label [ for "addUserEmail" ] [ text "Email:" ]
-                , li []
-                    [ input
-                        [ list "userCandidates"
-                        , type_ "text"
-                        , value model.addMember.email
-                        , onInput InputChangedNewMember
-                        ]
-                        []
-                    , datalist [ id "userCandidates" ] (candidates model)
-                    ]
-                , label [ for "addUserRole" ] [ text "Role:" ]
-                , li []
-                    [ viewRoleSelector "addUserRole" model.addMember.role ClickedNewMemberRole False
-                    ]
-                , li [ class "row" ]
-                    [ button [ onClick (CloseModal AddNewMember), class "small button" ] [ text "Cancel" ]
-                    , button [ type_ "submit", class "small button", disabled (queryUserList model.addMember.email model.allUsers == Nothing) ]
-                        [ div [ class "icon add" ] []
-                        , text "Add"
+        [ Card.new "Add member"
+            |> Card.withContents
+                [ form [ onSubmit ClickedNewMemberAdd ]
+                    [ ul []
+                        [ label [ for "addUserEmail" ] [ text "Email:" ]
+                        , li []
+                            [ input
+                                [ list "userCandidates"
+                                , type_ "text"
+                                , value model.addMember.email
+                                , onInput InputChangedNewMember
+                                ]
+                                []
+                            , datalist [ id "userCandidates" ] (candidates model)
+                            ]
+                        , label [ for "addUserRole" ] [ text "Role:" ]
+                        , li []
+                            [ viewRoleSelector "addUserRole" model.addMember.role ClickedNewMemberRole False
+                            ]
+                        , li [ class "row" ]
+                            [ button [ onClick (CloseModal AddNewMember), class "small button" ] [ text "Cancel" ]
+                            , button [ type_ "submit", class "small button", disabled (queryUserList model.addMember.email model.allUsers == Nothing) ]
+                                [ div [ class "icon add" ] []
+                                , text "Add"
+                                ]
+                            ]
+                        , li [] [ label [] [ text "GitHub" ] ]
                         ]
                     ]
                 ]
-            ]
+            |> Card.render
         ]
     ]
 
@@ -296,7 +304,7 @@ candidates model =
         memberEmails =
             model.team.members
                 |> expandableAll
-                |> List.map (\m -> m.user.email)
+                |> List.map (\m -> (tmUser m).email)
     in
     model.allUsers
         |> List.map (\u -> u.email)
@@ -309,7 +317,7 @@ viewEditRow row =
     let
         roleSelector : Html Msg
         roleSelector =
-            viewRoleSelector "" row.member.role (ClickedMemberRole row) (row.state == PendingChange)
+            viewRoleSelector "" (tmRole row.member) (ClickedMemberRole row) (row.state == PendingChange)
 
         phase : Html msg
         phase =
@@ -348,7 +356,7 @@ viewEditRow row =
                     smallButton (ClickedMemberRemove row) "delete" "Remove"
     in
     tr []
-        [ td [] [ text row.member.user.email ]
+        [ td [] [ text (tmUser row.member).email ]
         , td [] [ phase ]
         , td [] [ roleSelector ]
         , td [] [ btn ]
@@ -384,8 +392,8 @@ queryUserList query userList =
 viewRow : TeamMember -> Html Msg
 viewRow member =
     tr []
-        [ td [] [ text member.user.email ]
-        , td [ classList [ ( "team-owner", member.role == Owner ) ] ] [ text <| roleStr member.role ]
+        [ td [] [ text (tmUser member).email ]
+        , td [ classList [ ( "team-owner", tmRole member == Owner ) ] ] [ text <| roleStr (tmRole member) ]
         ]
 
 
@@ -423,7 +431,7 @@ showMoreButton expandable previewSize msg =
 
 mapMember : Row -> Row -> Row
 mapMember new existing =
-    if new.member.user.email == existing.member.user.email then
+    if (new.member |> tmUser).email == (existing.member |> tmUser).email then
         new
 
     else
@@ -463,7 +471,7 @@ toRows members =
 
 sortRows : Row -> Row -> Bool
 sortRows r1 r2 =
-    r1.member.user.email < r2.member.user.email
+    (r1.member |> tmUser).email < (r2.member |> tmUser).email
 
 
 updateRowsError : Row -> String -> List Row -> List Row
@@ -477,7 +485,7 @@ updateRows expandableMembers allRows =
         findMember : String -> List TeamMember -> Maybe TeamMember
         findMember email members =
             members
-                |> List.filter (\m -> m.user.email == email)
+                |> List.filter (\m -> (tmUser m).email == email)
                 |> List.head
 
         updateRowState : Row -> TeamMember -> Row
@@ -496,7 +504,7 @@ updateRows expandableMembers allRows =
                     []
 
                 [ row ] ->
-                    case findMember row.member.user.email members of
+                    case findMember (tmUser row.member).email members of
                         Just member ->
                             [ updateRowState row member ]
 
@@ -504,7 +512,7 @@ updateRows expandableMembers allRows =
                             []
 
                 row :: tail ->
-                    case findMember row.member.user.email members of
+                    case findMember (tmUser row.member).email members of
                         Just member ->
                             updateRowState row member :: rec members tail
 

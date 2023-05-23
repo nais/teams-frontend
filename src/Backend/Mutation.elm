@@ -206,7 +206,7 @@ type alias AddReconcilerOptOutRequiredArguments =
     }
 
 
-{-| Add opt-out of a reconciler for a team member.
+{-| Add opt-out of a reconciler for a team member. Only reconcilers that uses team memberships can be opted out from.
 
   - teamSlug - The team slug.
   - userId - The user ID of the team member.

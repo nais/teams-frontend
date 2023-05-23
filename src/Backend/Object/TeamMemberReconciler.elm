@@ -19,11 +19,13 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
-{-| Name of the reconciler.
+{-| The reconciler.
 -}
-name : SelectionSet Backend.ScalarCodecs.ReconcilerName Backend.Object.TeamMemberReconciler
-name =
-    Object.selectionForField "ScalarCodecs.ReconcilerName" "name" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecReconcilerName |> .decoder)
+reconciler :
+    SelectionSet decodesTo Backend.Object.Reconciler
+    -> SelectionSet decodesTo Backend.Object.TeamMemberReconciler
+reconciler object____ =
+    Object.selectionForCompositeField "reconciler" [] object____ Basics.identity
 
 
 {-| Whether or not the reconciler is enabled for the team member.

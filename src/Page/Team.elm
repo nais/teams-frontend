@@ -2,6 +2,7 @@ port module Page.Team exposing (EditMode(..), ExpandableList(..), Model, Msg(..)
 
 import Api.Do exposing (query, queryRD)
 import Api.Error exposing (errorToString)
+import Api.Reconciler exposing (getReconcilers)
 import Api.Str exposing (auditActionStr, deployKeyStr, slugStr)
 import Api.Team exposing (getTeam, teamSyncSelection, updateTeam)
 import Api.User
@@ -11,7 +12,7 @@ import Backend.Scalar exposing (Slug)
 import Component.Buttons exposing (smallButton)
 import Component.Card as Card
 import Component.ResourceTable as ResourceTable
-import DataModel exposing (AuditLog, DeployKey, Expandable(..), GitHubRepository, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, User, expandableAll)
+import DataModel exposing (AuditLog, DeployKey, Expandable(..), GitHubRepository, Reconciler, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, User, expandableAll, tmRole, tmUser)
 import Graphql.Http
 import Graphql.OptionalArgument
 import Html exposing (Html, a, button, dd, div, dl, dt, em, form, h3, input, label, li, p, strong, table, tbody, td, text, th, thead, tr, ul)
@@ -53,6 +54,7 @@ type alias Model =
     , session : Session
     , membersModel : SubModel
     , error : String -- TODO RENDER
+    , reconcilers : RemoteData (Graphql.Http.Error (List Reconciler)) (List Reconciler)
     }
 
 
@@ -62,6 +64,7 @@ type Msg
     | GotDeployKey (RemoteData (Graphql.Http.Error DeployKey) DeployKey)
     | GotSaveOverviewResponse (RemoteData (Graphql.Http.Error Team) Team)
     | GotSynchronizeResponse (RemoteData (Graphql.Http.Error TeamSync) TeamSync)
+    | GotReconcilersResponse (RemoteData (Graphql.Http.Error (List Reconciler)) (List Reconciler))
     | GotMembersMsg Members.Msg
     | ClickedEditMain
     | ClickedSaveOverview Team
@@ -85,26 +88,18 @@ init session slug =
       , deployKey = NotAsked
       , membersModel = NotInitialized
       , error = ""
+      , reconcilers = Loading
       }
-    , Cmd.batch [ fetchTeam slug, getUserList ]
+    , Cmd.batch [ fetchTeam slug, getUserList, getReconcilers ]
     )
 
 
 initSubModels : Model -> Model
 initSubModels model =
-    let
-        t : RemoteData String Team
-        t =
-            RemoteData.mapError errorToString model.team
-
-        u : RemoteData String (List User)
-        u =
-            RemoteData.mapError errorToString model.userList
-    in
-    case RemoteData.append t u of
-        Success ( team, allUsers ) ->
+    case ( model.team, model.userList, model.reconcilers ) of
+        ( Success team, Success allUsers, Success reconcilers ) ->
             { model
-                | membersModel = MembersModel (Members.init team allUsers (editor team (Session.viewer model.session)))
+                | membersModel = MembersModel (Members.init team allUsers (editor team (Session.viewer model.session)) reconcilers)
             }
 
         _ ->
@@ -130,6 +125,9 @@ update msg model =
 
                 _ ->
                     ( model, Cmd.none )
+
+        GotReconcilersResponse r ->
+            ( { model | reconcilers = r }, Cmd.none )
 
         ClickedEditMain ->
             ( { model | edit = EditMain Nothing }, Cmd.none )
@@ -676,7 +674,7 @@ teamRoleForViewer members viewer =
     Session.user viewer
         |> Maybe.andThen
             (\u ->
-                List.filter (\m -> m.user.id == u.id) members |> List.head |> Maybe.map (\m -> m.role)
+                List.filter (\m -> (tmUser m).id == u.id) members |> List.head |> Maybe.map (\m -> tmRole m)
             )
 
 
@@ -696,11 +694,14 @@ editor team viewer =
         ]
 
 
+getReconcilers : Cmd Msg
+getReconcilers =
+    Api.Do.queryRD Api.Reconciler.getReconcilers GotReconcilersResponse
+
+
 getUserList : Cmd Msg
 getUserList =
-    Api.Do.query
-        Api.User.getAllUsers
-        (RemoteData.fromResult >> GotUserListResponse)
+    Api.Do.queryRD Api.User.getAllUsers GotUserListResponse
 
 
 concatMaybe : Maybe a -> List a -> List a

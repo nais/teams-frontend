@@ -9,7 +9,7 @@ import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (Slug(..), Uuid)
 import Component.Card as Card exposing (Card)
 import Component.ResourceTable as ResourceTable
-import DataModel exposing (Team, TeamDeleteConfirmed, TeamDeleteKey, expandableAll)
+import DataModel exposing (Team, TeamDeleteConfirmed, TeamDeleteKey, expandableAll, tmRole, tmUser)
 import Graphql.Http
 import Html exposing (Html, button, div, input, li, p, text, ul)
 import Html.Attributes exposing (class, type_, value)
@@ -137,8 +137,8 @@ viewCardRequest team =
             , p [] [ text "Current team owners are listed below" ]
             , ul []
                 (expandableAll team.members
-                    |> List.filter (\m -> m.role == Owner)
-                    |> List.map (\m -> li [] [ text m.user.email ])
+                    |> List.filter (\m -> tmRole m == Owner)
+                    |> List.map (\m -> li [] [ text (tmUser m).email ])
                 )
             , div [ class "button-row" ]
                 [ button []
@@ -189,8 +189,8 @@ viewCardRequestDone session tdk =
             , p [] [ text "Current owners are listed below" ]
             , ul []
                 (expandableAll tdk.team.members
-                    |> List.filter (\m -> m.role == Owner)
-                    |> List.map (\m -> li [] [ text m.user.email ])
+                    |> List.filter (\m -> tmRole m == Owner)
+                    |> List.map (\m -> li [] [ text (tmUser m).email ])
                 )
             ]
 

@@ -43,7 +43,7 @@ name =
 {-| List of team memberships.
 -}
 teams :
-    SelectionSet decodesTo Backend.Object.TeamMembership
+    SelectionSet decodesTo Backend.Object.TeamMember
     -> SelectionSet (List decodesTo) Backend.Object.User
 teams object____ =
     Object.selectionForCompositeField "teams" [] object____ (Basics.identity >> Decode.list)

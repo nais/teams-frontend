@@ -20,6 +20,15 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
+{-| Team instance.
+-}
+team :
+    SelectionSet decodesTo Backend.Object.Team
+    -> SelectionSet decodesTo Backend.Object.TeamMember
+team object____ =
+    Object.selectionForCompositeField "team" [] object____ Basics.identity
+
+
 {-| User instance.
 -}
 user :
@@ -36,7 +45,7 @@ role =
     Object.selectionForField "Enum.TeamRole.TeamRole" "role" [] Backend.Enum.TeamRole.decoder
 
 
-{-| Reconcilers for this member.
+{-| Reconcilers for this member in this team.
 -}
 reconcilers :
     SelectionSet decodesTo Backend.Object.TeamMemberReconciler

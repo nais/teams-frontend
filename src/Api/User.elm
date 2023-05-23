@@ -2,16 +2,18 @@ module Api.User exposing (getAllUserSyncRuns, getAllUsers, getAllUsersWithRoles,
 
 import Backend.Object
 import Backend.Object.AuditLog as BOAuditLog
+import Backend.Object.Reconciler as BOReconciler
 import Backend.Object.Role as BORole
 import Backend.Object.Team as BOTeam
-import Backend.Object.TeamMembership as BOTeamMembership
+import Backend.Object.TeamMember as BOTeamMember
+import Backend.Object.TeamMemberReconciler as TeamMemberReconciler
 import Backend.Object.User as BOUser
 import Backend.Object.UserSyncRun as BOUserSyncRun
 import Backend.Query as Query
 import Backend.Scalar as Scalar
 import Backend.Union
 import Backend.Union.AuthenticatedUser
-import DataModel exposing (AuditLog, Role, TeamMembership, TeamSlug, User, UserSyncRun)
+import DataModel exposing (AuditLog, Expandable(..), Reconciler, Role, Team, TeamMember(..), TeamMemberReconciler(..), User, UserSyncRun)
 import Graphql.Operation exposing (RootQuery)
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import ISO8601
@@ -68,7 +70,7 @@ userWithRoleSelection =
         |> SelectionSet.with BOUser.email
         |> SelectionSet.with BOUser.name
         |> SelectionSet.with BOUser.externalId
-        |> SelectionSet.with (BOUser.teams teamMembershipSelection)
+        |> SelectionSet.with (BOUser.teams teamMemberSelection)
         |> SelectionSet.with (BOUser.roles roleSelection)
 
 
@@ -91,16 +93,33 @@ roleSelection =
         BORole.targetTeamSlug
 
 
-teamMembershipSelection : SelectionSet TeamMembership Backend.Object.TeamMembership
-teamMembershipSelection =
-    SelectionSet.succeed TeamMembership
-        |> SelectionSet.with (BOTeamMembership.team teamSelection)
+teamMemberSelection : SelectionSet TeamMember Backend.Object.TeamMember
+teamMemberSelection =
+    SelectionSet.map4 TeamMember
+        (BOTeamMember.user userSelection)
+        (BOTeamMember.team teamSelection)
+        BOTeamMember.role
+        (BOTeamMember.reconcilers teamMemberReconcilerSelection)
 
 
-teamSelection : SelectionSet TeamSlug Backend.Object.Team
-teamSelection =
-    SelectionSet.succeed TeamSlug
-        |> SelectionSet.with BOTeam.slug
+teamMemberReconcilerSelection : SelectionSet TeamMemberReconciler Backend.Object.TeamMemberReconciler
+teamMemberReconcilerSelection =
+    SelectionSet.succeed TeamMemberReconciler
+        |> SelectionSet.with TeamMemberReconciler.enabled
+        |> SelectionSet.with (TeamMemberReconciler.reconciler reconcilerSelection)
+
+
+reconcilerSelection : SelectionSet Reconciler Backend.Object.Reconciler
+reconcilerSelection =
+    SelectionSet.succeed Reconciler
+        |> SelectionSet.with BOReconciler.configured
+        |> SelectionSet.with BOReconciler.description
+        |> SelectionSet.with BOReconciler.displayName
+        |> SelectionSet.with BOReconciler.enabled
+        |> SelectionSet.with BOReconciler.name
+        |> SelectionSet.with BOReconciler.runOrder
+        |> SelectionSet.hardcoded []
+        |> SelectionSet.with BOReconciler.usesTeamMemberships
 
 
 meSelection : SelectionSet (Maybe User) Backend.Union.AuthenticatedUser
@@ -124,3 +143,18 @@ mapToMaybeDateTime : SelectionSet (Maybe Scalar.Time) scope -> SelectionSet (May
 mapToMaybeDateTime =
     SelectionSet.map
         (Maybe.map (\(Scalar.Time value) -> ISO8601.fromString value) >> Maybe.andThen Result.toMaybe)
+
+
+teamSelection : SelectionSet Team Backend.Object.Team
+teamSelection =
+    SelectionSet.succeed Team
+        |> SelectionSet.with BOTeam.slug
+        |> SelectionSet.with BOTeam.purpose
+        |> SelectionSet.with BOTeam.slackChannel
+        |> SelectionSet.hardcoded []
+        |> SelectionSet.hardcoded (Preview [])
+        |> SelectionSet.hardcoded (Preview [])
+        |> SelectionSet.hardcoded []
+        |> SelectionSet.with (BOTeam.lastSuccessfulSync |> mapToMaybeDateTime)
+        |> SelectionSet.hardcoded Nothing
+        |> SelectionSet.hardcoded (Preview [])

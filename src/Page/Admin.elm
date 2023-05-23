@@ -6,7 +6,7 @@ import Api.Reconciler exposing (disableReconciler, enableReconciler, getReconcil
 import Backend.Scalar exposing (ReconcilerConfigKey(..), ReconcilerName(..))
 import Component.Buttons exposing (smallButton)
 import Component.Card as Card exposing (Card)
-import DataModel exposing (ReconcilerConfigData, ReconcilerData)
+import DataModel exposing (Reconciler, ReconcilerConfig)
 import Graphql.Http
 import Html exposing (Html, a, button, div, form, h2, input, label, li, p, text, textarea, ul)
 import Html.Attributes exposing (checked, class, classList, for, href, id, placeholder, type_, value)
@@ -19,14 +19,14 @@ import Session exposing (Session)
 type alias Model =
     { session : Session
     , error : Maybe String
-    , reconcilers : RemoteData (Graphql.Http.Error (List ReconcilerData)) (List ReconcilerData)
+    , reconcilers : RemoteData (Graphql.Http.Error (List Reconciler)) (List Reconciler)
     }
 
 
 type Msg
-    = GotReconcilersResponse (RemoteData (Graphql.Http.Error (List ReconcilerData)) (List ReconcilerData))
-    | GotUpdateReconcilerResponse (Result (Graphql.Http.Error ReconcilerData) ReconcilerData)
-    | GotEnableReconcilerResponse (Result (Graphql.Http.Error ReconcilerData) ReconcilerData)
+    = GotReconcilersResponse (RemoteData (Graphql.Http.Error (List Reconciler)) (List Reconciler))
+    | GotUpdateReconcilerResponse (Result (Graphql.Http.Error Reconciler) Reconciler)
+    | GotEnableReconcilerResponse (Result (Graphql.Http.Error Reconciler) Reconciler)
     | GotEmptyResponse (Result (Graphql.Http.Error ()) ())
     | Submit ReconcilerName
     | OnInput ReconcilerName ReconcilerConfigKey String
@@ -91,7 +91,7 @@ update msg model =
                         updatedModel =
                             { model | error = Nothing, reconcilers = mapReconcilers (mapReconciler rd) model.reconcilers }
 
-                        maybeExisting : Maybe ReconcilerData
+                        maybeExisting : Maybe Reconciler
                         maybeExisting =
                             filterReconciler rd.name model
                     in
@@ -138,7 +138,7 @@ saveReconcilerConfig : ReconcilerName -> Model -> ( Model, Cmd Msg )
 saveReconcilerConfig name model =
     -- TODO (show some confirmation dialog -> send gql msg)
     let
-        config : Maybe (List ReconcilerConfigData)
+        config : Maybe (List ReconcilerConfig)
         config =
             case model.reconcilers of
                 Success recs ->
@@ -164,7 +164,7 @@ saveReconcilerConfig name model =
     ( model, mutate (updateReconcilerConfig name inputs) GotUpdateReconcilerResponse )
 
 
-enableDisableReconciler : ReconcilerData -> Cmd Msg
+enableDisableReconciler : Reconciler -> Cmd Msg
 enableDisableReconciler reconciler =
     if reconciler.enabled then
         mutate (enableReconciler reconciler.name) GotEnableReconcilerResponse
@@ -173,7 +173,7 @@ enableDisableReconciler reconciler =
         mutate (disableReconciler reconciler.name) GotEnableReconcilerResponse
 
 
-mapReconcilerEnabled : ReconcilerName -> Bool -> ReconcilerData -> ReconcilerData
+mapReconcilerEnabled : ReconcilerName -> Bool -> Reconciler -> Reconciler
 mapReconcilerEnabled name enabled reconciler =
     if reconciler.name == name then
         { reconciler | enabled = enabled }
@@ -182,7 +182,7 @@ mapReconcilerEnabled name enabled reconciler =
         reconciler
 
 
-mapReconcilerConfig : ReconcilerConfigKey -> String -> ReconcilerConfigData -> ReconcilerConfigData
+mapReconcilerConfig : ReconcilerConfigKey -> String -> ReconcilerConfig -> ReconcilerConfig
 mapReconcilerConfig key value input =
     if input.key == key then
         if value == "" then
@@ -195,7 +195,7 @@ mapReconcilerConfig key value input =
         input
 
 
-mapReconcilerConfigValue : ReconcilerName -> ReconcilerConfigKey -> String -> ReconcilerData -> ReconcilerData
+mapReconcilerConfigValue : ReconcilerName -> ReconcilerConfigKey -> String -> Reconciler -> Reconciler
 mapReconcilerConfigValue name key value reconciler =
     if reconciler.name == name then
         { reconciler | config = List.map (mapReconcilerConfig key value) reconciler.config }
@@ -204,7 +204,7 @@ mapReconcilerConfigValue name key value reconciler =
         reconciler
 
 
-mapReconciler : ReconcilerData -> ReconcilerData -> ReconcilerData
+mapReconciler : Reconciler -> Reconciler -> Reconciler
 mapReconciler new existing =
     if new.name == existing.name then
         new
@@ -213,7 +213,7 @@ mapReconciler new existing =
         existing
 
 
-filterReconciler : ReconcilerName -> Model -> Maybe ReconcilerData
+filterReconciler : ReconcilerName -> Model -> Maybe Reconciler
 filterReconciler name model =
     case model.reconcilers of
         Success reconcilers ->
@@ -229,7 +229,7 @@ reconcilerName (ReconcilerName s) =
     s
 
 
-toggleReconcilerElement : ReconcilerData -> Html Msg
+toggleReconcilerElement : Reconciler -> Html Msg
 toggleReconcilerElement rd =
     li [ class "checkbox" ]
         [ label [ for (reconcilerEnabledId rd) ] [ text "Enable synchronization" ]
@@ -243,12 +243,12 @@ toggleReconcilerElement rd =
         ]
 
 
-isConfiguredSecret : ReconcilerConfigData -> Bool
+isConfiguredSecret : ReconcilerConfig -> Bool
 isConfiguredSecret rcd =
     rcd.configured && rcd.secret && rcd.value == Nothing
 
 
-secretHelpText : ReconcilerConfigData -> List (Html msg)
+secretHelpText : ReconcilerConfig -> List (Html msg)
 secretHelpText rcd =
     if isConfiguredSecret rcd then
         [ p [ class "secret-help-text" ] [ text "This value is already configured. It is hidden because it is secret." ] ]
@@ -257,7 +257,7 @@ secretHelpText rcd =
         []
 
 
-placeholderText : ReconcilerConfigData -> String
+placeholderText : ReconcilerConfig -> String
 placeholderText rcd =
     if isConfiguredSecret rcd then
         "********"
@@ -266,7 +266,7 @@ placeholderText rcd =
         ""
 
 
-reconcilerDescription : ReconcilerData -> Html msg
+reconcilerDescription : Reconciler -> Html msg
 reconcilerDescription rd =
     -- Use this function to override reconciler descriptions
     case rd.name of
@@ -305,13 +305,13 @@ reconcilerDescription rd =
             p [] [ text rd.description ]
 
 
-configDescription : ReconcilerConfigData -> Html msg
+configDescription : ReconcilerConfig -> Html msg
 configDescription rcd =
     -- Use this function to override config descriptions
     p [] [ text rcd.description ]
 
 
-configElement : (ReconcilerConfigKey -> String -> Msg) -> ReconcilerConfigData -> Html Msg
+configElement : (ReconcilerConfigKey -> String -> Msg) -> ReconcilerConfig -> Html Msg
 configElement msg rcd =
     let
         (ReconcilerConfigKey idKey) =
@@ -340,12 +340,12 @@ configElement msg rcd =
         )
 
 
-reconcilerEnabledId : ReconcilerData -> String
+reconcilerEnabledId : Reconciler -> String
 reconcilerEnabledId rd =
     reconcilerName rd.name ++ ":enabled"
 
 
-viewReconcilerConfig : ReconcilerData -> Card Msg
+viewReconcilerConfig : Reconciler -> Card Msg
 viewReconcilerConfig rd =
     Card.new rd.displayname
         |> Card.withContents
@@ -368,7 +368,7 @@ viewReconcilerConfig rd =
             ]
 
 
-viewForm : List ReconcilerData -> Html Msg
+viewForm : List Reconciler -> Html Msg
 viewForm lrd =
     div [ class "cards" ] ((viewAdminActions :: List.map viewReconcilerConfig lrd) |> List.map Card.render)
 

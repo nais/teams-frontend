@@ -6,7 +6,7 @@ import Api.Team exposing (getTeams)
 import Backend.Scalar
 import Browser.Navigation exposing (pushUrl)
 import Component.Card as Card
-import DataModel exposing (Team)
+import DataModel exposing (Team, tmTeam)
 import Graphql.Http
 import Html exposing (Html, button, div, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class)
@@ -46,7 +46,7 @@ myTeams user teams =
         teamSlugs =
             case user of
                 LoggedIn u ->
-                    map (\x -> x.team.slug) u.teamMemberships
+                    map (\x -> (tmTeam x).slug) u.teamMemberships
 
                 Anonymous ->
                     []

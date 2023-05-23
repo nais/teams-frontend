@@ -69,10 +69,6 @@ type TeamMemberReconciler
     = TeamMemberReconciler
 
 
-type TeamMembership
-    = TeamMembership
-
-
 type TeamSync
     = TeamSync
 
