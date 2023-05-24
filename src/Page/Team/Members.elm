@@ -10,7 +10,7 @@ import Component.Buttons exposing (smallButton)
 import Component.Card as Card
 import Component.Icons exposing (spinnerDone, spinnerError, spinnerLoading)
 import Component.Modal as Modal
-import DataModel exposing (Expandable(..), Reconciler, Team, TeamMember(..), User, expandableAll, expandableTake, flipExpanded, tmRole, tmUser)
+import DataModel exposing (Expandable(..), Reconciler, Team, TeamMember(..), TeamMemberReconciler(..), User, expandableAll, expandableTake, flipExpanded, tmRole, tmUser)
 import Graphql.Http
 import Html exposing (Html, button, datalist, div, form, h3, input, label, li, option, select, span, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (checked, class, classList, colspan, disabled, for, id, list, selected, title, type_, value)
@@ -135,9 +135,11 @@ type Msg
     | ClickedMemberRole Row String
     | ClickedMemberRemove Row
     | ClickedMemberRemoveConfirm Row
+    | ClickedMemberToggleReconciler Row Reconciler Bool
     | ClickedShowMore
     | ClickedToggleReconciler ReconcilerName Bool
-    | GotSaveTeamMemberResponse Row (RemoteData (Graphql.Http.Error Team) Team)
+    | GotSaveTeamResponse Row (RemoteData (Graphql.Http.Error Team) Team)
+    | GotSaveTeamMemberResponse Row (RemoteData (Graphql.Http.Error TeamMember) TeamMember)
     | InputChangedNewMember String
     | CloseModal Modal
     | ShowModal Modal
@@ -182,7 +184,7 @@ update msg model =
                         |> mapAddMember (\_ -> initialAddMember)
                     , Cmd.batch
                         [ Modal.close (modalId AddNewMember)
-                        , mutateRD (addTeamMember model.team user model.addMember.role optOuts) (GotSaveTeamMemberResponse (Row member PendingChange))
+                        , mutateRD (addTeamMember model.team user model.addMember.role optOuts) (GotSaveTeamResponse (Row member PendingChange))
                         ]
                     )
 
@@ -196,18 +198,29 @@ update msg model =
                 r =
                     teamRoleFromString roleString
             in
-            ( model |> mapMembers (mapRow (Row row.member PendingChange)), mutateRD (setTeamMemberRole model.team row.member r) (GotSaveTeamMemberResponse row) )
+            ( model |> mapMembers (mapRow (Row row.member PendingChange)), mutateRD (setTeamMemberRole model.team row.member r) (GotSaveTeamResponse row) )
 
         ClickedMemberRemove row ->
             ( model |> mapMembers (mapRow (Row row.member PendingRemove)), Cmd.none )
 
         ClickedMemberRemoveConfirm row ->
-            ( model |> mapMembers (mapRow (Row row.member PendingChange)), mutateRD (removeMemberFromTeam model.team (tmUser row.member)) (GotSaveTeamMemberResponse row) )
+            ( model |> mapMembers (mapRow (Row row.member PendingChange)), mutateRD (removeMemberFromTeam model.team (tmUser row.member)) (GotSaveTeamResponse row) )
 
         ClickedShowMore ->
             ( model |> mapTeam (\t -> { t | members = flipExpanded t.members }), Cmd.none )
 
         GotSaveTeamMemberResponse row resp ->
+            case resp of
+                Success member ->
+                    ( model |> mapMembers (mapRow (Row member Updated)), Cmd.none )
+
+                Failure err ->
+                    ( model |> mapMembers (updateRowsError row (errorToString err)), Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        GotSaveTeamResponse row resp ->
             case resp of
                 Success team ->
                     ( { model | team = team } |> mapMembers (updateRows team.members), Cmd.none )
@@ -233,6 +246,13 @@ update msg model =
 
             else
                 ( model |> mapAddMember (addReconcilerOptOut reconcilerName), Cmd.none )
+
+        ClickedMemberToggleReconciler row reconciler checked ->
+            if checked then
+                ( model, mutateRD (Api.Team.removeReconcilerOptOut row.member reconciler) (GotSaveTeamMemberResponse row) )
+
+            else
+                ( model, mutateRD (Api.Team.addReconcilerOptOut row.member reconciler) (GotSaveTeamMemberResponse row) )
 
 
 view : Model -> Html Msg
@@ -329,7 +349,7 @@ viewReconcilerOption model r =
         in
         Just
             (li [ class "checkbox" ]
-                [ label [ for elementId ] [ text r.displayname ]
+                [ label [ for elementId ] [ text r.displayName ]
                 , input [ type_ "checkbox", checked (not optedOut), id elementId, onCheck (ClickedToggleReconciler r.name) ] []
                 ]
             )
@@ -346,11 +366,24 @@ viewEditMembers model =
             [ table [ class "first-column-wide" ]
                 [ thead []
                     [ tr []
-                        [ th [] [ text "Email" ]
-                        , th [] []
-                        , th [] [ text "Role" ]
-                        , th [] [ text "" ]
-                        ]
+                        (List.concat
+                            [ [ th [] [ text "Email" ]
+                              , th [] []
+                              ]
+                            , List.filterMap
+                                (\r ->
+                                    if r.usesTeamMemberships && r.enabled then
+                                        Just (th [] [ text r.displayName ])
+
+                                    else
+                                        Nothing
+                                )
+                                model.reconcilers
+                            , [ th [] [ text "Role" ]
+                              , th [] [ text "" ]
+                              ]
+                            ]
+                        )
                     ]
                 , tbody [] (List.map viewEditRow model.members)
                 ]
@@ -417,11 +450,33 @@ viewEditRow row =
                     smallButton (ClickedMemberRemove row) "delete" "Remove"
     in
     tr []
-        [ td [] [ text (tmUser row.member).email ]
-        , td [] [ phase ]
-        , td [] [ roleSelector ]
-        , td [] [ btn ]
-        ]
+        (List.concat
+            [ [ td [] [ text (tmUser row.member).email ]
+              , td [] [ phase ]
+              ]
+            , viewToggleReconciler row
+            , [ td [] [ roleSelector ]
+              , td [] [ btn ]
+              ]
+            ]
+        )
+
+
+viewToggleReconciler : Row -> List (Html Msg)
+viewToggleReconciler row =
+    let
+        (TeamMember _ _ _ reconcilers) =
+            row.member
+    in
+    List.filterMap
+        (\(TeamMemberReconciler optedIn reconciler) ->
+            if not reconciler.enabled || not reconciler.usesTeamMemberships then
+                Nothing
+
+            else
+                Just (td [] [ input [ type_ "checkbox", checked optedIn, onCheck (ClickedMemberToggleReconciler row reconciler) ] [] ])
+        )
+        reconcilers
 
 
 viewRoleSelector : String -> TeamRole -> (String -> Msg) -> Bool -> Html Msg

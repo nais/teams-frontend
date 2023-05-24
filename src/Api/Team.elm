@@ -1,4 +1,4 @@
-module Api.Team exposing (addTeamMember, createTeam, getDeployKey, getTeam, getTeams, removeMemberFromTeam, setTeamMemberRole, teamFullSelection, teamSyncSelection, updateTeam)
+module Api.Team exposing (addReconcilerOptOut, addTeamMember, createTeam, getDeployKey, getTeam, getTeams, removeMemberFromTeam, removeReconcilerOptOut, setTeamMemberRole, teamFullSelection, teamSyncSelection, updateTeam)
 
 import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
@@ -20,7 +20,7 @@ import Backend.Object.TeamMemberReconciler as BOTeamMemberReconciler
 import Backend.Object.TeamSync as BOTeamSync
 import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug)
-import DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, NaisNamespace, Reconciler, SlackAlertsChannel, SyncError, Team, TeamMember(..), TeamMemberReconciler(..), TeamSync, TeamSyncState, User, tmUser)
+import DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, NaisNamespace, Reconciler, SlackAlertsChannel, SyncError, Team, TeamMember(..), TeamMemberReconciler(..), TeamSync, TeamSyncState, User, tmTeam, tmUser)
 import Graphql.Operation exposing (RootMutation, RootQuery)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
@@ -83,6 +83,26 @@ setTeamMemberRole team member role =
         , role = role
         }
         teamFullSelection
+
+
+addReconcilerOptOut : TeamMember -> Reconciler -> SelectionSet TeamMember RootMutation
+addReconcilerOptOut member reconciler =
+    Mutation.addReconcilerOptOut
+        { teamSlug = (tmTeam member).slug
+        , userId = (tmUser member).id
+        , reconciler = reconciler.name
+        }
+        teamMemberSelection
+
+
+removeReconcilerOptOut : TeamMember -> Reconciler -> SelectionSet TeamMember RootMutation
+removeReconcilerOptOut member reconciler =
+    Mutation.removeReconcilerOptOut
+        { teamSlug = (tmTeam member).slug
+        , userId = (tmUser member).id
+        , reconciler = reconciler.name
+        }
+        teamMemberSelection
 
 
 teamSelection : SelectionSet Team Backend.Object.Team

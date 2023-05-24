@@ -86,7 +86,7 @@ type alias ReconcilerConfig =
 type alias Reconciler =
     { configured : Bool
     , description : String
-    , displayname : String
+    , displayName : String
     , enabled : Bool
     , name : ReconcilerName
     , runorder : Int

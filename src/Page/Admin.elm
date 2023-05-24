@@ -347,7 +347,7 @@ reconcilerEnabledId rd =
 
 viewReconcilerConfig : Reconciler -> Card Msg
 viewReconcilerConfig rd =
-    Card.new rd.displayname
+    Card.new rd.displayName
         |> Card.withContents
             [ form
                 [ onSubmit (Submit rd.name)
