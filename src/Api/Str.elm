@@ -1,4 +1,4 @@
-module Api.Str exposing (auditActionStr, deployKeyStr, roleStr, slugStr, uuidStr)
+module Api.Str exposing (auditActionStr, deployKeyStr, reconcilerNameStr, roleStr, slugStr, uuidStr)
 
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar
@@ -17,6 +17,11 @@ uuidStr (Backend.Scalar.Uuid s) =
 deployKeyStr : Backend.Scalar.DeployKey -> String
 deployKeyStr (Backend.Scalar.DeployKey s) =
     s
+
+
+reconcilerNameStr : Backend.Scalar.ReconcilerName -> String
+reconcilerNameStr (Backend.Scalar.ReconcilerName r) =
+    r
 
 
 auditActionStr : Backend.Scalar.AuditAction -> String

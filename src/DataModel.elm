@@ -1,4 +1,4 @@
-module DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, NaisNamespace, Reconciler, ReconcilerConfig, Role, SlackAlertsChannel, SyncError, Team, TeamDeleteConfirmed, TeamDeleteKey, TeamMember(..), TeamMemberReconciler(..), TeamSlug, TeamSync, TeamSyncState, User, UserSyncRun, expandableAll, expandableTake, flipExpanded, tmReconciler, tmRole, tmTeam, tmUser, tmrEnabled, tmrReconciler)
+module DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, NaisNamespace, Reconciler, ReconcilerConfig, Role, SlackAlertsChannel, SyncError, Team, TeamDeleteConfirmed, TeamDeleteKey, TeamMember(..), TeamMemberReconciler(..), TeamSync, TeamSyncState, User, UserSyncRun, expandableAll, expandableTake, flipExpanded, tmRole, tmTeam, tmUser)
 
 import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.Enum.UserSyncRunStatus exposing (UserSyncRunStatus)
@@ -91,7 +91,7 @@ type alias Reconciler =
     , name : ReconcilerName
     , runorder : Int
     , config : List ReconcilerConfig
-    , users : Bool
+    , usesTeamMemberships : Bool
     }
 
 
@@ -144,10 +144,6 @@ type alias TeamDeleteConfirmed =
 
 type TeamMember
     = TeamMember User Team TeamRole (List TeamMemberReconciler)
-
-
-type alias TeamSlug =
-    { slug : Slug }
 
 
 type alias TeamSync =
@@ -217,8 +213,3 @@ tmReconciler (TeamMember _ _ _ userReconcilers) =
 tmrEnabled : TeamMemberReconciler -> Bool
 tmrEnabled (TeamMemberReconciler enabled _) =
     enabled
-
-
-tmrReconciler : TeamMemberReconciler -> Reconciler
-tmrReconciler (TeamMemberReconciler _ reconciler) =
-    reconciler

@@ -1,19 +1,20 @@
-module Page.Team.Members exposing (AddMember, Mode(..), Model, Msg(..), Row, RowState, init, update, view)
+module Page.Team.Members exposing (AddMember, Modal, Mode(..), Model, Msg(..), Row, RowState, init, update, view)
 
 import Api.Do exposing (mutateRD)
 import Api.Error exposing (errorToString)
 import Api.Str exposing (roleStr)
 import Api.Team exposing (addTeamMember, removeMemberFromTeam, setTeamMemberRole)
 import Backend.Enum.TeamRole as TeamRole exposing (TeamRole(..))
+import Backend.Scalar exposing (ReconcilerName)
 import Component.Buttons exposing (smallButton)
 import Component.Card as Card
 import Component.Icons exposing (spinnerDone, spinnerError, spinnerLoading)
 import Component.Modal as Modal
 import DataModel exposing (Expandable(..), Reconciler, Team, TeamMember(..), User, expandableAll, expandableTake, flipExpanded, tmRole, tmUser)
 import Graphql.Http
-import Html exposing (Html, button, datalist, div, form, input, label, li, option, select, span, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, classList, colspan, disabled, for, id, list, selected, title, type_, value)
-import Html.Events exposing (onClick, onInput, onSubmit)
+import Html exposing (Html, button, datalist, div, form, h3, input, label, li, option, select, span, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (checked, class, classList, colspan, disabled, for, id, list, selected, title, type_, value)
+import Html.Events exposing (onCheck, onClick, onInput, onSubmit)
 import RemoteData exposing (RemoteData(..))
 import Util exposing (appendMaybe, conditionalElement, flattenMaybe)
 
@@ -51,6 +52,7 @@ type alias Model =
 type alias AddMember =
     { email : String
     , role : TeamRole
+    , reconcilerOptOuts : List ReconcilerName
     }
 
 
@@ -66,10 +68,15 @@ init team allUsers isEditor reconcilers =
     , allUsers = allUsers
     , isEditor = isEditor
     , mode = View
-    , addMember = { email = "", role = TeamRole.Member }
+    , addMember = initialAddMember
     , members = toRows team.members
     , reconcilers = reconcilers
     }
+
+
+initialAddMember : AddMember
+initialAddMember =
+    { email = "", role = TeamRole.Member, reconcilerOptOuts = [] }
 
 
 modalId : Modal -> String
@@ -100,6 +107,16 @@ setEmail email addMember =
     { addMember | email = email }
 
 
+addReconcilerOptOut : ReconcilerName -> AddMember -> AddMember
+addReconcilerOptOut reconcilerName addMember =
+    { addMember | reconcilerOptOuts = reconcilerName :: addMember.reconcilerOptOuts }
+
+
+removeReconcilerOptOut : ReconcilerName -> AddMember -> AddMember
+removeReconcilerOptOut reconcilerName addMember =
+    { addMember | reconcilerOptOuts = List.filter (\r -> not (r == reconcilerName)) addMember.reconcilerOptOuts }
+
+
 mapMembers : (List Row -> List Row) -> Model -> Model
 mapMembers fn model =
     { model | members = fn model.members }
@@ -119,6 +136,7 @@ type Msg
     | ClickedMemberRemove Row
     | ClickedMemberRemoveConfirm Row
     | ClickedShowMore
+    | ClickedToggleReconciler ReconcilerName Bool
     | GotSaveTeamMemberResponse Row (RemoteData (Graphql.Http.Error Team) Team)
     | InputChangedNewMember String
     | CloseModal Modal
@@ -150,13 +168,21 @@ update msg model =
                         -- TODO add reconcilers
                         member =
                             TeamMember user model.team model.addMember.role []
+
+                        optOuts : Maybe (List ReconcilerName)
+                        optOuts =
+                            if List.isEmpty model.addMember.reconcilerOptOuts then
+                                Nothing
+
+                            else
+                                Just model.addMember.reconcilerOptOuts
                     in
                     ( model
                         |> mapMembers (addRow (Row member PendingChange))
-                        |> mapAddMember (setEmail "")
+                        |> mapAddMember (\_ -> initialAddMember)
                     , Cmd.batch
                         [ Modal.close (modalId AddNewMember)
-                        , mutateRD (addTeamMember model.team user model.addMember.role) (GotSaveTeamMemberResponse (Row member PendingChange))
+                        , mutateRD (addTeamMember model.team user model.addMember.role optOuts) (GotSaveTeamMemberResponse (Row member PendingChange))
                         ]
                     )
 
@@ -200,6 +226,13 @@ update msg model =
 
         ShowModal modal ->
             ( model, Modal.open (modalId modal) )
+
+        ClickedToggleReconciler reconcilerName checked ->
+            if checked then
+                ( model |> mapAddMember (removeReconcilerOptOut reconcilerName), Cmd.none )
+
+            else
+                ( model |> mapAddMember (addReconcilerOptOut reconcilerName), Cmd.none )
 
 
 view : Model -> Html Msg
@@ -246,35 +279,63 @@ viewAddMemberModal model =
             |> Card.withContents
                 [ form [ onSubmit ClickedNewMemberAdd ]
                     [ ul []
-                        [ label [ for "addUserEmail" ] [ text "Email:" ]
-                        , li []
-                            [ input
-                                [ list "userCandidates"
-                                , type_ "text"
-                                , value model.addMember.email
-                                , onInput InputChangedNewMember
-                                ]
-                                []
-                            , datalist [ id "userCandidates" ] (candidates model)
+                        (List.concat
+                            [ [ label [ for "addUserEmail" ] [ text "Email:" ]
+                              , li []
+                                    [ input
+                                        [ list "userCandidates"
+                                        , type_ "text"
+                                        , value model.addMember.email
+                                        , onInput InputChangedNewMember
+                                        ]
+                                        []
+                                    , datalist [ id "userCandidates" ] (candidates model)
+                                    ]
+                              , label [ for "addUserRole" ] [ text "Role:" ]
+                              , li []
+                                    [ viewRoleSelector "addUserRole" model.addMember.role ClickedNewMemberRole False
+                                    ]
+                              , li [] [ h3 [] [ text "Reconcilers" ] ]
+                              ]
+                            , List.filterMap (viewReconcilerOption model) model.reconcilers
+                            , [ li [ class "row" ]
+                                    [ button [ onClick (CloseModal AddNewMember), class "small button" ] [ text "Cancel" ]
+                                    , button [ type_ "submit", class "small button", disabled (queryUserList model.addMember.email model.allUsers == Nothing) ]
+                                        [ div [ class "icon add" ] []
+                                        , text "Add"
+                                        ]
+                                    ]
+                              ]
                             ]
-                        , label [ for "addUserRole" ] [ text "Role:" ]
-                        , li []
-                            [ viewRoleSelector "addUserRole" model.addMember.role ClickedNewMemberRole False
-                            ]
-                        , li [ class "row" ]
-                            [ button [ onClick (CloseModal AddNewMember), class "small button" ] [ text "Cancel" ]
-                            , button [ type_ "submit", class "small button", disabled (queryUserList model.addMember.email model.allUsers == Nothing) ]
-                                [ div [ class "icon add" ] []
-                                , text "Add"
-                                ]
-                            ]
-                        , li [] [ label [] [ text "GitHub" ] ]
-                        ]
+                        )
                     ]
                 ]
             |> Card.render
         ]
     ]
+
+
+viewReconcilerOption : Model -> Reconciler -> Maybe (Html Msg)
+viewReconcilerOption model r =
+    if r.enabled && r.usesTeamMemberships then
+        let
+            elementId : String
+            elementId =
+                Api.Str.reconcilerNameStr r.name
+
+            optedOut : Bool
+            optedOut =
+                List.member r.name model.addMember.reconcilerOptOuts
+        in
+        Just
+            (li [ class "checkbox" ]
+                [ label [ for elementId ] [ text r.displayname ]
+                , input [ type_ "checkbox", checked (not optedOut), id elementId, onCheck (ClickedToggleReconciler r.name) ] []
+                ]
+            )
+
+    else
+        Nothing
 
 
 viewEditMembers : Model -> Html Msg

@@ -53,13 +53,13 @@ updateTeam slug team =
     Mutation.updateTeam { slug = slug, input = team } teamFullSelection
 
 
-addTeamMember : Team -> User -> TeamRole -> SelectionSet Team RootMutation
-addTeamMember team user role =
+addTeamMember : Team -> User -> TeamRole -> Maybe (List ReconcilerName) -> SelectionSet Team RootMutation
+addTeamMember team user role optOuts =
     Mutation.addTeamMember
         { member =
             { userId = user.id
             , role = role
-            , reconcilerOptOuts = Absent
+            , reconcilerOptOuts = Graphql.OptionalArgument.fromMaybe optOuts
             }
         , slug = team.slug
         }
