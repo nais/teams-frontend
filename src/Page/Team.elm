@@ -2,7 +2,7 @@ port module Page.Team exposing (EditMode(..), ExpandableList(..), Model, Msg(..)
 
 import Api.Do exposing (query, queryRD)
 import Api.Error exposing (errorToString)
-import Api.Reconciler exposing (getReconcilers)
+import Api.Reconciler
 import Api.Str exposing (auditActionStr, deployKeyStr, slugStr)
 import Api.Team exposing (getTeam, teamSyncSelection, updateTeam)
 import Api.User

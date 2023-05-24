@@ -57,9 +57,7 @@ type alias AddMember =
 
 
 type Modal
-    = EditMember
-    | AddNewMember
-    | RemoveMember
+    = AddNewMember
 
 
 init : Team -> List User -> Bool -> List Reconciler -> Model
@@ -82,12 +80,6 @@ initialAddMember =
 modalId : Modal -> String
 modalId modal =
     case modal of
-        EditMember ->
-            "modalEditMember"
-
-        RemoveMember ->
-            "modalRemoveMember"
-
         AddNewMember ->
             "modalAddMember"
 

@@ -203,13 +203,3 @@ tmTeam (TeamMember _ team _ _) =
 tmRole : TeamMember -> TeamRole
 tmRole (TeamMember _ _ role _) =
     role
-
-
-tmReconciler : TeamMember -> List TeamMemberReconciler
-tmReconciler (TeamMember _ _ _ userReconcilers) =
-    userReconcilers
-
-
-tmrEnabled : TeamMemberReconciler -> Bool
-tmrEnabled (TeamMemberReconciler enabled _) =
-    enabled

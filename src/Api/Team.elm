@@ -1,7 +1,7 @@
 module Api.Team exposing (addReconcilerOptOut, addTeamMember, createTeam, getDeployKey, getTeam, getTeams, removeMemberFromTeam, removeReconcilerOptOut, setTeamMemberRole, teamFullSelection, teamSyncSelection, updateTeam)
 
 import Api.User
-import Backend.Enum.TeamRole exposing (TeamRole(..))
+import Backend.Enum.TeamRole exposing (TeamRole)
 import Backend.InputObject exposing (CreateTeamInput, UpdateTeamInput)
 import Backend.Mutation as Mutation
 import Backend.Object
@@ -22,7 +22,7 @@ import Backend.Query as Query
 import Backend.Scalar as Scalar exposing (ReconcilerName(..), Slug)
 import DataModel exposing (AuditLog, DeployKey, Expandable(..), GCPProject, GitHubRepository, GitHubRepositoryPermission, NaisNamespace, Reconciler, SlackAlertsChannel, SyncError, Team, TeamMember(..), TeamMemberReconciler(..), TeamSync, TeamSyncState, User, tmTeam, tmUser)
 import Graphql.Operation exposing (RootMutation, RootQuery)
-import Graphql.OptionalArgument exposing (OptionalArgument(..))
+import Graphql.OptionalArgument
 import Graphql.SelectionSet as SelectionSet exposing (SelectionSet)
 import ISO8601
 
