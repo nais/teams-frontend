@@ -377,7 +377,7 @@ viewEditMembers model =
                             ]
                         )
                     ]
-                , tbody [] (List.map viewEditRow model.members)
+                , tbody [] (List.map (viewEditRow model.reconcilers) model.members)
                 ]
             ]
         |> Card.render
@@ -398,8 +398,8 @@ candidates model =
         |> List.map (\email -> option [] [ text email ])
 
 
-viewEditRow : Row -> Html Msg
-viewEditRow row =
+viewEditRow : List Reconciler -> Row -> Html Msg
+viewEditRow reconcilers row =
     let
         roleSelector : Html Msg
         roleSelector =
@@ -446,7 +446,7 @@ viewEditRow row =
             [ [ td [] [ text (tmUser row.member).email ]
               , td [] [ phase ]
               ]
-            , viewToggleReconciler row
+            , viewToggleReconciler reconcilers row
             , [ td [] [ roleSelector ]
               , td [] [ btn ]
               ]
@@ -454,21 +454,33 @@ viewEditRow row =
         )
 
 
-viewToggleReconciler : Row -> List (Html Msg)
-viewToggleReconciler row =
+viewToggleReconciler : List Reconciler -> Row -> List (Html Msg)
+viewToggleReconciler globalReconcilers row =
     let
-        (TeamMember _ _ _ reconcilers) =
+        (TeamMember _ _ _ memberReconcilers) =
             row.member
     in
-    List.filterMap
-        (\(TeamMemberReconciler optedIn reconciler) ->
-            if not reconciler.enabled || not reconciler.usesTeamMemberships then
-                Nothing
+    List.concat
+        (globalReconcilers
+            |> List.filterMap
+                (\globalReconciler ->
+                    if not globalReconciler.enabled || not globalReconciler.usesTeamMemberships then
+                        Nothing
 
-            else
-                Just (td [] [ input [ type_ "checkbox", checked optedIn, onCheck (ClickedMemberToggleReconciler row reconciler) ] [] ])
+                    else
+                        Just
+                            (memberReconcilers
+                                |> List.filterMap
+                                    (\(TeamMemberReconciler optedIn memberReconciler) ->
+                                        if memberReconciler.name == globalReconciler.name then
+                                            Just (td [] [ input [ type_ "checkbox", checked optedIn, onCheck (ClickedMemberToggleReconciler row globalReconciler) ] [] ])
+
+                                        else
+                                            Nothing
+                                    )
+                            )
+                )
         )
-        reconcilers
 
 
 viewRoleSelector : String -> TeamRole -> (String -> Msg) -> Bool -> Html Msg
