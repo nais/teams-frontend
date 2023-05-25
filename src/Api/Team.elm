@@ -171,12 +171,12 @@ teamMemberReconcilerSelection =
 reconcilerSelection : SelectionSet Reconciler Backend.Object.Reconciler
 reconcilerSelection =
     SelectionSet.succeed Reconciler
-        |> SelectionSet.with BOReconciler.configured
+        |> SelectionSet.hardcoded True
         |> SelectionSet.with BOReconciler.description
         |> SelectionSet.with BOReconciler.displayName
         |> SelectionSet.with BOReconciler.enabled
         |> SelectionSet.with BOReconciler.name
-        |> SelectionSet.with BOReconciler.runOrder
+        |> SelectionSet.hardcoded 0
         |> SelectionSet.hardcoded []
         |> SelectionSet.with BOReconciler.usesTeamMemberships
 
