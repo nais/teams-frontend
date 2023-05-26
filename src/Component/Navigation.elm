@@ -14,7 +14,7 @@ view route session =
             let
                 teamsButton : List (Html msg)
                 teamsButton =
-                    [ menuItem route (Route.Teams MyTeams) False "Teams" ]
+                    [ menuItem route (Route.Teams MyTeams) False "NAIS Teams" ]
 
                 adminButtons : List (Html msg)
                 adminButtons =
