@@ -26,9 +26,9 @@ type alias SetGitHubTeamSlugRequiredArguments =
     }
 
 
-{-| Set the GitHub team slug for a Console team.
+{-| Set the GitHub team slug for a NAIS team.
 
-  - teamSlug - The slug for the Console team.
+  - teamSlug - The slug for the NAIS team.
   - gitHubTeamSlug - The slug for the connected GitHub team.
 
 -}
@@ -46,9 +46,9 @@ type alias SetGoogleWorkspaceGroupEmailRequiredArguments =
     }
 
 
-{-| Set the Google Workspace group email for a Console team.
+{-| Set the Google Workspace group email for a NAIS team.
 
-  - teamSlug - The slug for the Console team.
+  - teamSlug - The slug for the NAIS team.
   - googleWorkspaceGroupEmail - The email for the connected Google workspace group.
 
 -}
@@ -66,9 +66,9 @@ type alias SetAzureADGroupIdRequiredArguments =
     }
 
 
-{-| Set the Azure AD group ID for a Console team.
+{-| Set the Azure AD group ID for a NAIS team.
 
-  - teamSlug - The slug for the Console team.
+  - teamSlug - The slug for the NAIS team.
   - azureADGroupId - The UUID for the connected Azure AD group.
 
 -}
@@ -87,9 +87,9 @@ type alias SetGcpProjectIdRequiredArguments =
     }
 
 
-{-| Set the GCP project ID for a Console team in a specific environment.
+{-| Set the GCP project ID for a NAIS team in a specific environment.
 
-  - teamSlug - The slug for the Console team.
+  - teamSlug - The slug for the NAIS team.
   - gcpEnvironment - The environment for the GCP project.
   - gcpProjectId - The project ID for the connected GCP project.
 
@@ -109,9 +109,9 @@ type alias SetNaisNamespaceRequiredArguments =
     }
 
 
-{-| Set the NAIS namespace for a Console team in a specific environment.
+{-| Set the NAIS namespace for a NAIS team in a specific environment.
 
-  - teamSlug - The slug for the Console team.
+  - teamSlug - The slug for the NAIS team.
   - gcpEnvironment - The environment for the namespace.
   - naisNamespace - The namespace.
 
@@ -358,7 +358,7 @@ synchronizeTeam requiredArgs____ object____ =
 {-| Manually synchronize all teams
 
 This action will trigger a full synchronization of all teams against the configured third party systems. The action
-is asynchronous. The operation can take a while, depending on the amount of teams currently in Console.
+is asynchronous. The operation can take a while, depending on the amount of teams currently managed.
 
 -}
 synchronizeAllTeams :
@@ -497,7 +497,7 @@ type alias ConfirmTeamDeletionRequiredArguments =
 {-| Confirm a team deletion
 
 This will start the actual team deletion process, which will be done in an asynchronous manner. All external
-entities controlled by Console will also be deleted.
+entities controlled by NAIS will also be deleted.
 
 WARNING: There is no going back after starting this process.
 

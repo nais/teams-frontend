@@ -37,7 +37,7 @@ reconcilers object____ =
     Object.selectionForCompositeField "reconcilers" [] object____ (Basics.identity >> Decode.list)
 
 
-{-| List all Console roles.
+{-| List all roles.
 -}
 roles : SelectionSet (List Backend.ScalarCodecs.RoleName) RootQuery
 roles =

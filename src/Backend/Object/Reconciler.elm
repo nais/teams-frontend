@@ -40,7 +40,7 @@ description =
     Object.selectionForField "String" "description" [] Decode.string
 
 
-{-| Whether or not the reconciler is available for teams in Console.
+{-| Whether or not the reconciler is enabled.
 -}
 enabled : SelectionSet Bool Backend.Object.Reconciler
 enabled =
