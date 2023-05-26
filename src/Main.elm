@@ -90,7 +90,7 @@ view model =
         (Model page) =
             model
     in
-    { title = "NAIS console"
+    { title = "NAIS teams"
     , body = Pages.view page |> List.map (Html.map GotPageMsg)
     }
 

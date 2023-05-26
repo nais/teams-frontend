@@ -49,7 +49,7 @@ update _ model =
 
 view : Model -> Html Msg
 view _ =
-    Card.new "Welcome to NAIS console"
+    Card.new "Welcome to NAIS teams"
         |> Card.withContents
             [ p [] [ text "This site enables self-service management of teams. Any user in the organization may create a team and assign team members to teams they own." ]
             , p [] [ text "Each team will get a Google group, a GCP project for each environment, a GitHub team, and an Azure AD security group." ]

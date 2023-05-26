@@ -1,7 +1,7 @@
 {
-  "name": "console-frontend",
+  "name": "teams-frontend",
   "version": "1.0.0",
-  "description": "frontend for https://github.com/nais/console",
+  "description": "frontend for https://github.com/nais/teams",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

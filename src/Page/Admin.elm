@@ -287,7 +287,7 @@ reconcilerDescription rd =
             div []
                 [ p []
                     [ text "Maintains "
-                    , a [ href "https://console.cloud.google.com" ] [ text "Google Cloud Platform" ]
+                    , a [ href "https://teams.cloud.google.com" ] [ text "Google Cloud Platform" ]
                     , text " projects for teams."
                     ]
                 , p []
