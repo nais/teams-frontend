@@ -42,7 +42,7 @@ view route session html =
             [ div []
                 [ div [ id "logo" ] []
                 , h1 []
-                    [ link Route.Home [] [ text "Console" ]
+                    [ link Route.Home [] [ text "NAIS Teams" ]
                     ]
                 ]
             , auth

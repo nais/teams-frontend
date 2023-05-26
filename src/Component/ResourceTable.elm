@@ -58,7 +58,7 @@ view syncState =
             ]
         , tbody []
             (if List.length rows == 0 then
-                [ tr [] [ td [ colspan 2 ] [ text "Console has not created any resources yet" ] ] ]
+                [ tr [] [ td [ colspan 2 ] [ text "NAIS Teams has not created any resources yet" ] ] ]
 
              else
                 rows

@@ -365,7 +365,7 @@ viewSyncErrors team =
             Card.new "Synchronization error"
                 |> Card.withAttributes [ class "error" ]
                 |> Card.withContents
-                    [ p [] [ text "Console failed to synchronize team ", strong [] [ text (slugStr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
+                    [ p [] [ text "NAIS Teams failed to synchronize team ", strong [] [ text (slugStr team.slug) ], text " with external systems. The operations will be automatically retried. The messages below indicate what went wrong." ]
                     , p [] [ text "If errors are caused by network outage, they will resolve automatically. If they persist for more than a few hours, please contact NAIS support." ]
                     , viewSyncSuccess team
                     , h3 [] [ text "Error messages" ]
