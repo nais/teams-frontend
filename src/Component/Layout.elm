@@ -26,7 +26,7 @@ view route session html =
                     in
                     div [ class "user-info" ]
                         [ p [] [ text loggedInUser.name ]
-                        , a [ href logoutURL ] [ button [ class "button small" ] [ text "Logout" ] ]
+                        , a [ class "nostyle", href logoutURL ] [ button [ class "button small" ] [ text "Logout" ] ]
                         ]
 
                 _ ->

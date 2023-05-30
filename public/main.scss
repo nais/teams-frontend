@@ -51,6 +51,11 @@ code {
 a {
   text-decoration: underline;
   color: $color-link;
+
+  &.nostyle {
+    text-decoration: none;
+    color: $color-white;
+  }
 }
 
 header {
@@ -515,11 +520,6 @@ button.transparent,
 .button.danger {
   color: $color-red !important;
   border-color: $color-red !important;
-}
-
-a.nostyle {
-  text-decoration: none !important;
-  color: $color-white;
 }
 
 button.red,
