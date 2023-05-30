@@ -1,4 +1,4 @@
-module Api.Reconciler exposing (disableReconciler, enableReconciler, getReconcilers, synchronizeAllTeams, updateReconcilerConfig)
+module Api.Reconciler exposing (disableReconciler, enableReconciler, getReconcilers, getReconcilersForTeamView, synchronizeAllTeams, updateReconcilerConfig)
 
 import Backend.InputObject exposing (ReconcilerConfigInput)
 import Backend.Mutation as Mutation
@@ -15,6 +15,11 @@ import Graphql.SelectionSet exposing (SelectionSet)
 getReconcilers : SelectionSet (List Reconciler) RootQuery
 getReconcilers =
     Query.reconcilers reconcilerDataSelection
+
+
+getReconcilersForTeamView : SelectionSet (List Reconciler) RootQuery
+getReconcilersForTeamView =
+    Query.reconcilers reconcilersForTeamView
 
 
 updateReconcilerConfig : ReconcilerName -> List ReconcilerConfigInput -> SelectionSet Reconciler Graphql.Operation.RootMutation
@@ -43,6 +48,19 @@ reconcilerDataSelection =
         Reconciler.runOrder
         (Reconciler.config reconcilerConfigDataSelection)
         Reconciler.usesTeamMemberships
+
+
+reconcilersForTeamView : SelectionSet Reconciler Backend.Object.Reconciler
+reconcilersForTeamView =
+    Graphql.SelectionSet.succeed Reconciler
+        |> Graphql.SelectionSet.hardcoded True
+        |> Graphql.SelectionSet.with Reconciler.description
+        |> Graphql.SelectionSet.with Reconciler.displayName
+        |> Graphql.SelectionSet.with Reconciler.enabled
+        |> Graphql.SelectionSet.with Reconciler.name
+        |> Graphql.SelectionSet.hardcoded 0
+        |> Graphql.SelectionSet.hardcoded []
+        |> Graphql.SelectionSet.with Reconciler.usesTeamMemberships
 
 
 reconcilerConfigDataSelection : SelectionSet ReconcilerConfig Backend.Object.ReconcilerConfig

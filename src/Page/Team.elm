@@ -696,7 +696,7 @@ editor team viewer =
 
 getReconcilers : Cmd Msg
 getReconcilers =
-    Api.Do.queryRD Api.Reconciler.getReconcilers GotReconcilersResponse
+    Api.Do.queryRD Api.Reconciler.getReconcilersForTeamView GotReconcilersResponse
 
 
 getUserList : Cmd Msg
