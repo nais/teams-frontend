@@ -141,10 +141,11 @@ viewCardRequest team =
                     |> List.map (\m -> li [] [ text (tmUser m).email ])
                 )
             , div [ class "button-row" ]
-                [ button []
-                    [ Route.link (Route.Team team.slug) [ class "nostyle" ] [ text "Abort" ]
+                [ Route.link (Route.Team team.slug)
+                    []
+                    [ button [ class "transparent" ] [ text "Abort" ]
                     ]
-                , button [ class "red", onClick (ClickRequestDelete team) ] [ text "Request team deletion" ]
+                , button [ class "danger", onClick (ClickRequestDelete team) ] [ text "Request team deletion" ]
                 ]
             ]
     ]
@@ -244,10 +245,11 @@ viewCardsConfirmDelete session tdk now =
                     |> Card.withContents
                         [ p [] [ text "When you click delete team there is now way back." ]
                         , div [ class "button-row" ]
-                            [ button []
-                                [ Route.link (Route.Team tdk.team.slug) [ class "nostyle" ] [ text "Abort" ]
+                            [ Route.link (Route.Team tdk.team.slug)
+                                []
+                                [ button [ class "transparent" ] [ text "Abort" ]
                                 ]
-                            , button [ class "red", onClick (ClickConfirmDelete tdk) ] [ text "Delete team" ]
+                            , button [ class "danger", onClick (ClickConfirmDelete tdk) ] [ text "Delete team" ]
                             ]
                         ]
                 ]

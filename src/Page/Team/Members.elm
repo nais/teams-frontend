@@ -316,10 +316,9 @@ viewAddMemberModal model =
                               ]
                             , List.filterMap (viewReconcilerOption model) model.reconcilers
                             , [ li [ class "row" ]
-                                    [ button [ onClick (CloseModal AddNewMember), class "small button" ] [ text "Cancel" ]
-                                    , button [ type_ "submit", class "small button", disabled (queryUserList model.addMember.email model.allUsers == Nothing) ]
-                                        [ div [ class "icon add" ] []
-                                        , text "Add"
+                                    [ button [ type_ "reset", onClick (CloseModal AddNewMember), class "transparent" ] [ text "Cancel" ]
+                                    , button [ type_ "submit", disabled (queryUserList model.addMember.email model.allUsers == Nothing) ]
+                                        [ text "Add"
                                         ]
                                     ]
                               ]
@@ -432,7 +431,7 @@ viewEditRow reconcilers row =
         btn =
             case row.state of
                 PendingChange ->
-                    button [ class "small button", disabled True ] [ div [ class "icon delete" ] [], text "Remove" ]
+                    button [ class "small", disabled True ] [ div [ class "icon delete" ] [], text "Remove" ]
 
                 PendingRemove ->
                     smallButton (ClickedMemberRemoveConfirm row) "delete" "Confirm"

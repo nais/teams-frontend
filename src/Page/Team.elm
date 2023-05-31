@@ -323,7 +323,7 @@ deleteTeamButton user team =
         Just
             (Route.link (Route.DeleteTeam team.slug)
                 [ class "nostyle" ]
-                [ button [ class "small button danger", disabled team.deletionInProgress ]
+                [ button [ class "small danger", disabled team.deletionInProgress ]
                     [ div [ class "icon", class "delete-red" ] []
                     , text "Delete"
                     ]
@@ -472,8 +472,8 @@ viewEditTeamOverview team error =
                         ++ List.map (viewEditSlackAlertsChannel team.slackChannel) team.slackAlertsChannels
                         ++ [ errorMessage
                            , div [ class "button-row" ]
-                                [ input [ type_ "submit", class "button", value "Save changes" ] []
-                                , button [ class "transparent", onClick ClickedCancelEditOverview ] [ text "Cancel changes" ]
+                                [ button [ type_ "reset", class "transparent", onClick ClickedCancelEditOverview ] [ text "Cancel changes" ]
+                                , button [ type_ "submit" ] [ text "Save changes" ]
                                 ]
                            ]
                     )
@@ -641,9 +641,9 @@ showMoreButton expandable previewSize msg =
         Nothing
 
     else
-        div []
+        div [ class "button-row contents-centered" ]
             [ button
-                [ class "text", onClick msg ]
+                [ class "transparent", onClick msg ]
                 [ text t ]
             ]
             |> Just

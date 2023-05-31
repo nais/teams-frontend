@@ -26,7 +26,7 @@ view route session html =
                     in
                     div [ class "user-info" ]
                         [ p [] [ text loggedInUser.name ]
-                        , a [ class "nostyle", href logoutURL ] [ button [ class "button small" ] [ text "Logout" ] ]
+                        , a [ class "nostyle", href logoutURL ] [ button [ class "small" ] [ text "Logout" ] ]
                         ]
 
                 _ ->
@@ -35,7 +35,7 @@ view route session html =
                         loginURL =
                             Url.Builder.absolute [ "oauth2", "login" ] []
                     in
-                    a [ href loginURL, class "button small" ] [ text "Login" ]
+                    a [ href loginURL, class "small" ] [ text "Login" ]
     in
     [ header []
         [ div [ class "content" ]

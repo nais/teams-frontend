@@ -1,10 +1,10 @@
 /*
-  elm-hot creates an additional div wrapper around the app to make HMR possible.
-  This could break styling in development mode if you are using Elm UI.
+elm-hot creates an additional div wrapper around the app to make HMR possible.
+This could break styling in development mode if you are using Elm UI.
 
-  More context in the issue:
-    https://github.com/halfzebra/create-elm-app/issues/320
-*/
+More context in the issue:
+https://github.com/halfzebra/create-elm-app/issues/320
+ */
 
 @import 'vars', 'icons';
 
@@ -23,29 +23,8 @@ body {
   background: $color-light-gray;
 }
 
-input,
-button,
-select {
-  font-family: "Source Sans Pro", sans-serif;
-}
-
-button:disabled {
-  cursor: not-allowed !important;
-  opacity: 50%;
-}
-
-button.text {
-  text-decoration: underline !important;
-  color: $color-link;
-  background-color: transparent;
-  padding: 0;
-  margin: 0 0 0 45%;
-  font-size: 0.9em;
-}
-
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 a {
@@ -435,19 +414,38 @@ select {
   justify-content: flex-start;
   gap: 1rem;
   margin: 0.5rem 0;
+
+  &.contents-centered {
+    width: 100%;
+    justify-content: center;
+  }
+
+  a {
+    display: flex;
+  }
 }
 
+input,
 button,
-.button {
+select {
+  font-family: "Source Sans Pro", sans-serif;
+
+  &:disabled {
+    cursor: not-allowed !important;
+    opacity: 50%;
+  }
+}
+
+button {
   flex-grow: 0;
   padding: 1em;
-  background: $color-link;
-  border: 0;
+  border: 1px solid $color-link;
   border-radius: 2px;
   color: $color-white;
+  background: $color-link;
   font-weight: bold;
   cursor: pointer;
-  text-decoration: none !important;
+  text-decoration: none;
   display: flex;
   align-content: space-evenly;
   align-items: center;
@@ -455,104 +453,84 @@ button,
   width: auto;
   line-height: 1em;
   font-size: 1rem;
-}
 
-button .icon,
-.button .icon {
-  width: 16px;
-  height: 16px;
-  background-repeat: no-repeat;
-  background-position: top left;
-}
+  &.transparent {
+    padding: 0;
+    gap: 0;
+    text-decoration: underline;
+    color: $color-link;
+    background: transparent;
+    font-weight: normal;
+    border: 1px solid transparent;
+    &:active{
+      text-decoration: none;
+    }
+  }
 
-.icon.add {
-  background-image: url("../public/icons/add.svg");
-}
+  &.small {
+    font-size: 0.88rem;
+    padding: 0.5em 0.75em;
+    border-color: $color-link;
+    color: $color-link;
+    background: $color-white;
 
-.icon.download {
-  background-image: url("../public/icons/download.svg");
-}
+    &.danger {
+      color: $color-red !important;
+    }
+  }
 
-.icon.copy {
-  background-image: url("../public/icons/copy.svg");
-}
+  &:not(.small){
+    &.danger {
+      background: $color-red;
+    }
+  }
+  &.danger {
+    border-color: $color-red !important;
+    text-decoration-color: $color-red;
+  }
 
-.icon.cancel {
-  background-image: url("../public/icons/cancel.svg");
-}
+  &:hover {
+    text-decoration: underline;
+  }
 
-.icon.edit {
-  background-image: url("../public/icons/edit.svg");
-}
+  &:active {
+    text-decoration: none;
+  }
 
-.icon.delete {
-  background-image: url("../public/icons/delete.svg");
-}
+  .icon {
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+    background-position: top left;
+  }
 
-.icon.delete-red {
-  background-image: url("../public/icons/delete-red.svg");
-}
-
-.icon.refresh {
-  background-image: url("../public/icons/refresh.svg");
-}
-
-.icon.synchronize {
-  background-image: url("../public/icons/synchronize.svg");
-}
-
-.icon.locked {
-  background-image: url("../public/icons/locked.svg");
-}
-
-button.small,
-.button.small {
-  font-size: 0.88rem;
-  padding: 0.5em 0.75em;
-  border: 1px solid $color-link;
-  color: $color-link;
-  background: $color-white;
-}
-
-button.transparent,
-.button.transparent {
-  background: transparent;
-  color: $color-link;
-  font-weight: normal;
-  text-decoration: underline !important;
-  border: 0;
-}
-
-.button.danger {
-  color: $color-red !important;
-  border-color: $color-red !important;
-}
-
-button.red,
-.button.red {
-  background: $color-red;
-}
-
-button:hover,
-.button:hover {
-  text-decoration: underline;
+  .icon.add { background-image: url("../public/icons/add.svg"); }
+  .icon.download { background-image: url("../public/icons/download.svg"); }
+  .icon.copy { background-image: url("../public/icons/copy.svg"); }
+  .icon.cancel { background-image: url("../public/icons/cancel.svg"); }
+  .icon.edit { background-image: url("../public/icons/edit.svg"); }
+  .icon.delete { background-image: url("../public/icons/delete.svg"); }
+  .icon.delete-red { background-image: url("../public/icons/delete-red.svg"); }
+  .icon.refresh { background-image: url("../public/icons/refresh.svg"); }
+  .icon.synchronize { background-image: url("../public/icons/synchronize.svg"); }
+  .icon.locked { background-image: url("../public/icons/locked.svg"); }
 }
 
 /*
 .reconcilerConfigured {
-    border: 5px solid $color-green;
-    padding-left: 5px;
-    border-right: 0;
-    border-top: 0;
-    border-bottom: 0;
+border: 5px solid $color-green;
+padding-left: 5px;
+border-right: 0;
+border-top: 0;
+border-bottom: 0;
 }
 
 .reconcilerNotConfigured {
-    border: 5px solid $color-red;
-    padding-left: 5px;
-    border-right: 0;
-    border-top: 0;
-    border-bottom: 0;
+border: 5px solid $color-red;
+padding-left: 5px;
+border-right: 0;
+border-top: 0;
+border-bottom: 0;
 }
  */
 

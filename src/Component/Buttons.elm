@@ -7,7 +7,7 @@ import Html.Events exposing (onClick)
 
 smallButton : msg -> String -> String -> Html msg
 smallButton msg iconClass title =
-    button [ class "small button", onClick msg ]
+    button [ class "small", onClick msg ]
         [ div [ class "icon", class iconClass ] []
         , text title
         ]
@@ -15,7 +15,7 @@ smallButton msg iconClass title =
 
 smallButtonWithAttrs : msg -> String -> String -> List (Html.Attribute msg) -> Html msg
 smallButtonWithAttrs msg iconClass title attrs =
-    button ([ class "small button", onClick msg ] ++ attrs)
+    button ([ class "small", onClick msg ] ++ attrs)
         [ div [ class "icon", class iconClass ] []
         , text title
         ]

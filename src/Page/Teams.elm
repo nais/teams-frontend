@@ -108,15 +108,21 @@ view model =
         switcher =
             case model.viewMode of
                 AllTeams ->
-                    button [ class "text", onClick (ClickedTeamSelection MyTeams) ] [ text "Show only my teams" ]
+                    div [ class "button-row contents-centered" ] [ button [ class "transparent", onClick (ClickedTeamSelection MyTeams) ] [ text "Show only my teams" ] ]
 
                 MyTeams ->
-                    button [ class "text", onClick (ClickedTeamSelection AllTeams) ] [ text "Show all teams" ]
+                    div [ class "button-row contents-centered" ] [ button [ class "transparent", onClick (ClickedTeamSelection AllTeams) ] [ text "Show all teams" ] ]
     in
     div [ class "cards" ]
         [ (Card.new title
             |> Card.withButtons
-                [ link Route.CreateTeam [ class "button small" ] [ text "Create" ] ]
+                [ link Route.CreateTeam
+                    [ class "nostyle" ]
+                    [ button [ class "small" ]
+                        [ text "Create"
+                        ]
+                    ]
+                ]
             |> Card.withContents
                 [ switcher
                 , div []
