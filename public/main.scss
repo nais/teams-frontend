@@ -220,25 +220,56 @@ main {
   display: flex;
   flex-direction: column;
   gap: 24px;
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: $color-white;
+    padding: 1rem;
+    width: calc(100% - 2rem);
+
+    &.warning{
+      border: 1px solid $color-red;
+    }
+
+    .title {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    h2 {
+      margin: 0;
+      flex-grow: 4;
+    }
+
+    &.error {
+      background: $color-white;
+      border: 1px solid $color-error-border;
+      border-radius: 2px;
+      h2 {
+        background: $color-error-background;
+        border-bottom: 1px solid $color-error-border;
+        font-size: 1.2rem;
+        margin: -1rem -1rem 0.5em;
+        padding: 0.75rem 1rem;
+      }
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .row {
+      display: flex;
+      flex-direction: row;
+    }
+  }
 }
 
-.card {
-  display: flex;
-  flex-direction: column;
-  background: $color-white;
-  padding: 1rem;
-  width: calc(100% - 2rem);
-}
 
-.card .column {
-  display: flex;
-  flex-direction: column;
-}
-
-.card .row {
-  display: flex;
-  flex-direction: row;
-}
 
 .wide {
   flex-grow: 1;
@@ -250,34 +281,9 @@ input.synchronizeUsersCorrelationID {
   width: 27rem;
 }
 
-.card .title {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.card h2 {
-  margin: 0;
-  flex-grow: 4;
-}
 
 .user-sync-run:not(:first-child) {
   margin-top: 3rem;
-}
-
-.card.error {
-  background: $color-white;
-  border: 1px solid $color-error-border;
-  border-radius: 2px;
-}
-
-.card.error h2 {
-  background: $color-error-background;
-  border-bottom: 1px solid $color-error-border;
-  font-size: 1.2rem;
-  margin: -1rem -1rem 0.5em;
-  padding: 0.75rem 1rem;
 }
 
 ul.logs {

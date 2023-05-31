@@ -158,3 +158,4 @@ teamSelection =
         |> SelectionSet.with (BOTeam.lastSuccessfulSync |> mapToMaybeDateTime)
         |> SelectionSet.hardcoded Nothing
         |> SelectionSet.hardcoded (Preview [])
+        |> SelectionSet.hardcoded False

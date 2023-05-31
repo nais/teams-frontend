@@ -118,6 +118,7 @@ teamSelection =
         |> SelectionSet.hardcoded Nothing
         |> SelectionSet.hardcoded Nothing
         |> SelectionSet.hardcoded (Preview [])
+        |> SelectionSet.hardcoded False
 
 
 teamFullSelection : SelectionSet Team Backend.Object.Team
@@ -133,6 +134,7 @@ teamFullSelection =
         |> SelectionSet.with (BOTeam.lastSuccessfulSync |> mapToMaybeDateTime)
         |> SelectionSet.with (SelectionSet.map Just (BOTeam.reconcilerState syncStateSelection))
         |> SelectionSet.with (SelectionSet.map Preview (BOTeam.gitHubRepositories gitHubRepositorySelection))
+        |> SelectionSet.with BOTeam.deletionInProgress
 
 
 gitHubRepositorySelection : SelectionSet GitHubRepository Backend.Object.GitHubRepository

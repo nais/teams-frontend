@@ -6,7 +6,7 @@ import Api.Str exposing (roleStr)
 import Api.Team exposing (addTeamMember, removeMemberFromTeam, setTeamMemberRole)
 import Backend.Enum.TeamRole as TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (ReconcilerName)
-import Component.Buttons exposing (smallButton)
+import Component.Buttons exposing (smallButton, smallButtonWithAttrs)
 import Component.Card as Card
 import Component.Icons exposing (spinnerDone, spinnerError, spinnerLoading)
 import Component.Modal as Modal
@@ -254,13 +254,18 @@ view model =
             viewEditMembers model
 
         View ->
-            viewMembers model.team.members model.isEditor
+            viewMembers model
 
 
-viewMembers : Expandable (List TeamMember) -> Bool -> Html Msg
-viewMembers members isEditor =
+viewMembers : Model -> Html Msg
+viewMembers model =
     Card.new "Members"
-        |> Card.withButtons ([ smallButton ClickedEditMode "edit" "Edit" |> conditionalElement isEditor ] |> flattenMaybe)
+        |> Card.withButtons
+            ([ smallButtonWithAttrs ClickedEditMode "edit" "Edit" [ disabled model.team.deletionInProgress ]
+                |> conditionalElement model.isEditor
+             ]
+                |> flattenMaybe
+            )
         |> Card.withContents
             ([ table [ class "first-column-wide" ]
                 [ thead []
@@ -270,15 +275,15 @@ viewMembers members isEditor =
                         ]
                     ]
                 , tbody []
-                    (if List.length (expandableTake 10 members) == 0 then
+                    (if List.length (expandableTake 10 model.team.members) == 0 then
                         [ tr [] [ td [ colspan 2 ] [ text "This team has no members" ] ] ]
 
                      else
-                        List.map viewRow (expandableTake 10 members)
+                        List.map viewRow (expandableTake 10 model.team.members)
                     )
                 ]
              ]
-                |> appendMaybe (showMoreButton members 10 ClickedShowMore)
+                |> appendMaybe (showMoreButton model.team.members 10 ClickedShowMore)
             )
         |> Card.render
 

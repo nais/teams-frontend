@@ -99,3 +99,10 @@ gitHubRepositories :
     -> SelectionSet (List decodesTo) Backend.Object.Team
 gitHubRepositories object____ =
     Object.selectionForCompositeField "gitHubRepositories" [] object____ (Basics.identity >> Decode.list)
+
+
+{-| Whether or not the team is currently being deleted.
+-}
+deletionInProgress : SelectionSet Bool Backend.Object.Team
+deletionInProgress =
+    Object.selectionForField "Bool" "deletionInProgress" [] Decode.bool

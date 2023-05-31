@@ -9,7 +9,7 @@ import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
 import Backend.Scalar exposing (Slug)
-import Component.Buttons exposing (smallButton)
+import Component.Buttons exposing (smallButton, smallButtonWithAttrs)
 import Component.Card as Card
 import Component.ResourceTable as ResourceTable
 import DataModel exposing (AuditLog, DeployKey, Expandable(..), GitHubRepository, Reconciler, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, User, expandableAll, tmRole, tmUser)
@@ -311,7 +311,7 @@ auditLogLine log =
 editorButton : Msg -> Viewer -> Team -> Maybe (Html Msg)
 editorButton msg viewer team =
     if editor team viewer then
-        Just (smallButton msg "edit" "Edit")
+        Just (smallButtonWithAttrs msg "edit" "Edit" [ disabled team.deletionInProgress ])
 
     else
         Nothing
@@ -323,7 +323,7 @@ deleteTeamButton user team =
         Just
             (Route.link (Route.DeleteTeam team.slug)
                 [ class "nostyle" ]
-                [ div [ class "small button danger" ]
+                [ button [ class "small button danger", disabled team.deletionInProgress ]
                     [ div [ class "icon", class "delete-red" ] []
                     , text "Delete"
                     ]
@@ -337,7 +337,7 @@ deleteTeamButton user team =
 syncButton : Msg -> Viewer -> Team -> Maybe (Html Msg)
 syncButton msg viewer team =
     if editor team viewer then
-        Just (smallButton msg "synchronize" "Synchronize")
+        Just (smallButtonWithAttrs msg "synchronize" "Synchronize" [ disabled team.deletionInProgress ])
 
     else
         Nothing
@@ -512,7 +512,8 @@ viewCards model team =
     div [ class "cards" ]
         (case model.edit of
             View ->
-                [ viewTeamOverview user team
+                [ viewTeamDeletionWarning team
+                , viewTeamOverview user team
                 , viewSyncErrors team
                 , viewSubModel model.membersModel
                 , viewTeamState team
@@ -530,6 +531,22 @@ viewCards model team =
                 , viewDeployKey user team model.deployKey
                 ]
         )
+
+
+viewTeamDeletionWarning : Team -> Html Msg
+viewTeamDeletionWarning team =
+    if team.deletionInProgress then
+        Card.new "Deletion in progress"
+            |> Card.withAttributes [ class "warning" ]
+            |> Card.withContents
+                [ p []
+                    [ text "This team is currently being deleted."
+                    ]
+                ]
+            |> Card.render
+
+    else
+        text ""
 
 
 viewDeployKey : Viewer -> Team -> RemoteData (Graphql.Http.Error DeployKey) DeployKey -> Html Msg

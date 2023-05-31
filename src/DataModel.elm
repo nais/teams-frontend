@@ -126,6 +126,7 @@ type alias Team =
     , lastSuccessfulSync : Maybe ISO8601.Time
     , syncState : Maybe TeamSyncState
     , repositories : Expandable (List GitHubRepository)
+    , deletionInProgress : Bool
     }
 
 
