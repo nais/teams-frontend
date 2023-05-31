@@ -113,30 +113,32 @@ view model =
                 MyTeams ->
                     button [ class "text", onClick (ClickedTeamSelection AllTeams) ] [ text "Show all teams" ]
     in
-    (Card.new title
-        |> Card.withButtons
-            [ link Route.CreateTeam [ class "button small" ] [ text "Create" ] ]
-        |> Card.withContents
-            [ switcher
-            , div []
-                [ case model.teams of
-                    Success teams ->
-                        case model.viewMode of
-                            AllTeams ->
-                                teamTable teams
+    div [ class "cards" ]
+        [ (Card.new title
+            |> Card.withButtons
+                [ link Route.CreateTeam [ class "button small" ] [ text "Create" ] ]
+            |> Card.withContents
+                [ switcher
+                , div []
+                    [ case model.teams of
+                        Success teams ->
+                            case model.viewMode of
+                                AllTeams ->
+                                    teamTable teams
 
-                            MyTeams ->
-                                teamTable (myTeams (Session.viewer model.session) teams)
+                                MyTeams ->
+                                    teamTable (myTeams (Session.viewer model.session) teams)
 
-                    Failure err ->
-                        text <| errorToString err
+                        Failure err ->
+                            text <| errorToString err
 
-                    Loading ->
-                        text <| "Loading teams..."
+                        Loading ->
+                            text <| "Loading teams..."
 
-                    NotAsked ->
-                        text <| "Data not loaded"
+                        NotAsked ->
+                            text <| "Data not loaded"
+                    ]
                 ]
-            ]
-    )
-        |> Card.render
+          )
+            |> Card.render
+        ]
