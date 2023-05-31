@@ -127,4 +127,6 @@ validateTeamName name =
 
 view : Model -> Html Msg
 view model =
-    createTeamForm model
+    div [ class "cards" ]
+        [ createTeamForm model
+        ]
