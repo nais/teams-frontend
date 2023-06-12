@@ -35,7 +35,7 @@ view route session html =
                         loginURL =
                             Url.Builder.absolute [ "oauth2", "login" ] []
                     in
-                    a [ href loginURL, class "small" ] [ text "Login" ]
+                    a [ class "nostyle", href loginURL ] [ button [ class "small" ] [ text "Login" ] ]
     in
     [ header []
         [ div [ class "content" ]
