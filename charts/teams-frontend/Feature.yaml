@@ -1,0 +1,16 @@
+dependencies:
+  - allOf:
+      - loadbalancer
+      - certificates
+      - teams-backend
+environmentKinds:
+  - management
+values:
+  image.tag:
+    description: Frontend image tag
+    config:
+      type: string
+  ingress.host:
+    displayName: Ingress URL
+    computed:
+      template: '"{{ subdomain . "teams" }}"'

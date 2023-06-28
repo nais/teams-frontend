@@ -1,0 +1,13 @@
+image:
+  repository: europe-north1-docker.pkg.dev/nais-io/nais/images/teams-frontend
+  pullPolicy: IfNotPresent
+  tag: # overwritten by yq in github workflow before push
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+ingress:
+  className: nais-ingress
+  host: # mapped in fasit

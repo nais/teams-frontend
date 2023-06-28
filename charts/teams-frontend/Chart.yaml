@@ -1,0 +1,7 @@
+apiVersion: v2
+name: teams-frontend
+description: Frontend for managing teams on the platform
+type: application
+version: 0.0.1
+sources:
+  - https://github.com/nais/teams-frontend/tree/main/charts/teams-frontend
