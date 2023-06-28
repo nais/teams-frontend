@@ -60,7 +60,7 @@ jobs:
           name=$(yq '.name' < "${{ env.CHART_PATH }}/Chart.yaml")
           echo "name=$name" >> $GITHUB_OUTPUT
           echo "version=$chart_version" >> $GITHUB_OUTPUT
-          echo "archive=$name-$chart_version.tgz" > $GITHUB_OUTPUT
+          echo "archive=$name-$chart_version.tgz" >> $GITHUB_OUTPUT
 
       - id: "auth"
         name: "Authenticate to Google Cloud"
