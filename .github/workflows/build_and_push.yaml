@@ -97,4 +97,3 @@ jobs:
         with:
           chart: oci://${{ env.GOOGLE_REGISTRY }}/nais-io/nais/feature/${{ needs.build_and_push.outputs.chart_archive }}
           version: ${{ needs.build_and_push.outputs.chart_version }}
-          feature_name: ${{ needs.build_and_push.outputs.chart_name }}
