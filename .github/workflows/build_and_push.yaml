@@ -95,5 +95,5 @@ jobs:
     steps:
       - uses: nais/fasit-deploy@v2
         with:
-          chart: oci://${{ env.GOOGLE_REGISTRY }}/nais-io/nais/feature/${{ needs.build_and_push.outputs.chart_archive }}
+          chart: oci://${{ env.GOOGLE_REGISTRY }}/nais-io/nais/feature/${{ needs.build_and_push.outputs.chart_name }}
           version: ${{ needs.build_and_push.outputs.chart_version }}
