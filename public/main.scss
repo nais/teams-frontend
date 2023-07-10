@@ -206,6 +206,7 @@ main {
     background: $color-white;
     padding: 1rem;
     width: calc(100% - 2rem);
+    margin-bottom: 2rem;
 
     &.warning{
       border: 1px solid $color-red;
