@@ -1,18 +1,18 @@
 port module Page.Team exposing (EditMode(..), ExpandableList(..), Model, Msg(..), SubModel, copy, init, update, view)
 
-import Api.Do exposing (query, queryRD)
+import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
 import Api.Reconciler
-import Api.Str exposing (auditActionStr, deployKeyStr, slugStr)
+import Api.Str exposing (auditActionStr, slugStr)
 import Api.Team exposing (getTeam, teamSyncSelection, updateTeam)
 import Api.User
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Mutation as Mutation
 import Backend.Scalar exposing (Slug)
-import Component.Buttons exposing (smallButton, smallButtonWithAttrs)
+import Component.Buttons exposing (smallButtonWithAttrs)
 import Component.Card as Card
 import Component.ResourceTable as ResourceTable
-import DataModel exposing (AuditLog, DeployKey, Expandable(..), GitHubRepository, Reconciler, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, User, expandableAll, tmRole, tmUser)
+import DataModel exposing (AuditLog, Expandable(..), GitHubRepository, Reconciler, SlackAlertsChannel, SyncError, Team, TeamMember, TeamSync, User, expandableAll, tmRole, tmUser)
 import Graphql.Http
 import Graphql.OptionalArgument
 import Html exposing (Html, a, button, dd, div, dl, dt, em, form, h3, input, label, li, p, strong, table, tbody, td, text, th, thead, tr, ul)
@@ -50,7 +50,6 @@ type alias Model =
     , slug : Slug
     , edit : EditMode
     , userList : RemoteData (Graphql.Http.Error (List User)) (List User)
-    , deployKey : RemoteData (Graphql.Http.Error DeployKey) DeployKey
     , session : Session
     , membersModel : SubModel
     , error : String -- TODO RENDER
@@ -61,7 +60,6 @@ type alias Model =
 type Msg
     = GotTeamResponse (RemoteData (Graphql.Http.Error Team) Team)
     | GotUserListResponse (RemoteData (Graphql.Http.Error (List User)) (List User))
-    | GotDeployKey (RemoteData (Graphql.Http.Error DeployKey) DeployKey)
     | GotSaveOverviewResponse (RemoteData (Graphql.Http.Error Team) Team)
     | GotSynchronizeResponse (RemoteData (Graphql.Http.Error TeamSync) TeamSync)
     | GotReconcilersResponse (RemoteData (Graphql.Http.Error (List Reconciler)) (List Reconciler))
@@ -70,7 +68,6 @@ type Msg
     | ClickedSaveOverview Team
     | ClickedCancelEditOverview
     | ClickedSynchronize
-    | ClickedGetDeployKeys Slug
     | PurposeChanged String
     | SlackChannelChanged String
     | SlackAlertsChannelChanged String String
@@ -85,7 +82,6 @@ init session slug =
       , session = session
       , edit = View
       , userList = NotAsked
-      , deployKey = NotAsked
       , membersModel = NotInitialized
       , error = ""
       , reconcilers = Loading
@@ -180,12 +176,6 @@ update msg model =
 
                 _ ->
                     ( model, Cmd.none )
-
-        ClickedGetDeployKeys slug ->
-            ( { model | deployKey = Loading }, queryRD (Api.Team.getDeployKey slug) GotDeployKey )
-
-        GotDeployKey r ->
-            ( { model | deployKey = r }, Cmd.none )
 
         Copy s ->
             ( model, copy s )
@@ -519,7 +509,6 @@ viewCards model team =
                 , viewTeamState team
                 , viewGitHubRepositories team
                 , viewLogs team
-                , viewDeployKey user team model.deployKey
                 ]
 
             EditMain err ->
@@ -528,7 +517,6 @@ viewCards model team =
                 , viewSubModel model.membersModel
                 , viewTeamState team
                 , viewLogs team
-                , viewDeployKey user team model.deployKey
                 ]
         )
 
@@ -547,38 +535,6 @@ viewTeamDeletionWarning team =
 
     else
         text ""
-
-
-viewDeployKey : Viewer -> Team -> RemoteData (Graphql.Http.Error DeployKey) DeployKey -> Html Msg
-viewDeployKey viewer team deployKey =
-    if not (isMemberOrOwner team viewer) then
-        div [] []
-
-    else
-        Card.new "Deploy key"
-            |> Card.withContents
-                [ div [ class "row" ]
-                    [ div [ class "column wide" ]
-                        [ p [] [ text "This is the api key used to communicate with nais deploy." ]
-                        , case deployKey of
-                            NotAsked ->
-                                smallButton (ClickedGetDeployKeys team.slug) "download" "get deploy key"
-
-                            Loading ->
-                                text "loading"
-
-                            Success d ->
-                                div [ class "row" ]
-                                    [ input [ type_ "text", class "deploykey", disabled True, value (deployKeyStr d.key) ] []
-                                    , smallButton (Copy (deployKeyStr d.key)) "copy" "copy"
-                                    ]
-
-                            Failure e ->
-                                text (Api.Error.errorToString e)
-                        ]
-                    ]
-                ]
-            |> Card.render
 
 
 numberOfPreviewElements : Int
@@ -693,14 +649,6 @@ teamRoleForViewer members viewer =
             (\u ->
                 List.filter (\m -> (tmUser m).id == u.id) members |> List.head |> Maybe.map (\m -> tmRole m)
             )
-
-
-isMemberOrOwner : Team -> Viewer -> Bool
-isMemberOrOwner team viewer =
-    List.any (\b -> b)
-        [ teamRoleForViewer (expandableAll team.members) viewer == Just Member
-        , teamRoleForViewer (expandableAll team.members) viewer == Just Owner
-        ]
 
 
 editor : Team -> Viewer -> Bool
