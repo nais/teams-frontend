@@ -326,7 +326,7 @@ deleteTeamButton user team =
 
 syncButton : Msg -> Viewer -> Team -> Maybe (Html Msg)
 syncButton msg viewer team =
-    if editor team viewer then
+    if isTeamSynchronizer team viewer then
         Just (smallButtonWithAttrs msg "synchronize" "Synchronize" [ disabled team.deletionInProgress ])
 
     else
@@ -649,6 +649,14 @@ teamRoleForViewer members viewer =
             (\u ->
                 List.filter (\m -> (tmUser m).id == u.id) members |> List.head |> Maybe.map (\m -> tmRole m)
             )
+
+
+isTeamSynchronizer : Team -> Viewer -> Bool
+isTeamSynchronizer team viewer =
+    List.any (\b -> b)
+        [ editor team viewer
+        ,teamRoleForViewer (expandableAll team.members) viewer == Just Member
+        ]
 
 
 editor : Team -> Viewer -> Bool
