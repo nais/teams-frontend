@@ -655,7 +655,7 @@ isTeamSynchronizer : Team -> Viewer -> Bool
 isTeamSynchronizer team viewer =
     List.any (\b -> b)
         [ editor team viewer
-        ,teamRoleForViewer (expandableAll team.members) viewer == Just Member
+        , teamRoleForViewer (expandableAll team.members) viewer == Just Member
         ]
 
 
