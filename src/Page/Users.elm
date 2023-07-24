@@ -19,6 +19,7 @@ import ISO8601
 import Page.Team exposing (copy)
 import RemoteData exposing (RemoteData(..))
 import Session exposing (Session)
+import Util exposing (formatForDisplay)
 
 
 type alias Model =
@@ -160,7 +161,7 @@ viewUserSyncRun run =
             ([ dt [] [ text "Correlation ID:" ]
              , dd [] [ b [] [ text (uuidStr run.correlationID) ] ]
              , dt [] [ text "Started at:" ]
-             , dd [] [ text (ISO8601.toString run.startedAt) ]
+             , dd [] [ text (formatForDisplay run.startedAt) ]
              , dt [] [ text "Finished at:" ]
              , dd [] [ text (finishedAtToString run.finishedAt) ]
              , dt [] [ text "Status:" ]
@@ -176,7 +177,7 @@ finishedAtToString : Maybe ISO8601.Time -> String
 finishedAtToString finishedAt =
     case finishedAt of
         Just t ->
-            ISO8601.toString t
+            formatForDisplay t
 
         Nothing ->
             "Not yet finished"
@@ -227,7 +228,7 @@ viewUserSyncRunLogEntries logEntries =
 viewAuditLogEntry : AuditLog -> Html Msg
 viewAuditLogEntry entry =
     tr []
-        [ td [] [ text (ISO8601.toString entry.createdAt) ]
+        [ td [] [ text (formatForDisplay entry.createdAt) ]
         , td [] [ text entry.message ]
         ]
 

@@ -21,6 +21,7 @@ import Session exposing (Session)
 import Task
 import Time
 import Url
+import Util exposing (formatForDisplay)
 
 
 type alias Model =
@@ -215,7 +216,7 @@ viewCardsConfirmDelete : Session -> TeamDeleteKey -> Time.Posix -> List (Card Ms
 viewCardsConfirmDelete session tdk now =
     (Card.new ("Confirm team deletion for team " ++ slugStr tdk.team.slug)
         |> Card.withContents
-            [ p [] [ text ("The deletion was initiated by " ++ tdk.createdBy.email ++ " and expires at " ++ ISO8601.toString tdk.expires) ] ]
+            [ p [] [ text ("The deletion was initiated by " ++ tdk.createdBy.email ++ " and expires at " ++ formatForDisplay tdk.expires) ] ]
     )
         :: (if expired tdk.expires now then
                 [ Card.new "Error"
