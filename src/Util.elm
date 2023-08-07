@@ -4,6 +4,7 @@ import ISO8601
 import Time exposing (Month(..), Posix, customZone)
 import TimeZone
 
+
 appendMaybe : Maybe a -> List a -> List a
 appendMaybe maybe list =
     case maybe of
@@ -41,8 +42,11 @@ flattenMaybe l =
 formatForDisplay : ISO8601.Time -> String
 formatForDisplay isoTime =
     let
-        posix = ISO8601.toPosix isoTime
-        zone = TimeZone.europe__berlin()
+        posix =
+            ISO8601.toPosix isoTime
+
+        zone =
+            TimeZone.europe__berlin ()
     in
     ensureTwoDigits (Time.toDay zone posix)
         ++ " "
@@ -56,28 +60,45 @@ formatForDisplay isoTime =
 
 
 ensureTwoDigits : Int -> String
-ensureTwoDigits nr = String.padLeft 2 '0' <| String.fromInt nr
+ensureTwoDigits nr =
+    String.padLeft 2 '0' <| String.fromInt nr
 
 
 toNorMonthShort : Month -> String
 toNorMonthShort month =
-  case month of
-    Jan -> "jan"
-    Feb -> "feb"
-    Mar -> "mar"
-    Apr -> "apr"
-    May -> "mai"
-    Jun -> "jun"
-    Jul -> "jul"
-    Aug -> "aug"
-    Sep -> "sep"
-    Oct -> "okt"
-    Nov -> "nov"
-    Dec -> "des"
+    case month of
+        Jan ->
+            "jan"
 
+        Feb ->
+            "feb"
 
+        Mar ->
+            "mar"
 
+        Apr ->
+            "apr"
 
+        May ->
+            "mai"
 
-    
+        Jun ->
+            "jun"
 
+        Jul ->
+            "jul"
+
+        Aug ->
+            "aug"
+
+        Sep ->
+            "sep"
+
+        Oct ->
+            "okt"
+
+        Nov ->
+            "nov"
+
+        Dec ->
+            "des"
