@@ -24,7 +24,7 @@ import Page.Team.Members as Members
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session, Viewer)
-import Util exposing (flattenMaybe)
+import Util exposing (flattenMaybe, formatForDisplay)
 
 
 port copy : String -> Cmd msg
@@ -272,7 +272,7 @@ logLine ts actor message =
     li []
         [ p [] [ text message ]
         , div [ class "meta" ]
-            [ p [] [ text (ISO8601.toString ts) ]
+            [ p [] [ text (formatForDisplay ts) ]
             , p [] [ text actor ]
             ]
         ]
@@ -341,7 +341,7 @@ viewSyncSuccess team =
 
         Just ts ->
             p []
-                [ em [] [ text <| "Status: last fully synchronized on " ++ ISO8601.toString ts ++ "." ]
+                [ em [] [ text <| "Status: last fully synchronized on " ++ formatForDisplay ts ++ "." ]
                 ]
 
 

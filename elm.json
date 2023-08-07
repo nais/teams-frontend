@@ -14,6 +14,7 @@
             "elm/svg": "1.0.1",
             "elm/time": "1.0.0",
             "elm/url": "1.0.0",
+            "justinmimbs/timezone-data": "10.0.2",
             "jweir/elm-iso8601": "7.0.1",
             "krisajenkins/remotedata": "6.0.1"
         },
