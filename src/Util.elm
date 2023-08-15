@@ -1,7 +1,7 @@
 module Util exposing (appendMaybe, conditionalElement, flattenMaybe, formatForDisplay)
 
 import ISO8601
-import Time exposing (Month(..), Posix, customZone)
+import Time exposing (Month(..), Posix, Zone)
 import TimeZone
 
 
@@ -42,9 +42,11 @@ flattenMaybe l =
 formatForDisplay : ISO8601.Time -> String
 formatForDisplay isoTime =
     let
+        posix : Posix
         posix =
             ISO8601.toPosix isoTime
 
+        zone : Zone
         zone =
             TimeZone.europe__berlin ()
     in

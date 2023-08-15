@@ -72,7 +72,6 @@ type Msg
     | SlackChannelChanged String
     | SlackAlertsChannelChanged String String
     | ToggleExpandableList ExpandableList
-    | Copy String
 
 
 init : Session -> Backend.Scalar.Slug -> ( Model, Cmd Msg )
@@ -176,9 +175,6 @@ update msg model =
 
                 _ ->
                     ( model, Cmd.none )
-
-        Copy s ->
-            ( model, copy s )
 
         GotMembersMsg subMsg ->
             case model.membersModel of
@@ -494,14 +490,14 @@ viewLogs team =
 
 viewCards : Model -> Team -> Html Msg
 viewCards model team =
-    let
-        user : Viewer
-        user =
-            Session.viewer model.session
-    in
     div [ class "cards" ]
         (case model.edit of
             View ->
+                let
+                    user : Viewer
+                    user =
+                        Session.viewer model.session
+                in
                 [ viewTeamDeletionWarning team
                 , viewTeamOverview user team
                 , viewSyncErrors team
@@ -607,12 +603,11 @@ showMoreButton expandable previewSize msg =
 
 repoLinkTitle : GitHubRepository -> String
 repoLinkTitle repository =
-    case repository.archived of
-        True ->
-            repository.name ++ " has been archived on GitHub"
+    if repository.archived then
+        repository.name ++ " has been archived on GitHub"
 
-        False ->
-            "View " ++ repository.name ++ " on GitHub"
+    else
+        "View " ++ repository.name ++ " on GitHub"
 
 
 viewGitHubRepository : GitHubRepository -> Html msg

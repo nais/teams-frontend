@@ -140,9 +140,11 @@ viewUserSyncRuns userSyncRuns =
 viewUser : User -> List (Html Msg)
 viewUser user =
     let
+        roleRows : List (Html Msg)
         roleRows =
             List.map viewRoleData user.roles
 
+        rs : Int
         rs =
             1 + List.length roleRows
     in
