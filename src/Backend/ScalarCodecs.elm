@@ -16,6 +16,10 @@ type alias AuditLogsTargetType =
     Backend.Scalar.AuditLogsTargetType
 
 
+type alias ComponentName =
+    Backend.Scalar.ComponentName
+
+
 type alias DeployKey =
     Backend.Scalar.DeployKey
 
@@ -40,10 +44,6 @@ type alias Slug =
     Backend.Scalar.Slug
 
 
-type alias SystemName =
-    Backend.Scalar.SystemName
-
-
 type alias Time =
     Backend.Scalar.Time
 
@@ -52,18 +52,18 @@ type alias Uuid =
     Backend.Scalar.Uuid
 
 
-codecs : Backend.Scalar.Codecs AuditAction AuditLogsTargetType DeployKey Id ReconcilerConfigKey ReconcilerName RoleName Slug SystemName Time Uuid
+codecs : Backend.Scalar.Codecs AuditAction AuditLogsTargetType ComponentName DeployKey Id ReconcilerConfigKey ReconcilerName RoleName Slug Time Uuid
 codecs =
     Backend.Scalar.defineCodecs
         { codecAuditAction = defaultCodecs.codecAuditAction
         , codecAuditLogsTargetType = defaultCodecs.codecAuditLogsTargetType
+        , codecComponentName = defaultCodecs.codecComponentName
         , codecDeployKey = defaultCodecs.codecDeployKey
         , codecId = defaultCodecs.codecId
         , codecReconcilerConfigKey = defaultCodecs.codecReconcilerConfigKey
         , codecReconcilerName = defaultCodecs.codecReconcilerName
         , codecRoleName = defaultCodecs.codecRoleName
         , codecSlug = defaultCodecs.codecSlug
-        , codecSystemName = defaultCodecs.codecSystemName
         , codecTime = defaultCodecs.codecTime
         , codecUuid = defaultCodecs.codecUuid
         }

@@ -33,11 +33,11 @@ action =
     Object.selectionForField "ScalarCodecs.AuditAction" "action" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecAuditAction |> .decoder)
 
 
-{-| The related system.
+{-| The related component.
 -}
-systemName : SelectionSet Backend.ScalarCodecs.SystemName Backend.Object.AuditLog
-systemName =
-    Object.selectionForField "ScalarCodecs.SystemName" "systemName" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecSystemName |> .decoder)
+componentName : SelectionSet Backend.ScalarCodecs.ComponentName Backend.Object.AuditLog
+componentName =
+    Object.selectionForField "ScalarCodecs.ComponentName" "componentName" [] (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapCodecs |> .codecComponentName |> .decoder)
 
 
 {-| The related correlation ID.

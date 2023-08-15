@@ -103,6 +103,34 @@ teamDeleteKey requiredArgs____ object____ =
     Object.selectionForCompositeField "teamDeleteKey" [ Argument.required "key" requiredArgs____.key (Backend.ScalarCodecs.codecs |> Backend.Scalar.unwrapEncoder .codecUuid) ] object____ Basics.identity
 
 
+type alias TeamsWithPermissionInGitHubRepoOptionalArguments =
+    { repoName : OptionalArgument String
+    , permissionName : OptionalArgument String
+    }
+
+
+{-| Get a list of teams with a specific permission in a GitHub repository.
+
+  - repoName - Name of the repository, with the org prefix, for instance 'org/repo'.
+  - permissionName - Name of the permission, for instance 'push'.
+
+-}
+teamsWithPermissionInGitHubRepo :
+    (TeamsWithPermissionInGitHubRepoOptionalArguments -> TeamsWithPermissionInGitHubRepoOptionalArguments)
+    -> SelectionSet decodesTo Backend.Object.Team
+    -> SelectionSet (List (Maybe decodesTo)) RootQuery
+teamsWithPermissionInGitHubRepo fillInOptionals____ object____ =
+    let
+        filledInOptionals____ =
+            fillInOptionals____ { repoName = Absent, permissionName = Absent }
+
+        optionalArgs____ =
+            [ Argument.optional "repoName" filledInOptionals____.repoName Encode.string, Argument.optional "permissionName" filledInOptionals____.permissionName Encode.string ]
+                |> List.filterMap Basics.identity
+    in
+    Object.selectionForCompositeField "teamsWithPermissionInGitHubRepo" optionalArgs____ object____ (Basics.identity >> Decode.nullable >> Decode.list)
+
+
 {-| Get a collection of users, sorted by name.
 -}
 users :

@@ -33,3 +33,10 @@ permissions :
     -> SelectionSet (List decodesTo) Backend.Object.GitHubRepository
 permissions object____ =
     Object.selectionForCompositeField "permissions" [] object____ (Basics.identity >> Decode.list)
+
+
+{-| Whether or not the repository is archived.
+-}
+archived : SelectionSet Bool Backend.Object.GitHubRepository
+archived =
+    Object.selectionForField "Bool" "archived" [] Decode.bool
