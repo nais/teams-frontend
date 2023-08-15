@@ -58,6 +58,7 @@ type alias GCPProject =
 type alias GitHubRepository =
     { name : String
     , permissions : List GitHubRepositoryPermission
+    , archived : Bool
     }
 
 

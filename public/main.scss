@@ -294,8 +294,14 @@ table {
   margin: 0.5rem 0 1rem;
 }
 
-table.repolist td {
-  width: 50%;
+table.repolist{
+  tr.archived {
+    text-decoration: line-through;
+  }
+
+  td {
+    width: 50%;
+  }
 }
 
 td,

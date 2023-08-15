@@ -133,10 +133,11 @@ teamFullSelection =
 
 gitHubRepositorySelection : SelectionSet GitHubRepository Backend.Object.GitHubRepository
 gitHubRepositorySelection =
-    SelectionSet.map2
+    SelectionSet.map3
         GitHubRepository
         BOGitHubRepository.name
         (BOGitHubRepository.permissions gitHubRepositoryPermissionSelection)
+        BOGitHubRepository.archived
 
 
 gitHubRepositoryPermissionSelection : SelectionSet GitHubRepositoryPermission Backend.Object.GitHubRepositoryPermission

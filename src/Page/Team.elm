@@ -16,7 +16,7 @@ import DataModel exposing (AuditLog, Expandable(..), GitHubRepository, Reconcile
 import Graphql.Http
 import Graphql.OptionalArgument
 import Html exposing (Html, a, button, dd, div, dl, dt, em, form, h3, input, label, li, p, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, disabled, for, href, id, type_, value)
+import Html.Attributes exposing (class, classList, disabled, for, href, id, title, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import ISO8601
 import List
@@ -605,10 +605,20 @@ showMoreButton expandable previewSize msg =
             |> Just
 
 
+repoLinkTitle : GitHubRepository -> String
+repoLinkTitle repository =
+    case repository.archived of
+        True ->
+            repository.name ++ " has been archived on GitHub"
+
+        False ->
+            "View " ++ repository.name ++ " on GitHub"
+
+
 viewGitHubRepository : GitHubRepository -> Html msg
 viewGitHubRepository repository =
-    tr []
-        [ td [] [ a [ href ("https://github.com/" ++ repository.name) ] [ text repository.name ] ]
+    tr [ classList [ ( "archived", repository.archived ) ] ]
+        [ td [] [ a [ title (repoLinkTitle repository), href ("https://github.com/" ++ repository.name) ] [ text repository.name ] ]
         , td []
             [ repository.permissions
                 |> List.filter (\p -> p.granted)
