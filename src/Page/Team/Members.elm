@@ -106,7 +106,7 @@ addReconcilerOptOut reconcilerName addMember =
 
 removeReconcilerOptOut : ReconcilerName -> AddMember -> AddMember
 removeReconcilerOptOut reconcilerName addMember =
-    { addMember | reconcilerOptOuts = List.filter (\r -> not (r == reconcilerName)) addMember.reconcilerOptOuts }
+    { addMember | reconcilerOptOuts = List.filter (\r -> r /= reconcilerName) addMember.reconcilerOptOuts }
 
 
 mapMembers : (List Row -> List Row) -> Model -> Model

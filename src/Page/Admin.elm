@@ -155,7 +155,7 @@ saveReconcilerConfig name model =
             case config of
                 Just cfg ->
                     cfg
-                        |> List.filter (\kv -> not (kv.value == Nothing))
+                        |> List.filter (\kv -> kv.value /= Nothing)
                         |> List.map (\kv -> { key = kv.key, value = Maybe.withDefault "" kv.value })
 
                 Nothing ->
