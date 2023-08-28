@@ -11,7 +11,8 @@
     "review": "elm-review --ignore-dirs src/Backend",
     "review-fix": "elm-review --ignore-dirs src/Backend --fix",
     "review-fix-all": "elm-review --ignore-dirs src/Backend --fix-all",
-    "generate-sbom": "cyclonedx-npm --output-file sbom.json --output-format json"
+    "generate-sbom": "cyclonedx-npm --output-file sbom.json --output-format json",
+    "bump": "elm-json upgrade"
   },
   "author": "nais features",
   "license": "MIT",
@@ -20,10 +21,13 @@
     "@dillonkearns/elm-graphql": "^4.3.0",
     "elm": "0.19.1-4",
     "elm-format": "^0.8.7",
-    "elm-review": "^2.9.1",
+    "elm-review": "^2.10.2",
     "elm-test": "^0.19.1-revision12",
     "sass": "^1.58.3",
     "vite": "^3.2.7",
     "vite-plugin-elm": "^v2.7.2"
+  },
+  "dependencies": {
+    "elm-json": "^0.2.13"
   }
 }
