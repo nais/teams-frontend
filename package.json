@@ -19,7 +19,7 @@
   "devDependencies": {
     "@cyclonedx/cyclonedx-npm": "^1.9.1",
     "@dillonkearns/elm-graphql": "^4.3.0",
-    "elm": "0.19.1-4",
+    "elm": "^0.19.1-4",
     "elm-format": "^0.8.7",
     "elm-review": "^2.10.2",
     "elm-test": "^0.19.1-revision12",
