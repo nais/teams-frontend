@@ -186,7 +186,9 @@ viewCardRequestDone session tdk =
         |> Card.withContents
             [ p []
                 [ text ("Deletion of team " ++ slugStr tdk.team.slug ++ " has been requested. To finalize the deletion send this link to another team owner and let them confirm the deletion.")
-                    , text "The link is valid for 1 hour."
+                ]
+            , p []
+                [ text "The link is valid for 1 hour."
                 ]
             , input [ type_ "text", Html.Attributes.disabled True, value (baseUrl session ++ Route.routeToString (Route.DeleteTeamConfirm tdk.key)) ] []
             , p [] [ text "Current owners are listed below" ]
