@@ -134,7 +134,7 @@ viewCardRequest team =
             ]
     , Card.new "Danger zone"
         |> Card.withContents
-            [ p [] [ text "When you request deletion a delete key will be generated for this team. It is valid for 5 minutes. Another team-owner will have to confirm the deletion by using a generated link before the team is irreversibly deleted." ]
+            [ p [] [ text "When you request deletion a delete key will be generated for this team. It is valid for 1 hour. Another team-owner will have to confirm the deletion by using a generated link before the team is irreversibly deleted." ]
             , p [] [ text "Current team owners are listed below" ]
             , ul []
                 (expandableAll team.members
@@ -186,6 +186,7 @@ viewCardRequestDone session tdk =
         |> Card.withContents
             [ p []
                 [ text ("Deletion of team " ++ slugStr tdk.team.slug ++ " has been requested. To finalize the deletion send this link to another team owner and let them confirm the deletion.")
+                    , text "The link is valid for 1 hour."
                 ]
             , input [ type_ "text", Html.Attributes.disabled True, value (baseUrl session ++ Route.routeToString (Route.DeleteTeamConfirm tdk.key)) ] []
             , p [] [ text "Current owners are listed below" ]
