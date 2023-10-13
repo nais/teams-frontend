@@ -1,4 +1,4 @@
-port module Page.Team exposing (EditMode(..), ExpandableList(..), Model, Msg(..), SubModel, copy, init, update, view)
+module Page.Team exposing (EditMode(..), ExpandableList(..), Model, Msg(..), SubModel, init, update, view)
 
 import Api.Do exposing (query)
 import Api.Error exposing (errorToString)
@@ -25,9 +25,6 @@ import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session, Viewer)
 import Util exposing (flattenMaybe, formatForDisplay)
-
-
-port copy : String -> Cmd msg
 
 
 type EditMode

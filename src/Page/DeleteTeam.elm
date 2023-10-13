@@ -7,14 +7,16 @@ import Api.Str exposing (slugStr, uuidStr)
 import Api.Team
 import Backend.Enum.TeamRole exposing (TeamRole(..))
 import Backend.Scalar exposing (Slug(..), Uuid)
+import Component.Buttons exposing (smallButton)
 import Component.Card as Card exposing (Card)
 import Component.ResourceTable as ResourceTable
 import DataModel exposing (Team, TeamDeleteConfirmed, TeamDeleteKey, expandableAll, tmRole, tmUser)
 import Graphql.Http
 import Html exposing (Html, button, div, input, li, p, text, ul)
-import Html.Attributes exposing (class, type_, value)
+import Html.Attributes exposing (class, disabled, type_, value)
 import Html.Events exposing (onClick)
 import ISO8601
+import Port exposing (copy)
 import RemoteData exposing (RemoteData(..))
 import Route
 import Session exposing (Session)
@@ -57,6 +59,7 @@ type Msg
     | GotTeam (RemoteData (Graphql.Http.Error Team) Team)
     | GotTeamDeleteKey (RemoteData (Graphql.Http.Error TeamDeleteKey) TeamDeleteKey)
     | GotTeamDeleteConfirmed (RemoteData (Graphql.Http.Error TeamDeleteConfirmed) TeamDeleteConfirmed)
+    | Copy String
 
 
 requestTeamDeletion : Session -> Slug -> ( Model, Cmd Msg )
@@ -182,6 +185,10 @@ baseUrl session =
 
 viewCardRequestDone : Session -> TeamDeleteKey -> Card Msg
 viewCardRequestDone session tdk =
+    let
+        url =
+            baseUrl session ++ Route.routeToString (Route.DeleteTeamConfirm tdk.key)
+    in
     Card.new ("Requested team deletion for team " ++ slugStr tdk.team.slug)
         |> Card.withContents
             [ p []
@@ -190,7 +197,10 @@ viewCardRequestDone session tdk =
             , p []
                 [ text "The link is valid for 1 hour."
                 ]
-            , input [ type_ "text", Html.Attributes.disabled True, value (baseUrl session ++ Route.routeToString (Route.DeleteTeamConfirm tdk.key)) ] []
+            , div [ class "row" ]
+                [ input [ type_ "text", class "synchronizeUsersCorrelationID", disabled True, value url ] []
+                , smallButton (Copy url) "copy" "copy url"
+                ]
             , p [] [ text "Current owners are listed below" ]
             , ul []
                 (expandableAll tdk.team.members
@@ -338,3 +348,6 @@ update msg model =
 
         TimeNow t ->
             ( { model | now = t }, Cmd.none )
+
+        Copy url ->
+            ( model, copy url )
