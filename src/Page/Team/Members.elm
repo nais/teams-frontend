@@ -356,6 +356,9 @@ viewReconcilerOption model r =
 
 viewEditMembers : Model -> Html Msg
 viewEditMembers model =
+    let
+        hasLessThanTwoOwners = countOwners model <= 1
+    in
     Card.new "Members"
         |> Card.withButtons (viewAddMemberModal model ++ [ smallButton ClickedViewMode "edit" "View" ])
         |> Card.withContents
@@ -381,7 +384,7 @@ viewEditMembers model =
                             ]
                         )
                     ]
-                , tbody [] (List.map (viewEditRow model.reconcilers) model.members)
+                , tbody [] (List.map (viewEditRow hasLessThanTwoOwners model.reconcilers) model.members) 
                 ]
             ]
         |> Card.render
@@ -402,8 +405,8 @@ candidates model =
         |> List.map (\email -> option [] [ text email ])
 
 
-viewEditRow : List Reconciler -> Row -> Html Msg
-viewEditRow reconcilers row =
+viewEditRow : Bool -> List Reconciler -> Row -> Html Msg
+viewEditRow hasLessThan2Owners reconcilers row =
     let
         roleSelector : Html Msg
         roleSelector =
@@ -437,7 +440,7 @@ viewEditRow reconcilers row =
                     smallButton (ClickedMemberRemoveConfirm row) "delete" "Confirm"
 
                 Unchanged ->
-                    smallButton (ClickedMemberRemove row) "delete" "Remove"
+                    smallButtonWithAttrs (ClickedMemberRemove row) "delete" "Remove" [disabled hasLessThan2Owners]
 
                 Updated ->
                     smallButton (ClickedMemberRemove row) "delete" "Remove"
@@ -644,3 +647,11 @@ updateRows expandableMembers allRows =
                             rec members tail
     in
     rec (expandableAll expandableMembers) allRows
+
+countOwners : Model -> Int
+countOwners model = List.filter isOwner model.members |> List.length
+
+isOwner : Row -> Bool
+isOwner row = case row.member of 
+    TeamMember _ _ Owner _  -> True
+    _ -> False
