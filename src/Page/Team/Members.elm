@@ -53,6 +53,7 @@ type alias AddMember =
     { email : String
     , role : TeamRole
     , reconcilerOptOuts : List ReconcilerName
+    , error : Maybe String
     }
 
 
@@ -74,7 +75,7 @@ init team allUsers isEditor reconcilers =
 
 initialAddMember : AddMember
 initialAddMember =
-    { email = "", role = TeamRole.Member, reconcilerOptOuts = [] }
+    { email = "", role = TeamRole.Member, reconcilerOptOuts = [], error = Nothing }
 
 
 modalId : Modal -> String
@@ -97,6 +98,11 @@ setRole role addMember =
 setEmail : String -> AddMember -> AddMember
 setEmail email addMember =
     { addMember | email = email }
+
+
+setError : Maybe String -> AddMember -> AddMember
+setError error addMember =
+    { addMember | error = error }
 
 
 addReconcilerOptOut : ReconcilerName -> AddMember -> AddMember
@@ -181,8 +187,7 @@ update msg model =
                     )
 
                 Nothing ->
-                    -- TODO: render error
-                    ( model, Cmd.none )
+                    ( mapAddMember (setError (Just ("user with email \"" ++ model.addMember.email ++ "\" not found"))) model, Cmd.none )
 
         ClickedMemberRole row roleString ->
             let
@@ -315,13 +320,21 @@ viewAddMemberModal model =
                               , li [] [ h3 [] [ text "Reconcilers" ] ]
                               ]
                             , List.filterMap (viewReconcilerOption model) model.reconcilers
-                            , [ li [ class "row" ]
-                                    [ button [ type_ "reset", onClick (CloseModal AddNewMember), class "transparent" ] [ text "Cancel" ]
-                                    , button [ type_ "submit", disabled (queryUserList model.addMember.email model.allUsers == Nothing) ]
-                                        [ text "Add"
-                                        ]
+                            , li [ class "row" ]
+                                [ button [ type_ "reset", onClick (CloseModal AddNewMember), class "transparent" ] [ text "Cancel" ]
+                                , button [ type_ "submit" ]
+                                    [ text "Add"
                                     ]
-                              ]
+                                ]
+                                :: (Maybe.withDefault [] <|
+                                        Maybe.map
+                                            (\e ->
+                                                [ li [ class "row" ]
+                                                    [ div [ class "error" ] [ text e ] ]
+                                                ]
+                                            )
+                                            model.addMember.error
+                                   )
                             ]
                         )
                     ]
@@ -357,7 +370,8 @@ viewReconcilerOption model r =
 viewEditMembers : Model -> Html Msg
 viewEditMembers model =
     let
-        hasLessThanTwoOwners = countOwners model <= 1
+        hasLessThanTwoOwners =
+            countOwners model <= 1
     in
     Card.new "Members"
         |> Card.withButtons (viewAddMemberModal model ++ [ smallButton ClickedViewMode "edit" "View" ])
@@ -384,7 +398,7 @@ viewEditMembers model =
                             ]
                         )
                     ]
-                , tbody [] (List.map (viewEditRow hasLessThanTwoOwners model.reconcilers) model.members) 
+                , tbody [] (List.map (viewEditRow hasLessThanTwoOwners model.reconcilers) model.members)
                 ]
             ]
         |> Card.render
@@ -440,7 +454,7 @@ viewEditRow hasLessThan2Owners reconcilers row =
                     smallButton (ClickedMemberRemoveConfirm row) "delete" "Confirm"
 
                 Unchanged ->
-                    smallButtonWithAttrs (ClickedMemberRemove row) "delete" "Remove" [disabled hasLessThan2Owners]
+                    smallButtonWithAttrs (ClickedMemberRemove row) "delete" "Remove" [ disabled hasLessThan2Owners ]
 
                 Updated ->
                     smallButton (ClickedMemberRemove row) "delete" "Remove"
@@ -648,10 +662,18 @@ updateRows expandableMembers allRows =
     in
     rec (expandableAll expandableMembers) allRows
 
+
 countOwners : Model -> Int
-countOwners model = List.filter isOwner model.members |> List.length
+countOwners model =
+    List.filter isOwner model.members |> List.length
+
 
 isOwner : Row -> Bool
-isOwner row = case row.member of 
-    TeamMember _ _ Owner _  -> True
-    _ -> False
+isOwner row =
+    case row.member of
+        TeamMember _ _ Owner _ ->
+            True
+
+        _ ->
+            False
+
